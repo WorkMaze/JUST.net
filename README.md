@@ -1,3 +1,16 @@
+# JUST
+
+JUST Stands for **JSON Under Simple Transformation**
+
+XSLT is a very popular way of transforming XML documents using a simple transformation language. More and more applications are now using JSON as a data format because it is much simpler and less bulkier than XML.
+However, there isn't a very easy way to transforming JSON documents.
+
+I have created a library in .NET which enables the transformation of JSON documents using very a simple transformation language. This is an attempt to create an XSLT parallel for JSON.
+The library is available as a NUGET package.
+
+This C# project has working examples of the transformations.
+
+
 # JUST.NET Library
 
 Pull the latest JUST.NET from https://www.nuget.org
@@ -12,11 +25,11 @@ using JUST;
 
 Below is a simple C# code snippet that you can use to transform your JSON:-
 
-``string input = File.ReadAllText("Examples/Input.json"); //read input from JSON file.
+``string input = File.ReadAllText("Examples/Input.json"); //read input from JSON file.``
 
-string transformer = File.ReadAllText("Examples/Transformer.json"); //read the transformer from a JSON file.
+``string transformer = File.ReadAllText("Examples/Transformer.json"); //read the transformer from a JSON file.``
 
-string transformedString = JsonTransformer.Transform(transformer, input); // do the actual transformation.``
+``string transformedString = JsonTransformer.Transform(transformer, input); // do the actual transformation.``
 
 
 # Using JUST to transform JSON
