@@ -12,11 +12,11 @@ using JUST;
 
 Below is a simple C# code snippet that you can use to transform your JSON:-
 
-``string input = File.ReadAllText("Examples/Input.json"); //read input from JSON file.
+``string input = File.ReadAllText("Examples/Input.json"); //read input from JSON file.``
 
-string transformer = File.ReadAllText("Examples/Transformer.json"); //read the transformer from a JSON file.
+``string transformer = File.ReadAllText("Examples/Transformer.json"); //read the transformer from a JSON file.``
 
-string transformedString = JsonTransformer.Transform(transformer, input); // do the actual transformation.``
+``string transformedString = JsonTransformer.Transform(transformer, input); // do the actual transformation.``
 
 
 # Using JUST to transform JSON
