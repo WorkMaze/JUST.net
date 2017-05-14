@@ -12,11 +12,11 @@ using JUST;
 
 Below is a simple C# code snippet that you can use to transform your JSON:-
 
-``string input = File.ReadAllText("Examples/Input.json"); //read input from JSON file.``
+``string input = File.ReadAllText("Examples/Input.json"); //read input from JSON file.
 
-``string transformer = File.ReadAllText("Examples/Transformer.json"); //read the transformer from a JSON file.``
+string transformer = File.ReadAllText("Examples/Transformer.json"); //read the transformer from a JSON file.
 
-``string transformedString = JsonTransformer.Transform(transformer, input); // do the actual transformation.``
+string transformedString = JsonTransformer.Transform(transformer, input); // do the actual transformation.``
 
 
 # Using JUST to transform JSON
@@ -244,4 +244,56 @@ Output:-
     "arrayavg":"20",
     "arraymin":"1",
     "arraymax":"3"
+}``
+
+## Bulk functions
+
+All the above functions set property values to predefined properties in the output JSON. However, in some cases we don't know what our output will look like as it depends on the input.
+Bulk functions are provided for this purpose. They correspond with the template-match functions in XSLT.
+
+Bulk functions by law have to be the first property of the JSON object. All bulk functions are represented as array elements of the property '#'.
+
+These are the bulk functions provided as of now:-
+
+1. copy(path)
+2. replace(path)
+3. delete(path)
+
+Cosider the input:-
+
+``{
+  "tree": {
+    "branch": {
+      "leaf": "green",
+      "flower": "red",
+      "bird": "crow",
+      "extra": { "twig":"birdnest" }
+    },
+    "ladder": {"wood": "treehouse" }
+  }
+}``
+
+Transformer:-
+
+``{
+  "#": [ "#copy($)",  "#delete($.tree.branch.bird)", "#replace($.tree.branch.extra,#valueof($.tree.ladder))" ],
+  "othervalue" : "othervalue"
+}``
+
+Output:-
+
+``{
+   "othervalue":"othervalue",
+   "tree":{
+    "branch":{
+     "leaf":"green",
+     "flower":"red",
+     "extra":{
+      "wood":"treehouse"
+     }
+    },
+    "ladder":{
+     "wood":"treehouse"
+    }
+  }
 }``
