@@ -1,0 +1,7 @@
+﻿{
+  "root": {
+    "menu1": "#valueof($.menu.popup.menuitem[?(@.value=='New')].onclick)",
+    "menu2": "#valueof($.menu.popup.menuitem[?(@.value=='Open')].onclick)"
+  },
+  
+}

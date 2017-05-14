@@ -1,0 +1,8 @@
+﻿{
+  "stringresult": {
+    "lastindexofand": "#lastindexof(#valueof($.stringref),and)",
+    "firstindexofand": "#firstindexof(#valueof($.stringref),and)",
+    "subsrting": "#substring(#valueof($.stringref),8,10)",
+    "concat": "#concat(#valueof($.menu.id.file),#valueof($.menu.value.Window))"
+  }
+}

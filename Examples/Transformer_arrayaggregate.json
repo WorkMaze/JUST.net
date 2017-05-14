@@ -1,0 +1,7 @@
+﻿{
+  "arrayconacted": "#concatallatpath(#valueof($.x),$.v.a)",
+  "arraysum": "#sumatpath(#valueof($.x),$.v.c)",
+  "arrayavg": "#averageatpath(#valueof($.x),$.v.c)",
+  "arraymin": "#minatpath(#valueof($.x),$.v.b)",
+  "arraymax": "#maxatpath(#valueof($.x),$.v.b)"
+}

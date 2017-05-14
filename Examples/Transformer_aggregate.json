@@ -1,0 +1,7 @@
+﻿{
+  "conacted": "#concatall(#valueof($.d))",
+  "sum": "#sum(#valueof($.numbers))",
+  "avg": "#average(#valueof($.numbers))",
+  "min": "#min(#valueof($.numbers))",
+  "max": "#max(#valueof($.numbers))"
+}

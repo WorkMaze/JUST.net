@@ -1,0 +1,11 @@
+﻿{
+  "root": {
+    "array": {
+
+      "fullarray": "#valueof($.x)",
+      "arrayelement": "#valueof($.x[0])",
+      "specificelement": "#valueof($.x[1].v.a)"
+    }
+  }
+
+}

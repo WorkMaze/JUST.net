@@ -1,0 +1,3 @@
+﻿{
+  "#": [ "#copy($)", "#replace($.menu.id,#valueof($.menu.value))" ]
+}

@@ -1,0 +1,8 @@
+﻿{
+  "mathresult": {
+    "add": "#add(#valueof($.numbers[0]),3)",
+    "subtract": "#subtract(#valueof($.numbers[4]),#valueof($.numbers[0]))",
+    "multiply": "#multiply(2,#valueof($.numbers[2]))",
+    "devide": "#devide(9,3)"
+  }
+}
