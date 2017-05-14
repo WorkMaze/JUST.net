@@ -1,7 +1,7 @@
 # JUST.NET Library
 
 Pull the latest JUST.NET from https://www.nuget.org
-Install-Package JUST 
+``Install-Package JUST``
 
 
 # Write a simple C# code snippet to transform your JSON
@@ -12,11 +12,11 @@ using JUST;
 
 Below is a simple C# code snippet that you can use to transform your JSON:-
 
-string input = File.ReadAllText("Examples/Input.json"); //read input from JSON file.
+``string input = File.ReadAllText("Examples/Input.json"); //read input from JSON file.
 
 string transformer = File.ReadAllText("Examples/Transformer.json"); //read the transformer from a JSON file.
 
-string transformedString = JsonTransformer.Transform(transformer, input); // do the actual transformation.
+string transformedString = JsonTransformer.Transform(transformer, input); // do the actual transformation.``
 
 
 # Using JUST to transform JSON
@@ -32,7 +32,7 @@ http://www.newtonsoft.com/json/help/html/QueryJsonSelectTokenJsonPath.htm
 
 Consider the input:-
 
-{
+``{
   "menu": {   
     "popup": {
       "menuitem": [
@@ -47,22 +47,22 @@ Consider the input:-
       ]
     }
   } 
-}
+}``
 
 Transformer:-
 
-{
+``{
   "result": {
     "Open": "#valueof($.menu.popup.menuitem[?(@.value=='Open')].onclick)",
     "Close": "#valueof($.menu.popup.menuitem[?(@.value=='Close')].onclick)"
   }
-}
+}``
 
 Output:-
 
-{
+``{
    "result":{"Open":null,"Close":"OpenDoc()"}
-}
+}``
 
 
 ## ifcondition
@@ -75,23 +75,26 @@ All four of the parameters can be a 'valueof' expressions or constants.
 
 Consider the input:-
 
-{
+``{
   "menu": {
     "id" : "github",
     "repository" : "JUST"
   } 
-}
+}``
 
 Transformer:-
 
-{
+``{
   "ifconditiontesttrue": "#ifcondition(#valueof($.menu.id),github,#valueof($.menu.repository),fail)",
   "ifconditiontestfalse": "#ifcondition(#valueof($.menu.id),xml,#valueof($.menu.repository),fail)"
-}
+}``
 
 Output:-
 
-{"ifconditiontesttrue":"JUST","ifconditiontestfalse":"fail"}
+``{
+   "ifconditiontesttrue":"JUST",
+   "ifconditiontestfalse":"fail"
+}``
 
 ## string and math functions
 
@@ -108,14 +111,14 @@ At the moment only the basic and often used string and math functions are provid
 
 Consider the input:-
 
-{
+``{
   "stringref": "thisisandveryunuasualandlongstring",
   "numbers": [ "1", "2", "3", "4", "5" ]
-}
+}``
 
 Transformer:-
 
-{
+``{
   "stringresult": {
     "lastindexofand": "#lastindexof(#valueof($.stringref),and)",
     "firstindexofand": "#firstindexof(#valueof($.stringref),and)",
@@ -128,11 +131,25 @@ Transformer:-
     "multiply": "#multiply(2,#valueof($.numbers[2]))",
     "devide": "#devide(9,3)"
   }
-}
+}``
 
 Output:-
 
-{"stringresult":{"lastindexofand":"21","firstindexofand":"6","substring":"veryunuasua","concat":""},"mathresult":{"add":"4","subtract":"4","multiply":"6","devide":"3"}}
+``{"stringresult":
+   { 
+    "lastindexofand":"21",
+    "firstindexofand":"6",
+    "substring":"veryunuasua",
+    "concat":""
+   },
+   "mathresult":
+   {
+    "add":"4",
+    "subtract":"4",
+    "multiply":"6",
+    "devide":"3"
+   }
+}``
 
 
 ## Aggregate functions
@@ -147,24 +164,30 @@ The following aggregate functions are provided for single dimensional arrays:-
 
 Consider the input:-
  
-{
+``{
   "d": [ "one", "two", "three" ],
   "numbers": [ "1", "2", "3", "4", "5" ]
-}
+}``
 
 Transformer:-
 
-{
+``{
   "conacted": "#concatall(#valueof($.d))",
   "sum": "#sum(#valueof($.numbers))",
   "avg": "#average(#valueof($.numbers))",
   "min": "#min(#valueof($.numbers))",
   "max": "#max(#valueof($.numbers))"
-}
+}``
 
 Output:-
 
-{"conacted":"onetwothree","sum":"15","avg":"3","min":"1","max":"5"}
+``{
+    "conacted":"onetwothree",
+    "sum":"15",
+    "avg":"3",
+    "min":"1",
+    "max":"5"
+}``
 
 ## Aggregate functions for multidimensional arrays:-
 
@@ -177,7 +200,7 @@ These functions are essentially the same as the above ones, the only difference 
 
 Consider the input:-
 
-{
+``{
    "x": [
     {
       "v": {
@@ -192,7 +215,6 @@ Consider the input:-
         "b": "2",
         "c": "20"
       }
-
     },
     {
       "v": {
@@ -202,18 +224,24 @@ Consider the input:-
       }
     }
   ]
-}
+}``
 
 Transformer:-
 
-{
+``{
   "arrayconacted": "#concatallatpath(#valueof($.x),$.v.a)",
   "arraysum": "#sumatpath(#valueof($.x),$.v.c)",
   "arrayavg": "#averageatpath(#valueof($.x),$.v.c)",
   "arraymin": "#minatpath(#valueof($.x),$.v.b)",
   "arraymax": "#maxatpath(#valueof($.x),$.v.b)"
-}
+}``
 
 Output:-
 
-{"arrayconacted":"a1,a2,a3b1,b2c1,c2,c3","arraysum":"60","arrayavg":"20","arraymin":"1","arraymax":"3"}
+``{
+    "arrayconacted":"a1,a2,a3b1,b2c1,c2,c3",
+    "arraysum":"60",
+    "arrayavg":"20",
+    "arraymin":"1",
+    "arraymax":"3"
+}``
