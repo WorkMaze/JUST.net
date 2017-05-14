@@ -1,12 +1,3 @@
-# JUST.net
-## JUST - JSON Under Simple Transformation (XSLT equivalent for JSON)
-
-XSLT is a very popular and simple way to transform an XML document to another. More and more applications have switches their data formats to JSON as it is more elegant and less bulkier of the two. However, there isn't a simple way to transform a JSON document into another without having to write some code. 
-
-This projects demonstrates the use of **JUST.NET** library which implements **JUST** in .NET.
-
-This library is also written by me can be pulled from the nuget repository and used in your project.
-
 # JUST.NET Library
 
 Pull the latest JUST.NET from https://www.nuget.org
@@ -103,3 +94,43 @@ Output:-
 
 {"ifconditiontesttrue":"JUST","ifconditiontestfalse":"fail"}
 
+## string and math functions
+
+At the moment only the basic and often used string and math functions are provided in the library.
+
+1. lastindexof(input string,search string)
+2. firstindexof(input string,search string)
+3. substring(input string,start indes,length)
+4. concat(string 1,string 2)
+5. add(value 1,value 2)
+6. subtract(value 1,value 2)
+3. multiply(value 1,value 2)
+4. devide(value 1,values 2)
+
+Consider the input:-
+
+{
+  "stringref": "thisisandveryunuasualandlongstring",
+  "numbers": [ "1", "2", "3", "4", "5" ]
+}
+
+Transformer:-
+
+{
+  "stringresult": {
+    "lastindexofand": "#lastindexof(#valueof($.stringref),and)",
+    "firstindexofand": "#firstindexof(#valueof($.stringref),and)",
+    "substring": "#substring(#valueof($.stringref),9,11)",
+    "concat": "#concat(#valueof($.menu.id.file),#valueof($.menu.value.Window))"
+  },
+  "mathresult": {
+    "add": "#add(#valueof($.numbers[0]),3)",
+    "subtract": "#subtract(#valueof($.numbers[4]),#valueof($.numbers[0]))",
+    "multiply": "#multiply(2,#valueof($.numbers[2]))",
+    "devide": "#devide(9,3)"
+  }
+}
+
+Output:-
+
+{"stringresult":{"lastindexofand":"21","firstindexofand":"6","substring":"veryunuasua","concat":""},"mathresult":{"add":"4","subtract":"4","multiply":"6","devide":"3"}}
