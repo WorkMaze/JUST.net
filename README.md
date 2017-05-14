@@ -1,7 +1,6 @@
 # JUST.NET Library
 
 Pull the latest JUST.NET from https://www.nuget.org
-
 Install-Package JUST 
 
 
@@ -134,3 +133,87 @@ Transformer:-
 Output:-
 
 {"stringresult":{"lastindexofand":"21","firstindexofand":"6","substring":"veryunuasua","concat":""},"mathresult":{"add":"4","subtract":"4","multiply":"6","devide":"3"}}
+
+
+## Aggregate functions
+
+The following aggregate functions are provided for single dimensional arrays:-
+
+1. concatall(array)
+2. sum(array)
+3. average(array)
+4. min(array)
+5. max(array)
+
+Consider the input:-
+ 
+{
+  "d": [ "one", "two", "three" ],
+  "numbers": [ "1", "2", "3", "4", "5" ]
+}
+
+Transformer:-
+
+{
+  "conacted": "#concatall(#valueof($.d))",
+  "sum": "#sum(#valueof($.numbers))",
+  "avg": "#average(#valueof($.numbers))",
+  "min": "#min(#valueof($.numbers))",
+  "max": "#max(#valueof($.numbers))"
+}
+
+Output:-
+
+{"conacted":"onetwothree","sum":"15","avg":"3","min":"1","max":"5"}
+
+## Aggregate functions for multidimensional arrays:-
+
+These functions are essentially the same as the above ones, the only difference being that you can also provide a path to point to particluar element inside the array.
+1. concatallatpath(array,path)
+2. sumatpath(array,path)
+3. averageatpath(array,path)
+4. minatpath(array,path)
+5. maxatpath(array,path)
+
+Consider the input:-
+
+{
+   "x": [
+    {
+      "v": {
+        "a": "a1,a2,a3",
+        "b": "1",
+        "c": "10"
+      }
+    },
+    {
+      "v": {
+        "a": "b1,b2",
+        "b": "2",
+        "c": "20"
+      }
+
+    },
+    {
+      "v": {
+        "a": "c1,c2,c3",
+        "b": "3",
+        "c": "30"
+      }
+    }
+  ]
+}
+
+Transformer:-
+
+{
+  "arrayconacted": "#concatallatpath(#valueof($.x),$.v.a)",
+  "arraysum": "#sumatpath(#valueof($.x),$.v.c)",
+  "arrayavg": "#averageatpath(#valueof($.x),$.v.c)",
+  "arraymin": "#minatpath(#valueof($.x),$.v.b)",
+  "arraymax": "#maxatpath(#valueof($.x),$.v.b)"
+}
+
+Output:-
+
+{"arrayconacted":"a1,a2,a3b1,b2c1,c2,c3","arraysum":"60","arrayavg":"20","arraymin":"1","arraymax":"3"}
