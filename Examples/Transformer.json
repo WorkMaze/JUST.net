@@ -1,5 +1,5 @@
 ﻿{
-  "#": [ "#copy($)", "#copy($.menu.id)", "#copy($.menu.value)", "#delete($.menu.popup)", "#replace($.menu.id,#valueof($.menu.value))"],
+  "#": [ "#copy($)", "#copy($.menu.id)", "#copy($.menu.value)", "#delete($.menu.popup)", "#replace($.menu.id,#valueof($.menu.value))" ],
   "root": {
     "menu1": "#valueof($.menu.popup.menuitem[?(@.value=='New')].onclick)",
     "menu2": "#valueof($.menu.popup.menuitem[?(@.value=='Open')].onclick)",
@@ -32,6 +32,25 @@
     "arrayavg": "#averageatpath(#valueof($.x),$.v.c)",
     "arraymin": "#minatpath(#valueof($.x),$.v.b)",
     "arraymax": "#maxatpath(#valueof($.x),$.v.b)"
+  },
+
+  "iteration": {
+    "#loop($.numbers)": {
+      "CurrentValue": "#currentvalue()",
+      "CurrentIndex": "#currentindex()",
+      "IsLast": "#ifcondition(#currentindex(),#lastindex(),yes,no)",
+      "LastValue": "#lastvalue()"
+
+    }
+  },
+  "iteration2": {
+    "#loop($.x)": {
+      "CurrentValue": "#currentvalueatpath($.v.a)",
+      "CurrentIndex": "#currentindex()",
+      "IsLast": "#ifcondition(#currentindex(),#lastindex(),yes,no)",
+      "LastValue": "#lastvalueatpath($.v.b)"
+
+    }
   }
-  
+
 }
