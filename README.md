@@ -305,7 +305,7 @@ Output:-
       "wood":"treehouse"
      }
     },
-    "ladder":{
+   "ladder":{
      "wood":"treehouse"
     }
   }
@@ -358,7 +358,6 @@ Cosider the input:-
 Transformer:-
 
 ``{
- 
   "iteration": {
     "#loop($.numbers)": {
       "CurrentValue": "#currentvalue()",
@@ -374,7 +373,6 @@ Transformer:-
       "CurrentIndex": "#currentindex()",
       "IsLast": "#ifcondition(#currentindex(),#lastindex(),yes,no)",
       "LastValue": "#lastvalueatpath($.country.language)"
-
     }
   },
   "othervalue": "othervalue"
