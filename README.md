@@ -334,7 +334,7 @@ Cosider the input:-
       "leaf": "green",
       "flower": "red",
       "bird": "crow",
-      "extra": { "twig": "birdnest" }
+     "extra": { "twig": "birdnest" }
     },
     "ladder": { "wood": "treehouse" }
   },
@@ -364,7 +364,6 @@ Transformer:-
       "CurrentIndex": "#currentindex()",
       "IsLast": "#ifcondition(#currentindex(),#lastindex(),yes,no)",
       "LastValue": "#lastvalue()"
-
     }
   },
   "iteration2": {
