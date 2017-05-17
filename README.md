@@ -392,3 +392,55 @@ Output:-
   ],
 "othervalue":"othervalue"
 }``
+
+## Calling Custom functions
+
+You can make your own custom functions in C# and call them from your transformer JSON.
+A custom function has to reside inside a public class and has to be a public static method.
+
+A custom function is called using the following syntax:-
+
+#customfunction(dll name, FQN for the static function, argument1.......,argumentN)
+
+
+Consider the following input:-
+
+``{
+  "tree": {
+    "branch": {
+      "leaf": "green",
+      "flower": "red",
+      "bird": "crow"
+    }
+  }
+}``
+
+Transformer:-
+
+``{
+  "Season": "#customfunction(JUST.NET.Test,JUST.NET.Test.Season.findseason,#valueof($.tree.branch.leaf),#valueof($.tree.branch.flower))"
+}``
+
+Custom function:-
+
+``using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+namespace JUST.NET.Test
+{
+    public class Season
+    {
+        public static string findseason(string leafColour, string flowerColour)
+        {
+            if (leafColour == "green" && flowerColour == "red")
+                return "summer";
+            else
+                return "winter";
+        }
+    }
+}``
+
+Output:-
+``{"Season":"summer"}``
