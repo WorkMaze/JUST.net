@@ -120,7 +120,7 @@ At the moment only the basic and often used string and math functions are provid
 5. add(value 1,value 2)
 6. subtract(value 1,value 2)
 3. multiply(value 1,value 2)
-4. devide(value 1,values 2)
+4. divide(value 1,values 2)
 
 Consider the input:-
 
@@ -142,7 +142,7 @@ Transformer:-
     "add": "#add(#valueof($.numbers[0]),3)",
     "subtract": "#subtract(#valueof($.numbers[4]),#valueof($.numbers[0]))",
     "multiply": "#multiply(2,#valueof($.numbers[2]))",
-    "devide": "#devide(9,3)"
+    "divide": "#divide(9,3)"
   }
 }``
 
@@ -160,7 +160,7 @@ Output:-
     "add":"4",
     "subtract":"4",
     "multiply":"6",
-    "devide":"3"
+    "divide":"3"
    }
 }``
 
@@ -305,8 +305,90 @@ Output:-
       "wood":"treehouse"
      }
     },
-    "ladder":{
+   "ladder":{
      "wood":"treehouse"
     }
   }
+}``
+
+## Array looping
+
+In some cases we don't want to copy the entire array to the destination JSON. We might want to transform the array into a different format, or have some special logic for each element while setting the destination JSON.
+For these cases we would use array looping.
+
+These are the functions provided for this pupose:-
+
+1. loop(path) - path is the path of the array to loop
+2. currentvalue()
+3. currentindex()
+4. lastindex()
+5. lastvalue()
+6. currentvalueatpath(path) - here path denotes the path inside the array
+7. lastvalueatpath(path) - here path denotes the path inside the array
+
+Cosider the input:-
+
+``{
+  "tree": {
+    "branch": {
+      "leaf": "green",
+      "flower": "red",
+      "bird": "crow",
+     "extra": { "twig": "birdnest" }
+    },
+    "ladder": { "wood": "treehouse" }
+  },
+  "numbers": [ "1", "2", "3", "4" ],
+  "arrayobjects": [
+    {"country": {"name": "norway","language": "norsk"}},
+    {
+      "country": {
+        "name": "UK",
+        "language": "english"
+      }
+    },
+    {
+      "country": {
+        "name": "Sweden",
+        "language": "swedish"
+      }
+    }]
+}``
+
+Transformer:-
+
+``{
+  "iteration": {
+    "#loop($.numbers)": {
+      "CurrentValue": "#currentvalue()",
+      "CurrentIndex": "#currentindex()",
+      "IsLast": "#ifcondition(#currentindex(),#lastindex(),yes,no)",
+      "LastValue": "#lastvalue()"
+    }
+  },
+  "iteration2": {
+    "#loop($.arrayobjects)": {
+      "CurrentValue": "#currentvalueatpath($.country.name)",
+      "CurrentIndex": "#currentindex()",
+      "IsLast": "#ifcondition(#currentindex(),#lastindex(),yes,no)",
+      "LastValue": "#lastvalueatpath($.country.language)"
+    }
+  },
+  "othervalue": "othervalue"
+}``
+
+Output:-
+
+``{"iteration":[
+   {"CurrentValue":"1","CurrentIndex":"0","IsLast":"no","LastValue":"4"},
+   {"CurrentValue":"2","CurrentIndex":"1","IsLast":"no","LastValue":"4"},
+   {"CurrentValue":"3","CurrentIndex":"2","IsLast":"no","LastValue":"4"},
+   {"CurrentValue":"4","CurrentIndex":"3","IsLast":"yes","LastValue":"4"}
+  ],
+   "iteration2":[
+   {"CurrentValue":"norway","CurrentIndex":"0","IsLast":"no","LastValue":"swedish"},
+   {"CurrentValue":"UK","CurrentIndex":"1","IsLast":"no","LastValue":"swedish"},
+   {"CurrentValue":"Sweden","CurrentIndex":"2","IsLast":"yes","LastValue":"swedish"}
+  ],
+"othervalue":"othervalue"
 }``
