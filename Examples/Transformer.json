@@ -51,6 +51,8 @@
       "LastValue": "#lastvalueatpath($.v.b)"
 
     }
-  }
+  },
+  "FullName": "#concat(#concat(#concat(#valueof($.Surname), ),#concat(#valueof($.Name), )),#concat(#valueof($.Patronomic), ))"
+
 
 }

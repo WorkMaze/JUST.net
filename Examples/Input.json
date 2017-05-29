@@ -59,5 +59,8 @@
       "flower": "red",
       "bird": "crow"
     }
-  }
+  },
+  "Name": "Ivan",
+  "Surname": "Ivanov",
+  "Patronomic": "Ivanovich"
 }
