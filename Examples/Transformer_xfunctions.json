@@ -1,0 +1,4 @@
+﻿{
+  "FullName": "#xconcat(#valueof($.Name),#constant_comma(),#valueof($.MiddleName),#constant_comma(),#valueof($.Surname))",
+  "AgeOfParents": "#xadd(#valueof($.AgeOfMother),#valueof($.AgeOfFather))"
+}
