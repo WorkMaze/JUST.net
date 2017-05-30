@@ -439,7 +439,8 @@ namespace JUST.NET.Test
             else
                 return "winter";
         }
-    }
+
+}
 }``
 
 Output:-
@@ -489,3 +490,34 @@ Output:-
      "Ethnicity":"Norwegian"
     }
 }``
+
+## Multiple argument & constant functions
+
+The transformation in the above scenario looks quite complex. And it could get quite messy when the string becomes longer. Also, since comma(,) is a reserved keyword, it is not possible to concatenate a comma to a string.
+
+Hence, the following 3 functions have been introduced:-
+
+1. xconcat(string1,string2......stringx) - Concatenates multiple strings.
+2. xadd(int1,int2......intx) - Adds multiples integers.
+3. constant_comma() - Returns comma(,)
+
+Consider the following input:-
+
+``{
+  "Name": "Kari",
+  "Surname": "Nordmann",
+  "MiddleName": "Inger",
+  "ContactInformation": "Karl johans gate:Oslo:88880000" ,
+  "PersonalInformation": "45:Married:Norwegian"
+}``
+
+Transformer:-
+
+``{
+  "FullName": "#xconcat(#valueof($.Name),#constant_comma(),#valueof($.MiddleName),#constant_comma(),#valueof($.Surname))",
+  "AgeOfParents": "#xadd(#valueof($.AgeOfMother),#valueof($.AgeOfFather))"
+}``
+
+
+Output:-
+``{"FullName":"Kari,Inger,Nordmann","AgeOfParents":"67"}``
