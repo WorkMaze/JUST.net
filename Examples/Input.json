@@ -60,7 +60,9 @@
       "bird": "crow"
     }
   },
-  "Name": "Ivan",
-  "Surname": "Ivanov",
-  "Patronomic": "Ivanovich"
+  "Name": "Kari",
+  "Surname": "Nordmann",
+  "MiddleName": "Inger",
+  "ContactInformation": "Karl johans gate:Oslo:88880000",
+  "PersonalInformation": "45:Married:Norwegian"
 }

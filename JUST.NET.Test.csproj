@@ -60,6 +60,9 @@
     <None Include="Examples\Input.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Include="Examples\Transformer_nestedfunctions.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Include="Examples\Transformer_aggregate.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
