@@ -444,3 +444,48 @@ namespace JUST.NET.Test
 
 Output:-
 ``{"Season":"summer"}``
+
+## Complex nested functions
+
+You can easily nest functions to do complex transformations. An example of such a transformation would be:-
+
+Consider the following input:-
+
+``{
+  "Name": "Kari",
+  "Surname": "Nordmann",
+  "MiddleName": "Inger",
+  "ContactInformation": "Karl johans gate:Oslo:88880000" ,
+  "PersonalInformation": "45:Married:Norwegian"
+}``
+
+Transformer:-
+
+``{
+  "FullName": "#concat(#concat(#concat(#valueof($.Name), ),#concat(#valueof($.MiddleName), )),#valueof($.Surname))",
+  "Contact Information": {
+    "Street Name": "#substring(#valueof($.ContactInformation),0,#firstindexof(#valueof($.ContactInformation),:))",
+    "City": "#substring(#valueof($.ContactInformation),#add(#firstindexof(#valueof($.ContactInformation),:),1),#subtract(#subtract(#lastindexof(#valueof($.ContactInformation),:),#firstindexof(#valueof($.ContactInformation),:)),1))",
+    "PhoneNumber": "#substring(#valueof($.ContactInformation),#add(#lastindexof(#valueof($.ContactInformation),:),1),#subtract(#lastindexof(#valueof($.ContactInformation),),#lastindexof(#valueof($.ContactInformation),:)))"
+  },
+  "Personal Information": {
+    "Age": "#substring(#valueof($.PersonalInformation),0,#firstindexof(#valueof($.PersonalInformation),:))",
+    "Civil Status": "#substring(#valueof($.PersonalInformation),#add(#firstindexof(#valueof($.PersonalInformation),:),1),#subtract(#subtract(#lastindexof(#valueof($.PersonalInformation),:),#firstindexof(#valueof($.PersonalInformation),:)),1))",
+    "Ethnicity": "#substring(#valueof($.PersonalInformation),#add(#lastindexof(#valueof($.PersonalInformation),:),1),#subtract(#lastindexof(#valueof($.PersonalInformation),),#lastindexof(#valueof($.PersonalInformation),:)))"
+  }``
+
+
+Output:-
+``{
+   "FullName":"Kari Inger Nordmann",
+   "Contact Information":{
+     "Street Name":"Karl johans gate",
+     "City":"Oslo",
+     "PhoneNumber":"88880000"
+    },
+   "Personal Information":{
+     "Age":"45",
+     "Civil Status":"Married",
+     "Ethnicity":"Norwegian"
+    }
+}``
