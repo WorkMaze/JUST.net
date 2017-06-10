@@ -521,3 +521,61 @@ Transformer:-
 
 Output:-
 ``{"FullName":"Kari,Inger,Nordmann","AgeOfParents":"67"}``
+
+## Schema Validation against multiple schemas using prefixes
+
+A new feature to validate a JSON against multiple schemas has been introduced in the new Nuget 2.0.0. This is to enable namespace based validation using prefixes like in XSD.
+
+Below is a sample code which you need to write to validate a JSON against 2 schemas using prefixes:-
+
+``string inputJson = File.ReadAllText("Examples/ValidationInput.json");//read input from JSON file.``
+``string schemaJsonX = File.ReadAllText("Examples/SchemaX.json");//read first schema from JSON file.``
+``string schemaJsonY = File.ReadAllText("Examples/SchemaY.json");//read second input from JSON file.``
+``JsonValidator validator = new JsonValidator(inputJson);//create instance of JsonValidator using the input``
+``validator.AddSchema("x", schemaJsonX);//Add first schema with prefix 'x'``
+``validator.AddSchema("y", schemaJsonY);//Add second schema with prefix 'y'``
+``validator.Validate();//Validate``
+
+In the above case if the validation is un-successful an exception will be thrown with the validation errors.
+
+Consider the validation input:-
+
+``{
+  "x.tree": { "x.branch": { "x.leaf": "1" } },
+  "x.child": 1,
+  "y.animal": 1
+}``
+
+
+Schema X JSON:-
+
+``{
+  "properties": {
+    "tree": {
+      "type": "object",
+      "properties": {
+        "branch": {
+          "type": "object",
+          "properties": {
+            "leaf": { "type": "string" }
+          }
+        }
+      }
+    },
+    "child": { "type": "string" }
+  }
+}``
+
+Schema Y JSON:-
+
+``{
+  "properties": {
+    "animal": { "type": "string" }
+  }
+}
+``
+
+The exception message thrown in the above case would be:-
+
+``Unhandled Exception: System.Exception: Invalid type. Expected String but got Integer. Path '['x.child']', line 3, position 14. AND Invalid type. Expected String but got Integer. Path '['y.animal']', line 4, position 15.``
+
