@@ -529,11 +529,17 @@ A new feature to validate a JSON against multiple schemas has been introduced in
 Below is a sample code which you need to write to validate a JSON against 2 schemas using prefixes:-
 
 ``string inputJson = File.ReadAllText("Examples/ValidationInput.json");//read input from JSON file.``
+
 ``string schemaJsonX = File.ReadAllText("Examples/SchemaX.json");//read first schema from JSON file.``
+
 ``string schemaJsonY = File.ReadAllText("Examples/SchemaY.json");//read second input from JSON file.``
+
 ``JsonValidator validator = new JsonValidator(inputJson);//create instance of JsonValidator using the input``
+
 ``validator.AddSchema("x", schemaJsonX);//Add first schema with prefix 'x'``
+
 ``validator.AddSchema("y", schemaJsonY);//Add second schema with prefix 'y'``
+
 ``validator.Validate();//Validate``
 
 In the above case if the validation is un-successful an exception will be thrown with the validation errors.
