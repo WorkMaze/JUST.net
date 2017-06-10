@@ -1,0 +1,5 @@
+﻿{
+  "properties": {
+    "animal": { "type": "string" }
+  }
+}

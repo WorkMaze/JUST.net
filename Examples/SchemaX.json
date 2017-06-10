@@ -1,0 +1,16 @@
+﻿{
+  "properties": {
+    "tree": {
+      "type": "object",
+      "properties": {
+        "branch": {
+          "type": "object",
+          "properties": {
+            "leaf": { "type": "string" }
+          }
+        }
+      }
+    },
+    "child": { "type": "string" }
+  }
+}

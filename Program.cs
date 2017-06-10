@@ -92,6 +92,18 @@ namespace JUST.NET.Test
             Console.WriteLine("################################################################################################");
             Console.WriteLine(transformedString);
 
+
+            Console.WriteLine("################################################################################################");
+            string inputJson = File.ReadAllText("Examples/ValidationInput.json");
+            string schemaJsonX = File.ReadAllText("Examples/SchemaX.json");
+            string schemaJsonY = File.ReadAllText("Examples/SchemaY.json");
+
+            JsonValidator validator = new JsonValidator(inputJson);
+            validator.AddSchema("x", schemaJsonX);
+            validator.AddSchema("y", schemaJsonY);
+
+            validator.Validate();
+
         }
     }
 }
