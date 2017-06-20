@@ -472,7 +472,8 @@ Transformer:-
   "Personal Information": {
     "Age": "#substring(#valueof($.PersonalInformation),0,#firstindexof(#valueof($.PersonalInformation),:))",
     "Civil Status": "#substring(#valueof($.PersonalInformation),#add(#firstindexof(#valueof($.PersonalInformation),:),1),#subtract(#subtract(#lastindexof(#valueof($.PersonalInformation),:),#firstindexof(#valueof($.PersonalInformation),:)),1))",
-    "Ethnicity": "#substring(#valueof($.PersonalInformation),#add(#lastindexof(#valueof($.PersonalInformation),:),1),#subtract(#lastindexof(#valueof($.PersonalInformation),),#lastindexof(#valueof($.PersonalInformation),:)))"
+
+"Ethnicity": "#substring(#valueof($.PersonalInformation),#add(#lastindexof(#valueof($.PersonalInformation),:),1),#subtract(#lastindexof(#valueof($.PersonalInformation),),#lastindexof(#valueof($.PersonalInformation),:)))"
   }``
 
 
@@ -500,6 +501,7 @@ Hence, the following 3 functions have been introduced:-
 1. xconcat(string1,string2......stringx) - Concatenates multiple strings.
 2. xadd(int1,int2......intx) - Adds multiples integers.
 3. constant_comma() - Returns comma(,)
+4. constant_hash() - Returns hash(#)
 
 Consider the following input:-
 
@@ -522,9 +524,44 @@ Transformer:-
 Output:-
 ``{"FullName":"Kari,Inger,Nordmann","AgeOfParents":"67"}``
 
+## Check for existance 
+
+The following two functions have been added to check for existance:-
+
+1. exists(path)
+2. existsandnotempty(path)
+
+Consider the following input:-
+
+``{
+   "BuyDate": "2017-04-10T11:36:39+03:00",
+   "ExpireDate": ""
+}``
+
+Transformer:-
+
+``{
+  "BuyDateString": "#ifcondition(#exists($.BuyDate),true,#concat(Buy Date : ,#valueof($.BuyDate)),NotExists)",
+  "BuyDateString2": "#ifcondition(#existsandnotempty($.BuyDate),true,#concat(Buy Date : ,#valueof($.BuyDate)),EmptyOrNotExists)",
+  "ExpireDateString": "#ifcondition(#exists($.ExpireDate),true,#concat(Expire Date : ,#valueof($.ExpireDate)),NotExists)",
+  "ExpireDateString2": "#ifcondition(#existsandnotempty($.ExpireDate),true,#concat(Expire Date : ,#valueof($.ExpireDate)),EmptyOrNotExists)",
+  "SellDateString": "#ifcondition(#exists($.SellDate),true,#concat(Sell Date : ,#valueof($.SellDate)),NotExists)",
+  "SellDateString2": "#ifcondition(#existsandnotempty($.SellDate),true,#concat(Sell Date : ,#valueof($.SellDate)),EmptyOrNotExists)"
+}``
+
+Output:-
+``{"BuyDateString":"Buy Date : 2017-04-10T11:36:39+03:00",
+   "BuyDateString2":"Buy Date : 2017-04-10T11:36:39+03:00",
+   "ExpireDateString":"Expire Date : ",
+   "ExpireDateString2":"EmptyOrNotExists",
+   "SellDateString":"NotExists",
+   "SellDateString2":"EmptyOrNotExists"
+}``
+
+
 ## Schema Validation against multiple schemas using prefixes
 
-A new feature to validate a JSON against multiple schemas has been introduced in the new Nuget 2.0.0. This is to enable namespace based validation using prefixes like in XSD.
+A new feature to validate a JSON against multiple schemas has been introduced in the new Nuget 2.0.xxx. This is to enable namespace based validation using prefixes like in XSD.
 
 Below is a sample code which you need to write to validate a JSON against 2 schemas using prefixes:-
 
