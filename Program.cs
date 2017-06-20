@@ -87,6 +87,11 @@ namespace JUST.NET.Test
             Console.WriteLine("################################################################################################");
             Console.WriteLine(transformedString);
 
+            transformer = File.ReadAllText("Examples/Transformer_Existance.json");
+            transformedString = JsonTransformer.Transform(transformer, input);
+            Console.WriteLine("################################################################################################");
+            Console.WriteLine(transformedString);
+
             transformer = File.ReadAllText("Examples/Transformer.json");
             transformedString = JsonTransformer.Transform(transformer, input);
             Console.WriteLine("################################################################################################");
