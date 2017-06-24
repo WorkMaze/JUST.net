@@ -390,8 +390,7 @@ Output:-
    {"CurrentValue":"UK","CurrentIndex":"1","IsLast":"no","LastValue":"swedish"},
    {"CurrentValue":"Sweden","CurrentIndex":"2","IsLast":"yes","LastValue":"swedish"}
   ],
-"othervalue":"othervalue"
-}``
+"othervalue":"othervalue"}``
 
 ## Calling Custom functions
 
@@ -423,25 +422,13 @@ Transformer:-
 
 Custom function:-
 
-``using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-namespace JUST.NET.Test
-{
-    public class Season
-    {
-        public static string findseason(string leafColour, string flowerColour)
+`public static string findseason(string leafColour, string flowerColour)
         {
             if (leafColour == "green" && flowerColour == "red")
                 return "summer";
             else
                 return "winter";
-        }
-
-}
-}``
+        }`
 
 Output:-
 ``{"Season":"summer"}``
@@ -472,7 +459,6 @@ Transformer:-
   "Personal Information": {
     "Age": "#substring(#valueof($.PersonalInformation),0,#firstindexof(#valueof($.PersonalInformation),:))",
     "Civil Status": "#substring(#valueof($.PersonalInformation),#add(#firstindexof(#valueof($.PersonalInformation),:),1),#subtract(#subtract(#lastindexof(#valueof($.PersonalInformation),:),#firstindexof(#valueof($.PersonalInformation),:)),1))",
-
 "Ethnicity": "#substring(#valueof($.PersonalInformation),#add(#lastindexof(#valueof($.PersonalInformation),:),1),#subtract(#lastindexof(#valueof($.PersonalInformation),),#lastindexof(#valueof($.PersonalInformation),:)))"
   }``
 
