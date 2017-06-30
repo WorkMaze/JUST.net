@@ -1,5 +1,5 @@
 ﻿{
   "x.tree": { "x.branch": { "x.leaf": "1" } },
-  "x.child": 1,
-  "y.animal": 1
+  "x.child": "1",
+  "y.animal": "1"
 }
