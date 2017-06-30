@@ -16,6 +16,9 @@ This C# project has working examples of the transformations.
 Pull the latest JUST.NET from https://www.nuget.org
 ``Install-Package JUST``
 
+A dotnetcore version is also available 
+``Install-Package JUST.NETCore``
+
 
 # Write a simple C# code snippet to transform your JSON
 
