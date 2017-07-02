@@ -1,0 +1,53 @@
+﻿<?xml version="1.0" encoding="UTF-8" ?>
+<root>
+  <root>
+    <ifconditiontesttrue>#ifcondition(#valueof($.menu.id.file),csv,#valueof($.menu.value.Window),fail)</ifconditiontesttrue>
+    <ifconditiontestfalse>#ifcondition(#valueof($.menu.id.file),xml,#valueof($.menu.value.Window),fail)</ifconditiontestfalse>
+    <stringresult>
+      <lastindexofand>#lastindexof(#valueof($.stringref),and)</lastindexofand>
+      <firstindexofand>#firstindexof(#valueof($.stringref),and)</firstindexofand>
+      <subsrting>#substring(#valueof($.stringref),8,10)</subsrting>
+      <concat>#concat(#valueof($.menu.id.file),#valueof($.menu.value.Window))</concat>
+    </stringresult>
+    <mathresult>
+      <add>#add(#valueof($.numbers[0]),3)</add>
+      <subtract>#subtract(#valueof($.numbers[4]),#valueof($.numbers[0]))</subtract>
+      <multiply>#multiply(2,#valueof($.numbers[2]))</multiply>
+      <divide>#divide(9,3)</divide>
+    </mathresult>
+    <conacted>#concatall(#valueof($.d))</conacted>
+    <sum>#sum(#valueof($.numbers))</sum>
+    <avg>#average(#valueof($.numbers))</avg>
+    <min>#min(#valueof($.numbers))</min>
+    <max>#max(#valueof($.numbers))</max>
+    <arrayconacted>#concatallatpath(#valueof($.x),$.v.a)</arrayconacted>
+    <arraysum>#sumatpath(#valueof($.x),$.v.c)</arraysum>
+    <arrayavg>#averageatpath(#valueof($.x),$.v.c)</arrayavg>
+    <arraymin>#minatpath(#valueof($.x),$.v.b)</arraymin>
+    <arraymax>#maxatpath(#valueof($.x),$.v.b)</arraymax>
+  </root>
+  <FullName>#concat(#concat(#concat(#valueof($.Name), ),#concat(#valueof($.MiddleName), )),#valueof($.Surname))</FullName>
+  <Contact_Information>
+    <City>#substring(#valueof($.ContactInformation),#add(#firstindexof(#valueof($.ContactInformation),:),1),#subtract(#subtract(#lastindexof(#valueof($.ContactInformation),:),#firstindexof(#valueof($.ContactInformation),:)),1))</City>
+    <PhoneNumber>#substring(#valueof($.ContactInformation),#add(#lastindexof(#valueof($.ContactInformation),:),1),#subtract(#lastindexof(#valueof($.ContactInformation),),#lastindexof(#valueof($.ContactInformation),:)))</PhoneNumber>
+    <Street_Name>#substring(#valueof($.ContactInformation),0,#firstindexof(#valueof($.ContactInformation),:))</Street_Name>
+  </Contact_Information>
+  <Personal_Information>
+    <Age>#substring(#valueof($.PersonalInformation),0,#firstindexof(#valueof($.PersonalInformation),:))</Age>
+    <Ethnicity>#substring(#valueof($.PersonalInformation),#add(#lastindexof(#valueof($.PersonalInformation),:),1),#subtract(#lastindexof(#valueof($.PersonalInformation),),#lastindexof(#valueof($.PersonalInformation),:)))</Ethnicity>
+    <LogId>#valueof($.LogId)</LogId>
+    <Civil_Status>#substring(#valueof($.PersonalInformation),#add(#firstindexof(#valueof($.PersonalInformation),:),1),#subtract(#subtract(#lastindexof(#valueof($.PersonalInformation),:),#firstindexof(#valueof($.PersonalInformation),:)),1))</Civil_Status>
+  </Personal_Information>
+  <Custom>#customfunction(JUST.NET.Test,JUST.NET.Test.Season.findseason,#valueof($.tree.branch.leaf),#valueof($.tree.branch.flower))</Custom>
+  <iteration>
+    "#loop($.numbers,<!--Record ends here-->)": {
+    <Record>
+      <CurrentValue>#currentvalue()</CurrentValue>
+      <CurrentIndex>#currentindex()</CurrentIndex>
+      <IsLast>#ifcondition(#currentindex(),#lastindex(),yes,no)</IsLast>
+      <LastValue>#lastvalue()</LastValue> 
+      <SomeValue>#valueof($.LogId)</SomeValue>
+    </Record>}
+  </iteration>
+  
+</root>

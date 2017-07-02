@@ -97,6 +97,16 @@ namespace JUST.NET.Test
             Console.WriteLine("################################################################################################");
             Console.WriteLine(transformedString);
 
+            transformer = File.ReadAllText("Examples/DataTransformer.xml");
+            transformedString = DataTransformer.Transform(transformer, input);
+            Console.WriteLine("################################################################################################");
+            Console.WriteLine(transformedString);
+
+            transformer = File.ReadAllText("Examples/DataTransformer.csv");
+            transformedString = DataTransformer.Transform(transformer, input);
+            Console.WriteLine("################################################################################################");
+            Console.WriteLine(transformedString);
+
 
             Console.WriteLine("################################################################################################");
             string inputJson = File.ReadAllText("Examples/ValidationInput.json");
