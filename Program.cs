@@ -5,6 +5,8 @@ using System.Text;
 using System.Threading.Tasks;
 using JUST;
 using System.IO;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace JUST.NET.Test
 {
@@ -107,6 +109,10 @@ namespace JUST.NET.Test
             Console.WriteLine("################################################################################################");
             Console.WriteLine(transformedString);
 
+            transformer = File.ReadAllText("Examples/Transformer.json");
+            transformedString = JsonConvert.SerializeObject
+                (JsonTransformer.Transform(JObject.Parse(transformer), JObject.Parse(input)));
+            Console.WriteLine(transformedString);
 
             Console.WriteLine("################################################################################################");
             string inputJson = File.ReadAllText("Examples/ValidationInput.json");
