@@ -578,7 +578,6 @@ Consider the validation input:-
   "y.animal": 1
 }``
 
-
 Schema X JSON:-
 
 ``{
@@ -593,7 +592,8 @@ Schema X JSON:-
           }
         }
       }
-    },
+
+},
     "child": { "type": "string" }
   }
 }``
@@ -610,6 +610,58 @@ Schema Y JSON:-
 The exception message thrown in the above case would be:-
 
 ``Unhandled Exception: System.Exception: Invalid type. Expected String but got Integer. Path '['x.child']', line 3, position 14. AND Invalid type. Expected String but got Integer. Path '['y.animal']', line 4, position 15.``
+
+## Splitting JSON into multiple JSON(s) based upon an array token
+
+A JSON file containing an array can now be split into multiple JSON files, each representing a file for every array element.
+
+Two new functions have been added for this purpose:-
+
+`public static IEnumerable<string> SplitJson(string input,string arrayPath)`
+
+`public static IEnumerable<JObject> SplitJson(JObject input, string arrayPath)`
+
+Consider the input:-
+``{
+  "cars": {
+    "Ford": [
+      {
+        "model": "Taurus",
+        "doors": 4
+      },
+      {
+        "model": "Escort",
+        "doors": 4
+      },
+      {
+        "model": "Fiesta",
+        "doors": 3
+      },
+      {
+        "model": "Bronco",
+        "doors": 5
+      }
+    ],
+    "firstName": "John",
+    "lastName": "Smith",
+  }
+}``
+
+Below is a sample code which splits the above input:-
+
+``string input = File.ReadAllText("Input.json");``
+
+``List<string> outputs = JsonTransformer.SplitJson(input, "$.cars.Ford").ToList<string>();``
+
+The output will contain 4 JSON files:-
+
+``{"cars":{"Ford":{"model":"Taurus","doors":4},"firstName":"John","lastName":"Smith"}}``
+
+``{"cars":{"Ford":{"model":"Escort","doors":4},"firstName":"John","lastName":"Smith"}}``
+
+``{"cars":{"Ford":{"model":"Fiesta","doors":3},"firstName":"John","lastName":"Smith"}}``
+
+``{"cars":{"Ford":{"model":"Bronco","doors":5},"firstName":"John","lastName":"Smith"}}``
 
 ## Transforming JSON to other data formats
 
@@ -840,7 +892,7 @@ Output:-
 
 ### Example for JSON to CSV
 
-Sample code to transform from JSON to XML:-
+Sample code to transform from JSON to CSV:-
 ``string transformer = File.ReadAllText("Input.json");``
 ``string transformer = File.ReadAllText("DataTransformer.csv");``
 ``string transformedString = DataTransformer.Transform(transformer, input);``
