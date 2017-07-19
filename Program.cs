@@ -119,11 +119,25 @@ namespace JUST.NET.Test
             string schemaJsonX = File.ReadAllText("Examples/SchemaX.json");
             string schemaJsonY = File.ReadAllText("Examples/SchemaY.json");
 
+            string InputToSplit = File.ReadAllText("Examples/InputToSplit.json");
+
+            List<string> outputs = JsonTransformer.SplitJson(InputToSplit, "$.cars.Ford").ToList<string>();
+
+            foreach (string output in outputs)
+            {
+                Console.WriteLine("-----------------------------------------------------");
+                Console.WriteLine(output);
+            }
+
+            Console.WriteLine("################################################################################################");
+
             JsonValidator validator = new JsonValidator(inputJson);
             validator.AddSchema("x", schemaJsonX);
             validator.AddSchema("y", schemaJsonY);
 
             validator.Validate();
+
+
 
         }
     }
