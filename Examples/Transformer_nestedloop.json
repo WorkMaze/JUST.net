@@ -1,0 +1,12 @@
+﻿{
+  "hello": {
+    "#loop($.NestedLoop.Organization.Employee)": {
+      "CurrentName": "#currentvalueatpath($.Name)",
+      "Details": {
+        "#loop($.Details)": {
+          "CurrentCountry": "#currentvalueatpath($.Country)"
+        }
+      }
+    }
+  }
+}

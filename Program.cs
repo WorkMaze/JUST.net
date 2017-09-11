@@ -114,6 +114,8 @@ namespace JUST.NET.Test
                 (JsonTransformer.Transform(JObject.Parse(transformer), JObject.Parse(input)));
             Console.WriteLine(transformedString);
 
+           
+
             Console.WriteLine("################################################################################################");
             string inputJson = File.ReadAllText("Examples/ValidationInput.json");
             string schemaJsonX = File.ReadAllText("Examples/SchemaX.json");
@@ -137,7 +139,11 @@ namespace JUST.NET.Test
 
             validator.Validate();
 
-
+            Console.WriteLine("################################################################################################");
+            transformer = File.ReadAllText("Examples/Transformer_nestedloop.json");
+            transformedString = JsonConvert.SerializeObject
+                (JsonTransformer.Transform(JObject.Parse(transformer), JObject.Parse(input)));
+            Console.WriteLine(transformedString);
 
         }
     }

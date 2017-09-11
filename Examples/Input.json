@@ -69,5 +69,33 @@
   "AgeOfFather": "70",
   "BuyDate": "2017-04-10T11:36:39+03:00",
   "ExpireDate": "",
-  "LogId": 5000510625
+  "LogId": 5000510625,
+  "NestedLoop":{
+    "Organization": {
+      "Employee": [
+        {
+          "Name": "E2",
+          "Details": [
+            {
+              "Country": "Iceland",
+              "Age": "30",
+              "Name": "Sven",
+              "Language": "Icelandic"
+            }
+          ]
+        },
+        {
+          "Name": "E1",
+          "Details": [
+            {
+              "Country": "Denmark",
+              "Age": "30",
+              "Name": "Svein",
+              "Language": "Danish"
+            }
+          ]
+        }
+      ]
+    }
+  }
 }
