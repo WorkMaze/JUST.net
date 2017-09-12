@@ -3,7 +3,7 @@
     "#loop($.NestedLoop.Organization.Employee)": {
       "CurrentName": "#currentvalueatpath($.Name)",
       "Details": {
-        "#loop($.Details)": {
+        "#loopwithincontext($.Details)": {
           "CurrentCountry": "#currentvalueatpath($.Country)"
         }
       }
