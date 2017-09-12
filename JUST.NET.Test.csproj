@@ -34,7 +34,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="JUST.NET, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>packages\JUST.4.0.8\lib\net452\JUST.NET.dll</HintPath>
+      <HintPath>packages\JUST.4.0.9\lib\net452\JUST.NET.dll</HintPath>
     </Reference>
     <Reference Include="Newtonsoft.Json, Version=10.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>packages\Newtonsoft.Json.10.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
