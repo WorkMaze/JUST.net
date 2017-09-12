@@ -395,6 +395,65 @@ Output:-
   ],
 "othervalue":"othervalue"}``
 
+
+## Nested array looping (looping within context)
+A new function `loopwithincontext` has been introduced to be able to loop withing the context of an outer loop.
+Cosider the input:-
+``{
+  "NestedLoop": {
+    "Organization": {
+      "Employee": [
+        {
+          "Name": "E2",
+          "Details": [
+            {
+              "Country": "Iceland",
+              "Age": "30",
+              "Name": "Sven",
+              "Language": "Icelandic"
+            }
+          ]
+        },
+        {
+          "Name": "E1",
+          "Details": [
+            {
+              "Country": "Denmark",
+              "Age": "30",
+              "Name": "Svein",
+              "Language": "Danish"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}``
+Transformer:-
+
+``{
+  "hello": {
+    "#loop($.NestedLoop.Organization.Employee)": {
+      "CurrentName": "#currentvalueatpath($.Name)",
+      "Details": {
+        "#loopwithincontext($.Details)": {
+          "CurrentCountry": "#currentvalueatpath($.Country)"
+        }
+      }
+    }
+  }
+}``
+
+Output:-
+
+``{
+  "hello":
+    [
+      {"CurrentName":"E2","Details":[{"CurrentCountry":"Iceland"}]},
+      {"CurrentName":"E1","Details":[{"CurrentCountry":"Denmark"}]}
+    ]
+}``
+
 ## Calling Custom functions
 
 You can make your own custom functions in C# and call them from your transformer JSON.
