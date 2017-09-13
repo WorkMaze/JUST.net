@@ -70,7 +70,7 @@
   "BuyDate": "2017-04-10T11:36:39+03:00",
   "ExpireDate": "",
   "LogId": 5000510625,
-  "NestedLoop":{
+  "NestedLoop": {
     "Organization": {
       "Employee": [
         {
@@ -97,5 +97,38 @@
         }
       ]
     }
-  }
+  },
+  "people": [
+    {
+      "name": "Jim",
+      "phoneNumbers": [
+        {
+          "type": "iPhone",
+          "number": "0123-4567-8888",
+          "countryPrefix": "34"
+        },
+        {
+          "type": "work",
+          "number": "012567-8910"
+        }
+      ]
+    },
+    {
+      "name": "John",
+      "phoneNumbers": [
+        {
+          "type": "iPhone",
+          "number": "0123-4562347-8888",
+          "countryPrefix": "43"
+        },
+        {
+          "type": "home",
+          "number": "0134523-4567-8910"
+        }
+      ]
+    },
+    {
+      "name": "John"
+    }
+  ]
 }

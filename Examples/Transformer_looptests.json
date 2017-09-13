@@ -1,0 +1,22 @@
+﻿{
+  "iPhoneNumbers1": {
+    "#loop($.people[*].phoneNumbers[?(@.type=='iPhone')])": {
+      "phoneNumber": "#concat(#currentvalueatpath($.countryPrefix), #currentvalueatpath($.number))"
+    }
+  },
+  "iPhoneNumbers2": {
+    "#loop($.people[?(@.name=='Jim' || @.name=='John')].phoneNumbers[?(@.type=='iPhone')])": {
+      "phoneNumber": "#concat(#currentvalueatpath($.countryPrefix), #currentvalueatpath($.number))"
+    }
+  },
+  "iPhoneNumbers3": {
+    "#loop($.people[?(@.name=='Jim1' || @.name=='John')].phoneNumbers[?(@.type=='iPhone')])": {
+      "phoneNumber": "#concat(#currentvalueatpath($.countryPrefix), #currentvalueatpath($.number))"
+    }
+  },
+  "iPhoneNumbers4": {
+    "#loop($.people[?(@.name=='Jim1' || @.name=='John1')].phoneNumbers[?(@.type=='iPhone')])": {
+      "phoneNumber": "#concat(#currentvalueatpath($.countryPrefix), #currentvalueatpath($.number))"
+    }
+  }
+}
