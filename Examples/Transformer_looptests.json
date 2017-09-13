@@ -18,5 +18,10 @@
     "#loop($.people[?(@.name=='Jim1' || @.name=='John1')].phoneNumbers[?(@.type=='iPhone')])": {
       "phoneNumber": "#concat(#currentvalueatpath($.countryPrefix), #currentvalueatpath($.number))"
     }
+  },
+  "iPhoneNumbers5": {
+    "#loop($.people[*].phoneNumbers[?(@.type== '#valueof($.PhoneTypeToSearch)')])": {
+      "phoneNumber": "#concat(#currentvalueatpath($.countryPrefix), #currentvalueatpath($.number))"
+    }
   }
 }

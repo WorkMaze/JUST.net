@@ -130,5 +130,6 @@
     {
       "name": "John"
     }
-  ]
+  ],
+  "PhoneTypeToSearch": "iPhone"
 }
