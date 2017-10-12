@@ -151,6 +151,14 @@ namespace JUST.NET.Test
                 (JsonTransformer.Transform(JObject.Parse(transformer), JObject.Parse(input)));
             Console.WriteLine(transformedString);
 
+            Console.WriteLine("################################################################################################");
+
+            string inputSpecial = File.ReadAllText("Examples/InputSpecial.json");
+            transformer = File.ReadAllText("Examples/Transformer_customfunctionspecial.json");
+            transformedString = JsonConvert.SerializeObject
+                (JsonTransformer.Transform(JObject.Parse(transformer), JObject.Parse(inputSpecial)));
+            Console.WriteLine(transformedString);
+
         }
     }
 }
