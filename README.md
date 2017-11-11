@@ -395,7 +395,6 @@ Output:-
   ],
 "othervalue":"othervalue"}``
 
-
 ## Nested array looping (looping within context)
 A new function `loopwithincontext` has been introduced to be able to loop withing the context of an outer loop.
 Cosider the input:-
@@ -452,6 +451,99 @@ Output:-
       {"CurrentName":"E2","Details":[{"CurrentCountry":"Iceland"}]},
       {"CurrentName":"E1","Details":[{"CurrentCountry":"Denmark"}]}
     ]
+}``
+
+## Array grouping
+
+A function similar to SQL GROUP BY clause has been introduced to group an array based on the value of an element.
+
+grouparrayby(path,groupingElementName,groupedElementName)
+
+``{
+  "Forest": [
+    {
+      "type": "Mammal",
+      "qty": 1,
+      "name": "Hippo"
+    },
+    {
+      "type": "Bird",
+      "qty": 2,
+      "name": "Sparrow"
+    },
+    {
+      "type": "Amphibian",
+      "qty": 300,
+      "name": "Lizard"
+    },
+    {
+      "type": "Bird",
+      "qty": 3,
+      "name": "Parrot"
+    },
+    {
+      "type": "Mammal",
+      "qty": 1,
+      "name": "Elephant"
+    },
+    {
+      "type": "Mammal",
+      "qty": 10,
+      "name": "Dog"
+    }    
+  ]
+}``
+
+Transformer:-
+
+``{
+  "Result": "#grouparrayby($.Forest,type,all)" 
+}``
+
+Output:-
+
+``{  
+   "Result":[  
+      {  
+         "type":"Mammal",
+         "all":[  
+            {  
+               "qty":1,
+               "name":"Hippo"
+            },
+            {  
+               "qty":1,
+               "name":"Elephant"
+            },
+            {  
+               "qty":10,
+               "name":"Dog"
+            }
+         ]
+      },
+      {  
+         "type":"Bird",
+         "all":[  
+            {  
+               "qty":2,
+               "name":"Sparrow"
+            },
+            {  
+               "qty":3,
+               "name":"Parrot"
+            }
+         ]
+      },
+      {  
+         "type":"Amphibian",
+         "all":[  
+            {  
+               "qty":300,
+               "name":"Lizard"
+            }
+         ]
+      }
+   ]
 }``
 
 ## Calling Custom functions
