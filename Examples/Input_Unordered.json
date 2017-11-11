@@ -1,0 +1,40 @@
+﻿{
+  "Forest": [
+    {
+      "type": "Mammal",
+      "qty": 1,
+      "name": "Hippo"
+    },
+
+    {
+      "type": "Bird",
+      "qty": 2,
+      "name": "Sparrow"
+    },
+
+    {
+      "type": "Amphibian",
+      "qty": 300,
+      "name": "Lizard"
+    },
+
+    {
+      "type": "Bird",
+      "qty": 3,
+      "name": "Parrot"
+    },
+
+    {
+      "type": "Mammal",
+      "qty": 1,
+      "name": "Elephant"
+    },
+    {
+      "type": "Mammal",
+      "qty": 10,
+      "name": "Dog"
+    }
+
+
+  ]
+}
