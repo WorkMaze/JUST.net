@@ -1,0 +1,5 @@
+﻿{
+  "Result": "#grouparrayby($.Vehicle,type:company,all)"
+
+
+}
