@@ -459,6 +459,8 @@ A function similar to SQL GROUP BY clause has been introduced to group an array 
 
 grouparrayby(path,groupingElementName,groupedElementName)
 
+Input:-
+
 ``{
   "Forest": [
     {
@@ -540,6 +542,100 @@ Output:-
             {  
                "qty":300,
                "name":"Lizard"
+            }
+         ]
+      }
+   ]
+}``
+
+You can group using multiple "grouping elements". They should be seperated by a semicolon (:)
+
+Input:-
+
+``{
+  "Vehicle": [
+    {
+      "type": "air",
+      "company": "Boeing",
+      "name": "airplane"
+    },
+    {
+      "type": "air",
+      "company": "Concorde",
+      "name": "airplane"
+    },
+    {
+      "type": "air",
+      "company": "Boeing",
+      "name": "Chopper"
+    },
+    {
+      "type": "land",
+      "company": "GM",
+      "name": "car"
+    },
+    {
+      "type": "sea",
+      "company": "Viking",
+      "name": "ship"
+    },
+    {
+      "type": "land",
+      "company": "GM",
+      "name": "truck"
+    }
+  ]  
+}``
+
+Transformer:-
+
+``{
+  "Result": "#grouparrayby($.Vehicle,type:company,all)"
+}``
+
+Output:-
+
+``{  
+   "Result":[  
+      {  
+         "type":"air",
+         "company":"Boeing",
+         "all":[  
+            {  
+               "name":"airplane"
+            },
+            {  
+               "name":"Chopper"
+            }
+         ]
+      },
+      {  
+         "type":"air",
+         "company":"Concorde",
+         "all":[  
+            {  
+               "name":"airplane"
+            }
+         ]
+      },
+      {  
+         "type":"land",
+         "company":"GM",
+         "all":[  
+            {  
+               "name":"car"
+            },
+            {  
+               "name":"truck"
+            }
+         ]
+      },
+      {  
+         "type":"sea",
+         "company":"Viking",
+         "all":[  
+            {  
+               "name":"ship"
             }
          ]
       }
