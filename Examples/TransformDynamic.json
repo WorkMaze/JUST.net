@@ -1,7 +1,7 @@
 ﻿{
   "Result": {
     "Header": "JsonTransform",
-    "#ifgroup(#exists($.Tree.Branch),true)": {
+    "#ifgroup(#exists($.Tree.Branch))": {
       "State": {
         "Value1": "#valueof($.Tree.Branch)",
         "Value2": "#valueof($.Tree.Flower)"
