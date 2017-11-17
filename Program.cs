@@ -175,6 +175,15 @@ namespace JUST.NET.Test
                 (JsonTransformer.Transform(JObject.Parse(transformer), JObject.Parse(inputUnordered2)));
             Console.WriteLine(transformedString);
 
+            Console.WriteLine("################################################################################################");
+
+
+            string inputDyn= File.ReadAllText("Examples/InputDynamic.json");
+            transformer = File.ReadAllText("Examples/TransformDynamic.json");
+            transformedString = JsonConvert.SerializeObject
+                (JsonTransformer.Transform(JObject.Parse(transformer), JObject.Parse(inputDyn)));
+            Console.WriteLine(transformedString);
+
         }
     }
 }
