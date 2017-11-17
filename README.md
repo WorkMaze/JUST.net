@@ -794,6 +794,99 @@ Output:-
    "SellDateString2":"EmptyOrNotExists"
 }``
 
+## Conditional transformation
+
+Conditional transformation can be achieved using the *ifgroup* function.
+
+The function takes an expression as argument which should evaluate to a boolean value.
+
+Consider the following input:-
+
+``{
+  "Tree": {    
+    "Branch": "leaf",
+    "Flower": "Rose"
+  }
+}``
+
+Transformer:-
+
+``{
+  "Result": {
+    "Header": "JsonTransform",
+    "#ifgroup(#exists($.Tree.Branch))": {
+      "State": {
+        "Value1": "#valueof($.Tree.Branch)",
+        "Value2": "#valueof($.Tree.Flower)"
+      }
+    }
+ }
+}``
+
+Output:-
+``{  
+   "Result":{  
+      "Header":"JsonTransform",
+      "State":{  
+         "Value1":"leaf",
+         "Value2":"Rose"
+      }
+   }
+}``
+
+Now, for the same input if we use the following transformer, we get a diferent output.
+
+Transformer:-
+
+``{
+  "Result": {
+    "Header": "JsonTransform",
+    "#ifgroup(#exists($.Tree.Root))": {
+      "State": {
+        "Value1": "#valueof($.Tree.Branch)",
+        "Value2": "#valueof($.Tree.Flower)"
+      }
+    }
+ }
+}``
+
+Output:-
+``{  
+   "Result":{  
+      "Header":"JsonTransform"
+   }
+}``
+
+
+## Dynamic Properties
+
+We can now create dynamic properties using the *eval* function. The function takes an expression as an argument.
+
+Consider the following input:-
+
+``{
+  "Tree": {    
+    "Branch": "leaf",
+    "Flower": "Rose"
+  }
+}``
+
+Transformer:-
+
+``{
+  "Result": {
+      "#eval(#valueof($.Tree.Flower))": "x"
+  }
+}``
+
+Output:-
+``{  
+   "Result":{  
+      "Rose":"x"
+   }
+}``
+ 
+
 
 ## Schema Validation against multiple schemas using prefixes
 
