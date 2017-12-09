@@ -7,6 +7,12 @@
         "Value2": "#valueof($.Tree.Flower)"
       }
     },
-    "#eval(#valueof($.Tree.Flower))": "x"
+    "#eval(#valueof($.Tree.Flower))": "x",
+    "#ifgroup(#exists($.Tree.Flower))": {
+      "Comment": {
+        "Statement": "Flower Exists"
+      }
+    }
   }
+
 }
