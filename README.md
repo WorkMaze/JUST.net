@@ -1,3 +1,5 @@
+[![Build Status](https://workmaze.visualstudio.com/_apis/public/build/definitions/82d9da6f-b38c-4d61-a668-2087094c2849/1/badge)](https://workmaze.visualstudio.com/JUST.net/_build/index?definitionId=1)
+
 # JUST
 
 JUST Stands for **JSON Under Simple Transformation**
