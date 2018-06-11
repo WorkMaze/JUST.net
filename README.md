@@ -169,6 +169,42 @@ Output:-
    }
 }``
 
+## Opearators
+
+The following operators have been added to compare strings and numbers :-
+
+1. stringequals(string1, string2)
+2. stringcontains(string1, string2)
+3. mathequals(decimal1, decimal2)
+4. mathgreaterthan(decimal1, decimal2)
+5. mathlessthan(decimal1, decimal2)
+6. mathgreaterthanorequalto(decimal1, decimal2)
+7. mathlessthanorequalto(decimal1, decimal2)
+
+Consider the input:-
+ 
+``{
+  "d": [ "one", "two", "three" ],
+  "numbers": [ "1", "2", "3", "4", "5" ]
+}``
+
+Transformer:-
+
+``{
+  "mathresult": {
+    "third_element_equals_3": "#ifcondition(#mathequals(#valueof($.numbers[2]),3),true,yes,no)",
+    "third_element_greaterthan_2": "#ifcondition(#mathgreaterthan(#valueof($.numbers[2]),2),true,yes,no)",
+    "third_element_lessthan_4": "#ifcondition(#mathlessthan(#valueof($.numbers[2]),4),true,yes,no)",
+    "third_element_greaterthanorequals_4": "#ifcondition(#mathgreaterthanorequalto(#valueof($.numbers[2]),4),true,yes,no)",
+    "third_element_lessthanoreuals_2": "#ifcondition(#mathlessthanorequalto(#valueof($.numbers[2]),2),true,yes,no)",
+    "one_stringequals": "#ifcondition(#stringequals(#valueof($.d[0]),one),true,yes,no)",
+    "one_stringcontains": "#ifcondition(#stringcontains(#valueof($.d[0]),n),true,yes,no)"
+  }
+}``
+
+Output:-
+
+``{"mathresult":   {"third_element_equals_3":"yes","third_element_greaterthan_2":"yes","third_element_lessthan_4":"yes","third_element_greaterthanorequals_4":"no","third_element_lessthanoreuals_2":"no","one_stringequals":"yes","one_stringcontains":"yes"}}
 
 ## Aggregate functions
 
