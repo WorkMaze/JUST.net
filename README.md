@@ -21,6 +21,8 @@ Pull the latest JUST.NET from https://www.nuget.org
 A dotnetcore version is also available 
 ``Install-Package JUST.NETCore``
 
+A .net standard library is now available. This is the version which will be supported from now on.
+``Install-Package JUST.NET``
 
 # Write a simple C# code snippet to transform your JSON
 
