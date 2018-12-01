@@ -81,7 +81,7 @@ Transformer:-
 Output:-
 
 ``{
-   "result":{"Open":null,"Close":"OpenDoc()"}
+   "result":{"Open": "OpenDoc()", "Close": "CloseDoc()"}
 }``
 
 
