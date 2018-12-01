@@ -3,9 +3,11 @@
   "ExternalStaticTypedParametersResult": "#ExternalMethods::ExternalMethods.ExternalClass::StaticTypedParameters(1,true,abc,2018-10-11T11:00:00.000Z)",
   "ExternalInstanceMethodResult": "#ExternalMethods::ExternalMethods.ExternalClass::InstanceMethod()",
   "ExternalInstanceTypedParametersResult": "#ExternalMethods::ExternalMethods.ExternalClass::TypedParameters(1,true,abc,2018-10-11T11:00:00.000Z)",
+  "ExternalInstanceNavigateTypedParametersResult": "#ExternalMethods::ExternalMethods.ExternalClass::NavigateTypedParameters(#valueof($.reflection))",
 
   "InternalStaticMethodResult": "#InternalMethods.InternalClass::StaticMethod()",
   "InternalStaticTypedParametersResult": "#InternalMethods.InternalClass::StaticTypedParameters(1,true,abc,2018-10-11T11:00:00.000Z)",
   "InternalInstanceMethodResult": "#InternalMethods.InternalClass::InstanceMethod()",
-  "InternalInstanceTypedParametersResult": "#InternalMethods.InternalClass::TypedParameters(1,true,abc,2018-10-11T11:00:00.000Z)"
+  "InternalInstanceTypedParametersResult": "#InternalMethods.InternalClass::TypedParameters(1,true,abc,2018-10-11T11:00:00.000Z)",
+  "InternalInstanceNavigateTypedParametersResult": "#InternalMethods.InternalClass::NavigateTypedParameters(#valueof($))"
 }

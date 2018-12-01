@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json.Linq;
+using System;
 
 namespace InternalMethods
 {
@@ -22,6 +23,11 @@ namespace InternalMethods
         public string TypedParameters(int n, bool b, string s, DateTime d)
         {
             return "Internal TypedParameters success";
+        }
+
+        public string NavigateTypedParameters(JObject token)
+        {
+            return token.ToString();
         }
     }
 }

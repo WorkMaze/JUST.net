@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json.Linq;
+using System;
 
 namespace ExternalMethods
 {
@@ -22,6 +23,11 @@ namespace ExternalMethods
         public string TypedParameters(int n, bool b, string s, DateTime d)
         {
             return "External TypedParameters success";
+        }
+
+        public string NavigateTypedParameters(bool val)
+        {
+            return val.ToString();
         }
     }
 }
