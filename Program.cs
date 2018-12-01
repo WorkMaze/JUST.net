@@ -188,7 +188,7 @@ namespace JUST.NET.Test
 
             transformer = File.ReadAllText("Examples/Transformer_externalmethods.json");
             transformedString = JsonConvert.SerializeObject
-                (JsonTransformer.Transform(JObject.Parse(transformer), JObject.Parse("{ \"reflection\": true }")));
+                (JsonTransformer.Transform(JObject.Parse(transformer), JObject.Parse(input)));
             Console.WriteLine(transformedString);
         }
     }
