@@ -62,13 +62,10 @@ namespace JUST
                 {
                     JArray arrayToken = childToken as JArray;
 
-                    List<object> itemsToAdd = null;
+                    List<object> itemsToAdd = new List<object>();
 
                     foreach (JToken arrEl in childToken.Children())
                     {
-                        if (itemsToAdd == null)
-                            itemsToAdd = new List<object>();
-
                         object itemToAdd = arrEl.Value<JToken>();
 
                         if (arrEl.Type == JTokenType.String && arrEl.ToString().Trim().StartsWith("#"))
