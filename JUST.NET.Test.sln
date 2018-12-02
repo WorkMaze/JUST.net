@@ -7,7 +7,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JUST.NET.Test", "JUST.NET.T
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JUST.net", "JUST.net\JUST.net.csproj", "{C33053BC-A3F2-4F0A-9B7F-B0AF5AD4EFFB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExternalMethods", "ExternalMethods\ExternalMethods\ExternalMethods.csproj", "{EE1B7740-1A36-4334-9508-26B15491F373}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ExternalMethods", "ExternalMethods\ExternalMethods.csproj", "{15F60FAC-38CF-4AA7-B369-E738702AA94E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -23,10 +23,10 @@ Global
 		{C33053BC-A3F2-4F0A-9B7F-B0AF5AD4EFFB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C33053BC-A3F2-4F0A-9B7F-B0AF5AD4EFFB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C33053BC-A3F2-4F0A-9B7F-B0AF5AD4EFFB}.Release|Any CPU.Build.0 = Release|Any CPU
-		{EE1B7740-1A36-4334-9508-26B15491F373}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{EE1B7740-1A36-4334-9508-26B15491F373}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{EE1B7740-1A36-4334-9508-26B15491F373}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{EE1B7740-1A36-4334-9508-26B15491F373}.Release|Any CPU.Build.0 = Release|Any CPU
+		{15F60FAC-38CF-4AA7-B369-E738702AA94E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{15F60FAC-38CF-4AA7-B369-E738702AA94E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{15F60FAC-38CF-4AA7-B369-E738702AA94E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{15F60FAC-38CF-4AA7-B369-E738702AA94E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -172,8 +172,8 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="ExternalMethods\ExternalMethods\ExternalMethods.csproj">
-      <Project>{ee1b7740-1a36-4334-9508-26b15491f373}</Project>
+    <ProjectReference Include="ExternalMethods\ExternalMethods.csproj">
+      <Project>{15f60fac-38cf-4aa7-b369-e738702aa94e}</Project>
       <Name>ExternalMethods</Name>
     </ProjectReference>
     <ProjectReference Include="JUST.net\JUST.net.csproj">
