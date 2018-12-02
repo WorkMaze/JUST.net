@@ -60,6 +60,13 @@
       "bird": "crow"
     }
   },
+  "season": {
+    "characteristics": {
+      "hot": true,
+      "averageDaysOfRain": 10,
+      "randomDay": "2018-08-01T00:00:00.000Z"
+    }
+  },
   "Name": "Kari",
   "Surname": "Nordmann",
   "MiddleName": "Inger",

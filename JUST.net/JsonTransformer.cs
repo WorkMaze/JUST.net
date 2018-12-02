@@ -1,11 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using System.Reflection;
 using System.IO;
+using System.Text.RegularExpressions;
 
 namespace JUST
 {
@@ -574,11 +573,14 @@ namespace JUST
 
                 if (functionName == "currentvalue" || functionName == "currentindex" || functionName == "lastindex"
                     || functionName == "lastvalue")
-                    output = caller("JUST.Transformer", functionName, new object[] { array, currentArrayElement });
+                    output = ReflectionHelper.caller(null, "JUST.Transformer", functionName, new object[] { array, currentArrayElement });
                 else if (functionName == "currentvalueatpath" || functionName == "lastvalueatpath")
-                    output = caller("JUST.Transformer", functionName, new object[] { array, currentArrayElement, arguments[0] });
+                    output = ReflectionHelper.caller(null, "JUST.Transformer", functionName, new object[] { array, currentArrayElement, arguments[0] });
                 else if (functionName == "customfunction")
                     output = CallCustomFunction(parameters);
+                else if (Regex.IsMatch(functionName, ReflectionHelper.EXTERNAL_ASSEMBLY_REGEX)){
+                    output = ReflectionHelper.CallExternalAssembly(functionName, parameters);
+                }
                 else if (functionName == "xconcat" || functionName == "xadd"
                     || functionName == "mathequals" || functionName == "mathgreaterthan" || functionName == "mathlessthan" 
                     || functionName == "mathgreaterthanorequalto"
@@ -587,7 +589,7 @@ namespace JUST
                 {
                     object[] oParams = new object[1];
                     oParams[0] = parameters;
-                    output = caller("JUST.Transformer", functionName, oParams);
+                    output = ReflectionHelper.caller(null, "JUST.Transformer", functionName, oParams);
                 }
                 else
                 {
@@ -595,14 +597,14 @@ namespace JUST
                     {
                         parameters[i] = JsonConvert.SerializeObject(currentArrayElement);
                     }
-                    output = caller("JUST.Transformer", functionName, parameters);
+                    output = ReflectionHelper.caller(null, "JUST.Transformer", functionName, parameters);
                 }
 
                 return output;
             }
             catch (Exception ex)
             {
-                throw new Exception("Error while calling function : " + functionString + " - " + ex.Message);
+                throw new Exception("Error while calling function : " + functionString + " - " + ex.Message, ex);
             }
         }
 
@@ -632,21 +634,8 @@ namespace JUST
 
             className = className + "," + dllName;
 
-            return caller(className, functionName, customParameters);
+            return ReflectionHelper.caller(null, className, functionName, customParameters);
 
-        }
-
-        private static object caller(String myclass, String mymethod, object[] parameters)
-        {
-            Assembly assembly = Assembly.GetEntryAssembly();
-
-            Type type = Type.GetType(myclass);
-            // Create an instance of that type
-            //Object obj = Activator.CreateInstance(type);
-            // Retrieve the method you are looking for
-            MethodInfo methodInfo = type.GetTypeInfo().GetMethod(mymethod);
-            // Invoke the method on the instance we created above
-            return methodInfo.Invoke(null, parameters);
         }
         #endregion
 
