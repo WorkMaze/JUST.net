@@ -1,0 +1,15 @@
+﻿{
+  "externalStaticMethodResult": "#ExternalMethods::ExternalMethods.ExternalClass::StaticMethod()",
+  "externalStaticTypedParametersResult": "#ExternalMethods::ExternalMethods.ExternalClass::StaticTypedParameters(1,true,abc,2018-10-11T11:00:00.000Z)",
+  "externalInstanceMethodResult": "#ExternalMethods::ExternalMethods.ExternalClass::InstanceMethod()",
+  "externalInstanceTypedParametersResult": "#ExternalMethods::ExternalMethods.ExternalClass::TypedParameters(1,true,abc,2018-10-11T11:00:00.000Z)",
+  "externalInstanceNavigateTypedParametersResult": "#ExternalMethods::ExternalMethods.ExternalClass::NavigateTypedParameters(#valueof($.season.characteristics.hot))",
+
+  "internalStaticMethodResult": "#InternalMethods.InternalClass::StaticMethod()",
+  "internalStaticTypedParametersResult": "#InternalMethods.InternalClass::StaticTypedParameters(1,true,abc,2018-10-11T11:00:00.000Z)",
+  "internalInstanceMethodResult": "#InternalMethods.InternalClass::InstanceMethod()",
+  "internalInstanceTypedParametersResult": "#InternalMethods.InternalClass::TypedParameters(1,true,abc,2018-10-11T11:00:00.000Z)",
+  "internalInstanceNavigateTypedParametersResult": "#InternalMethods.InternalClass::NavigateTypedParameters(#valueof($.season))",
+
+  "summer": "#ExternalMethods::SeasonsHelper.Season::IsSummer(#valueof($.season.characteristics.hot),#valueof($.season.characteristics.averageDaysOfRain),#valueof($.season.characteristics.randomDay))"
+}
