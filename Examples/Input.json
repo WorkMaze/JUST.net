@@ -138,5 +138,9 @@
       "name": "John"
     }
   ],
-  "PhoneTypeToSearch": "iPhone"
+  "PhoneTypeToSearch": "iPhone",
+  "DataForArrayTransformer": {
+    "Field1": "Value1",
+    "Field2": "Value2"
+  }
 }

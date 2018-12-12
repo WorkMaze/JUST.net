@@ -190,6 +190,22 @@ namespace JUST.NET.Test
             transformedString = JsonConvert.SerializeObject
                 (JsonTransformer.Transform(JObject.Parse(transformer), JObject.Parse(input)));
             Console.WriteLine(transformedString);
+
+            Console.WriteLine("################################################################################################");
+
+            transformer = File.ReadAllText("Examples/Transformer_array.json");
+            transformedString = JsonConvert.SerializeObject
+                (JsonTransformer.Transform(transformer, input));
+            Console.WriteLine(transformedString);
+
+            Console.WriteLine("################################################################################################");
+
+            transformer = File.ReadAllText("Examples/Transformer_array.json");
+            transformedString = JsonConvert.SerializeObject
+                (JsonTransformer.Transform(JArray.Parse(transformer), input));
+            Console.WriteLine(transformedString);
+
+            Console.ReadLine();
         }
     }
 }
