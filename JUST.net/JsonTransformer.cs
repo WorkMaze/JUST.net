@@ -1,9 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text.RegularExpressions;
 
 namespace JUST
@@ -12,24 +12,50 @@ namespace JUST
     {
         public static string Transform(string transformerJson, string inputJson)
         {
+            JToken result = null;
+            JToken transformerToken = JToken.Parse(transformerJson);
+            switch (transformerToken.Type)
+            {
+                case JTokenType.Object:
+                    result = Transform(transformerToken as JObject, inputJson);
+                    break;
+                case JTokenType.Array:
+                    result = Transform(transformerToken as JArray, inputJson);
+                    break;
+                default:
+                    throw new NotSupportedException($"Transformer of type '{transformerToken.Type}' not supported!");
+            }
 
-
-            JToken transformerToken = JObject.Parse(transformerJson);
-
-            RecursiveEvaluate(transformerToken, inputJson, null, null);
-
-            string output = JsonConvert.SerializeObject(transformerToken);
+            string output = JsonConvert.SerializeObject(result);
 
             return output;
         }
 
+        public static JArray Transform(JArray transformerArray, string input)
+        {
+            var result = new JArray();
+            foreach (var transformer in transformerArray)
+            {
+                if (transformer.Type != JTokenType.Object)
+                {
+                    throw new NotSupportedException($"Transformer of type '{transformer.Type}' not supported!");
+                }
+                Transform(transformer as JObject, input);
+                result.Add(transformer);
+            }
+            return result;
+        }
 
         public static JObject Transform(JObject transformer, JObject input)
         {
-            JObject transformerToken = transformer;
             string inputJson = JsonConvert.SerializeObject(input);
-            RecursiveEvaluate(transformerToken, inputJson, null, null);
-            return transformerToken;
+            return Transform(transformer, inputJson);
+        }
+
+        public static JObject Transform(JObject transformer, string input)
+        {
+            RecursiveEvaluate(transformer, input, null, null);
+            return transformer;
         }
         #region RecursiveEvaluate
 

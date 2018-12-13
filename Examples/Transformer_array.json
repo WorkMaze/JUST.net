@@ -1,0 +1,8 @@
+[
+  {
+    "field": "#valueof($.DataForArrayTransformer.Field1)"
+  },
+  {
+    "field": "#valueof($.DataForArrayTransformer.Field2)"
+  }
+]
