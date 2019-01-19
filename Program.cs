@@ -205,6 +205,25 @@ namespace JUST.NET.Test
                 (JsonTransformer.Transform(JArray.Parse(transformer), input));
             Console.WriteLine(transformedString);
 
+            Console.WriteLine("################################################################################################");
+
+            transformer = File.ReadAllText("Examples/Transformer_registeredmethods.json");
+            JsonTransformer.RegisterCustomFunction("ExternalMethods", "ExternalMethods.ExternalClass", "StaticMethod", "External_StaticMethod");
+            JsonTransformer.RegisterCustomFunction("ExternalMethods", "ExternalMethods.ExternalClass", "StaticTypedParameters", "External_StaticTypedParameters");
+            JsonTransformer.RegisterCustomFunction("ExternalMethods", "ExternalMethods.ExternalClass", "InstanceMethod", "External_InstanceMethod");
+            JsonTransformer.RegisterCustomFunction("ExternalMethods", "ExternalMethods.ExternalClass", "TypedParameters", "External_TypedParameters");
+            JsonTransformer.RegisterCustomFunction("ExternalMethods", "ExternalMethods.ExternalClass", "NavigateTypedParameters", "External_NavigateTypedParameters");
+
+            JsonTransformer.RegisterCustomFunction(null, "InternalMethods.InternalClass", "StaticMethod");
+            JsonTransformer.RegisterCustomFunction(null, "InternalMethods.InternalClass", "StaticTypedParameters");
+            JsonTransformer.RegisterCustomFunction(null, "InternalMethods.InternalClass", "InstanceMethod");
+            JsonTransformer.RegisterCustomFunction(null, "InternalMethods.InternalClass", "TypedParameters");
+            JsonTransformer.RegisterCustomFunction(null, "InternalMethods.InternalClass", "NavigateTypedParameters");
+            
+            transformedString = JsonConvert.SerializeObject
+                (JsonTransformer.Transform(JObject.Parse(transformer), JObject.Parse(input)));
+            Console.WriteLine(transformedString);
+
             Console.ReadLine();
         }
     }

@@ -1,15 +1,38 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text.RegularExpressions;
 
 namespace JUST
 {
     public class JsonTransformer
     {
+        private static ConcurrentDictionary<string, MethodInfo> _customFunctions = new ConcurrentDictionary<string, MethodInfo>();
+
+        public static void RegisterCustomFunction(string assemblyName, string namespc, string methodName, string methodAlias = null)
+        {
+            var methodInfo = ReflectionHelper.SearchCustomFunction(assemblyName, namespc, methodName);
+            if (methodInfo == null)
+            {
+                throw new Exception("Unable to find specified method!");
+            }
+
+            if (!_customFunctions.TryAdd(methodAlias ?? methodName, methodInfo))
+            {
+                throw new Exception("Error while registering custom method!");
+            }
+        }
+
+        public static void ClearCustomFunctionRegistrations()
+        {
+            _customFunctions.Clear();
+        }
+
         public static string Transform(string transformerJson, string inputJson)
         {
             JToken result = null;
@@ -604,6 +627,10 @@ namespace JUST
                     output = ReflectionHelper.caller(null, "JUST.Transformer", functionName, new object[] { array, currentArrayElement, arguments[0] });
                 else if (functionName == "customfunction")
                     output = CallCustomFunction(parameters);
+                else if (_customFunctions.TryGetValue(functionName, out var methodInfo))
+                {
+                    output = ReflectionHelper.InvokeCustomMethod(methodInfo, parameters, true);
+                }
                 else if (Regex.IsMatch(functionName, ReflectionHelper.EXTERNAL_ASSEMBLY_REGEX)){
                     output = ReflectionHelper.CallExternalAssembly(functionName, parameters);
                 }
