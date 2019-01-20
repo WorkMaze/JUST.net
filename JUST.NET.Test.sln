@@ -9,6 +9,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JUST.net", "JUST.net\JUST.n
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ExternalMethods", "ExternalMethods\ExternalMethods.csproj", "{15F60FAC-38CF-4AA7-B369-E738702AA94E}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ENV", "ENV", "{FF566713-3F06-4A89-9127-1916A9DB3C3E}"
+	ProjectSection(SolutionItems) = preProject
+		README.md = README.md
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU

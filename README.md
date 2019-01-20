@@ -52,7 +52,8 @@ http://www.newtonsoft.com/json/help/html/QueryJsonSelectTokenJsonPath.htm
 
 Consider the input:-
 
-``{
+```json
+{
   "menu": {   
     "popup": {
       "menuitem": [
@@ -67,22 +68,27 @@ Consider the input:-
       ]
     }
   } 
-}``
+}
+```
 
 Transformer:-
 
-``{
+```json
+{
   "result": {
     "Open": "#valueof($.menu.popup.menuitem[?(@.value=='Open')].onclick)",
     "Close": "#valueof($.menu.popup.menuitem[?(@.value=='Close')].onclick)"
   }
-}``
+}
+```
 
 Output:-
 
-``{
+```json
+{
    "result":{"Open": "OpenDoc()", "Close": "CloseDoc()"}
-}``
+}
+```
 
 
 ## ifcondition
@@ -95,26 +101,32 @@ All four of the parameters can be a 'valueof' expressions or constants.
 
 Consider the input:-
 
-``{
+```json
+{
   "menu": {
     "id" : "github",
     "repository" : "JUST"
   } 
-}``
+}
+```
 
 Transformer:-
 
-``{
+```json
+{
   "ifconditiontesttrue": "#ifcondition(#valueof($.menu.id),github,#valueof($.menu.repository),fail)",
   "ifconditiontestfalse": "#ifcondition(#valueof($.menu.id),xml,#valueof($.menu.repository),fail)"
-}``
+}
+```
 
 Output:-
 
-``{
+```json
+{
    "ifconditiontesttrue":"JUST",
    "ifconditiontestfalse":"fail"
-}``
+}
+```
 
 ## string and math functions
 
@@ -131,14 +143,17 @@ At the moment only the basic and often used string and math functions are provid
 
 Consider the input:-
 
-``{
+```json
+{
   "stringref": "thisisandveryunuasualandlongstring",
   "numbers": [ "1", "2", "3", "4", "5" ]
-}``
+}
+```
 
 Transformer:-
 
-``{
+```json
+{
   "stringresult": {
     "lastindexofand": "#lastindexof(#valueof($.stringref),and)",
     "firstindexofand": "#firstindexof(#valueof($.stringref),and)",
@@ -151,11 +166,13 @@ Transformer:-
     "multiply": "#multiply(2,#valueof($.numbers[2]))",
     "divide": "#divide(9,3)"
   }
-}``
+}
+```
 
 Output:-
 
-``{"stringresult":
+```json
+{"stringresult":
    { 
     "lastindexofand":"21",
     "firstindexofand":"6",
@@ -169,7 +186,8 @@ Output:-
     "multiply":"6",
     "divide":"3"
    }
-}``
+}
+```
 
 ## Opearators
 
@@ -185,14 +203,17 @@ The following operators have been added to compare strings and numbers :-
 
 Consider the input:-
  
-``{
+```json
+{
   "d": [ "one", "two", "three" ],
   "numbers": [ "1", "2", "3", "4", "5" ]
-}``
+}
+```
 
 Transformer:-
 
-``{
+```json
+{
   "mathresult": {
     "third_element_equals_3": "#ifcondition(#mathequals(#valueof($.numbers[2]),3),true,yes,no)",
     "third_element_greaterthan_2": "#ifcondition(#mathgreaterthan(#valueof($.numbers[2]),2),true,yes,no)",
@@ -202,11 +223,24 @@ Transformer:-
     "one_stringequals": "#ifcondition(#stringequals(#valueof($.d[0]),one),true,yes,no)",
     "one_stringcontains": "#ifcondition(#stringcontains(#valueof($.d[0]),n),true,yes,no)"
   }
-}``
+}
+```
 
 Output:-
 
-``{"mathresult":   {"third_element_equals_3":"yes","third_element_greaterthan_2":"yes","third_element_lessthan_4":"yes","third_element_greaterthanorequals_4":"no","third_element_lessthanoreuals_2":"no","one_stringequals":"yes","one_stringcontains":"yes"}}
+```json
+{
+   "mathresult":{
+      "third_element_equals_3":"yes",
+      "third_element_greaterthan_2":"yes",
+      "third_element_lessthan_4":"yes",
+      "third_element_greaterthanorequals_4":"no",
+      "third_element_lessthanoreuals_2":"no",
+      "one_stringequals":"yes",
+      "one_stringcontains":"yes"
+   }
+}
+```
 
 ## Aggregate functions
 
@@ -220,30 +254,36 @@ The following aggregate functions are provided for single dimensional arrays:-
 
 Consider the input:-
  
-``{
+```json
+{
   "d": [ "one", "two", "three" ],
   "numbers": [ "1", "2", "3", "4", "5" ]
-}``
+}
+```
 
 Transformer:-
 
-``{
+```json
+{
   "conacted": "#concatall(#valueof($.d))",
   "sum": "#sum(#valueof($.numbers))",
   "avg": "#average(#valueof($.numbers))",
   "min": "#min(#valueof($.numbers))",
   "max": "#max(#valueof($.numbers))"
-}``
+}
+```
 
 Output:-
 
-``{
+```json
+{
     "conacted":"onetwothree",
     "sum":"15",
     "avg":"3",
     "min":"1",
     "max":"5"
-}``
+}
+```
 
 ## Aggregate functions for multidimensional arrays:-
 
@@ -256,7 +296,8 @@ These functions are essentially the same as the above ones, the only difference 
 
 Consider the input:-
 
-``{
+```json
+{
    "x": [
     {
       "v": {
@@ -280,27 +321,32 @@ Consider the input:-
       }
     }
   ]
-}``
+}
+```
 
 Transformer:-
 
-``{
+```json
+{
   "arrayconacted": "#concatallatpath(#valueof($.x),$.v.a)",
   "arraysum": "#sumatpath(#valueof($.x),$.v.c)",
   "arrayavg": "#averageatpath(#valueof($.x),$.v.c)",
   "arraymin": "#minatpath(#valueof($.x),$.v.b)",
   "arraymax": "#maxatpath(#valueof($.x),$.v.b)"
-}``
+}
+```
 
 Output:-
 
-``{
+```json
+{
     "arrayconacted":"a1,a2,a3b1,b2c1,c2,c3",
     "arraysum":"60",
     "arrayavg":"20",
     "arraymin":"1",
     "arraymax":"3"
-}``
+}
+```
 
 ## Bulk functions
 
@@ -317,7 +363,8 @@ These are the bulk functions provided as of now:-
 
 Cosider the input:-
 
-``{
+```json
+{
   "tree": {
     "branch": {
       "leaf": "green",
@@ -327,18 +374,22 @@ Cosider the input:-
     },
     "ladder": {"wood": "treehouse" }
   }
-}``
+}
+```
 
 Transformer:-
 
-``{
+```json
+{
   "#": [ "#copy($)",  "#delete($.tree.branch.bird)", "#replace($.tree.branch.extra,#valueof($.tree.ladder))" ],
   "othervalue" : "othervalue"
-}``
+}
+```
 
 Output:-
 
-``{
+```json
+{
    "othervalue":"othervalue",
    "tree":{
     "branch":{
@@ -352,7 +403,8 @@ Output:-
      "wood":"treehouse"
     }
   }
-}``
+}
+```
 
 ## Array looping
 
@@ -371,7 +423,8 @@ These are the functions provided for this pupose:-
 
 Cosider the input:-
 
-``{
+```json
+{
   "tree": {
     "branch": {
       "leaf": "green",
@@ -396,11 +449,13 @@ Cosider the input:-
         "language": "swedish"
       }
     }]
-}``
+}
+```
 
 Transformer:-
 
-``{
+```json
+{
   "iteration": {
     "#loop($.numbers)": {
       "CurrentValue": "#currentvalue()",
@@ -418,11 +473,13 @@ Transformer:-
     }
   },
   "othervalue": "othervalue"
-}``
+}
+```
 
 Output:-
 
-``{"iteration":[
+```json
+{"iteration":[
    {"CurrentValue":"1","CurrentIndex":"0","IsLast":"no","LastValue":"4"},
    {"CurrentValue":"2","CurrentIndex":"1","IsLast":"no","LastValue":"4"},
    {"CurrentValue":"3","CurrentIndex":"2","IsLast":"no","LastValue":"4"},
@@ -433,12 +490,15 @@ Output:-
    {"CurrentValue":"UK","CurrentIndex":"1","IsLast":"no","LastValue":"swedish"},
    {"CurrentValue":"Sweden","CurrentIndex":"2","IsLast":"yes","LastValue":"swedish"}
   ],
-"othervalue":"othervalue"}``
+"othervalue":"othervalue"}
+```
 
 ## Nested array looping (looping within context)
 A new function `loopwithincontext` has been introduced to be able to loop withing the context of an outer loop.
 Cosider the input:-
-``{
+
+```json
+{
   "NestedLoop": {
     "Organization": {
       "Employee": [
@@ -467,10 +527,13 @@ Cosider the input:-
       ]
     }
   }
-}``
+}
+```
+
 Transformer:-
 
-``{
+```json
+{
   "hello": {
     "#loop($.NestedLoop.Organization.Employee)": {
       "CurrentName": "#currentvalueatpath($.Name)",
@@ -481,17 +544,20 @@ Transformer:-
       }
     }
   }
-}``
+}
+```
 
 Output:-
 
-``{
+```json
+{
   "hello":
     [
       {"CurrentName":"E2","Details":[{"CurrentCountry":"Iceland"}]},
       {"CurrentName":"E1","Details":[{"CurrentCountry":"Denmark"}]}
     ]
-}``
+}
+```
 
 ## Array grouping
 
@@ -501,7 +567,8 @@ grouparrayby(path,groupingElementName,groupedElementName)
 
 Input:-
 
-``{
+```json
+{
   "Forest": [
     {
       "type": "Mammal",
@@ -534,17 +601,21 @@ Input:-
       "name": "Dog"
     }    
   ]
-}``
+}
+```
 
 Transformer:-
 
-``{
+```json
+{
   "Result": "#grouparrayby($.Forest,type,all)" 
-}``
+}
+```
 
 Output:-
 
-``{  
+```json
+{
    "Result":[  
       {  
          "type":"Mammal",
@@ -586,13 +657,15 @@ Output:-
          ]
       }
    ]
-}``
+}
+```
 
 You can group using multiple "grouping elements". They should be seperated by a semicolon (:)
 
 Input:-
 
-``{
+```json
+{
   "Vehicle": [
     {
       "type": "air",
@@ -625,17 +698,21 @@ Input:-
       "name": "truck"
     }
   ]  
-}``
+}
+```
 
 Transformer:-
 
-``{
+```json
+{
   "Result": "#grouparrayby($.Vehicle,type:company,all)"
-}``
+}
+```
 
 Output:-
 
-``{  
+```json
+{
    "Result":[  
       {  
          "type":"air",
@@ -680,7 +757,8 @@ Output:-
          ]
       }
    ]
-}``
+}
+```
 
 ## Calling Custom functions
 
@@ -694,7 +772,8 @@ A custom function is called using the following syntax:-
 
 Consider the following input:-
 
-``{
+```json
+{
   "tree": {
     "branch": {
       "leaf": "green",
@@ -702,13 +781,16 @@ Consider the following input:-
       "bird": "crow"
     }
   }
-}``
+}
+```
 
 Transformer:-
 
-``{
+```json
+{
   "Season": "#customfunction(JUST.NET.Test,JUST.NET.Test.Season.findseason,#valueof($.tree.branch.leaf),#valueof($.tree.branch.flower))"
-}``
+}
+```
 
 Custom function:-
 
@@ -721,7 +803,9 @@ Custom function:-
         }`
 
 Output:-
-``{"Season":"summer"}``
+```json
+{"Season":"summer"}
+```
 
 ## Calling User Defined methods by name
 
@@ -735,7 +819,8 @@ Here's the syntax:-
 
 Consider the following input:-
 
-``{
+```json
+{
   "season": {
     "characteristics": {
       "hot": true,
@@ -743,16 +828,21 @@ Consider the following input:-
       "randomDay": "2018-08-01T00:00:00.000Z"
     }
   }
-}``
+}
+```
 
 Transformer:-
 
-``{
+```json
+{
   "summer": "#ExternalMethods::SeasonsHelper.Season::IsSummer(#valueof($.season.characteristics.hot),#valueof($.season.characteristics.averageDaysOfRain),#valueof($.season.characteristics.randomDay))"
-}``
+}
+```
 
 Output:-
-``{"summer": true}``
+```json
+{"summer": true}
+```
 
 ## Complex nested functions
 
@@ -760,17 +850,20 @@ You can easily nest functions to do complex transformations. An example of such 
 
 Consider the following input:-
 
-``{
+```json
+{
   "Name": "Kari",
   "Surname": "Nordmann",
   "MiddleName": "Inger",
   "ContactInformation": "Karl johans gate:Oslo:88880000" ,
   "PersonalInformation": "45:Married:Norwegian"
-}``
+}
+```
 
 Transformer:-
 
-``{
+```json
+{
   "FullName": "#concat(#concat(#concat(#valueof($.Name), ),#concat(#valueof($.MiddleName), )),#valueof($.Surname))",
   "Contact Information": {
     "Street Name": "#substring(#valueof($.ContactInformation),0,#firstindexof(#valueof($.ContactInformation),:))",
@@ -780,12 +873,14 @@ Transformer:-
   "Personal Information": {
     "Age": "#substring(#valueof($.PersonalInformation),0,#firstindexof(#valueof($.PersonalInformation),:))",
     "Civil Status": "#substring(#valueof($.PersonalInformation),#add(#firstindexof(#valueof($.PersonalInformation),:),1),#subtract(#subtract(#lastindexof(#valueof($.PersonalInformation),:),#firstindexof(#valueof($.PersonalInformation),:)),1))",
-"Ethnicity": "#substring(#valueof($.PersonalInformation),#add(#lastindexof(#valueof($.PersonalInformation),:),1),#subtract(#lastindexof(#valueof($.PersonalInformation),),#lastindexof(#valueof($.PersonalInformation),:)))"
-  }``
+	"Ethnicity": "#substring(#valueof($.PersonalInformation),#add(#lastindexof(#valueof($.PersonalInformation),:),1),#subtract(#lastindexof(#valueof($.PersonalInformation),),#lastindexof(#valueof($.PersonalInformation),:)))"
+}
+```
 
 
 Output:-
-``{
+```json
+{
    "FullName":"Kari Inger Nordmann",
    "Contact Information":{
      "Street Name":"Karl johans gate",
@@ -797,7 +892,8 @@ Output:-
      "Civil Status":"Married",
      "Ethnicity":"Norwegian"
     }
-}``
+}
+```
 
 ## Multiple argument & constant functions
 
@@ -812,24 +908,30 @@ Hence, the following 3 functions have been introduced:-
 
 Consider the following input:-
 
-``{
+```json
+{
   "Name": "Kari",
   "Surname": "Nordmann",
   "MiddleName": "Inger",
   "ContactInformation": "Karl johans gate:Oslo:88880000" ,
   "PersonalInformation": "45:Married:Norwegian"
-}``
+}
+```
 
 Transformer:-
 
-``{
+```json
+{
   "FullName": "#xconcat(#valueof($.Name),#constant_comma(),#valueof($.MiddleName),#constant_comma(),#valueof($.Surname))",
   "AgeOfParents": "#xadd(#valueof($.AgeOfMother),#valueof($.AgeOfFather))"
-}``
+}
+```
 
 
 Output:-
-``{"FullName":"Kari,Inger,Nordmann","AgeOfParents":"67"}``
+```json
+{"FullName":"Kari,Inger,Nordmann","AgeOfParents":"67"}
+```
 
 ## Check for existance 
 
@@ -840,30 +942,36 @@ The following two functions have been added to check for existance:-
 
 Consider the following input:-
 
-``{
+```json
+{
    "BuyDate": "2017-04-10T11:36:39+03:00",
    "ExpireDate": ""
-}``
+}
+```
 
 Transformer:-
 
-``{
+```json
+{
   "BuyDateString": "#ifcondition(#exists($.BuyDate),true,#concat(Buy Date : ,#valueof($.BuyDate)),NotExists)",
   "BuyDateString2": "#ifcondition(#existsandnotempty($.BuyDate),true,#concat(Buy Date : ,#valueof($.BuyDate)),EmptyOrNotExists)",
   "ExpireDateString": "#ifcondition(#exists($.ExpireDate),true,#concat(Expire Date : ,#valueof($.ExpireDate)),NotExists)",
   "ExpireDateString2": "#ifcondition(#existsandnotempty($.ExpireDate),true,#concat(Expire Date : ,#valueof($.ExpireDate)),EmptyOrNotExists)",
   "SellDateString": "#ifcondition(#exists($.SellDate),true,#concat(Sell Date : ,#valueof($.SellDate)),NotExists)",
   "SellDateString2": "#ifcondition(#existsandnotempty($.SellDate),true,#concat(Sell Date : ,#valueof($.SellDate)),EmptyOrNotExists)"
-}``
+}
+```
 
 Output:-
-``{"BuyDateString":"Buy Date : 2017-04-10T11:36:39+03:00",
+```json
+{"BuyDateString":"Buy Date : 2017-04-10T11:36:39+03:00",
    "BuyDateString2":"Buy Date : 2017-04-10T11:36:39+03:00",
    "ExpireDateString":"Expire Date : ",
    "ExpireDateString2":"EmptyOrNotExists",
    "SellDateString":"NotExists",
    "SellDateString2":"EmptyOrNotExists"
-}``
+}
+```
 
 ## Conditional transformation
 
@@ -873,16 +981,19 @@ The function takes an expression as argument which should evaluate to a boolean 
 
 Consider the following input:-
 
-``{
+```json
+{
   "Tree": {    
     "Branch": "leaf",
     "Flower": "Rose"
   }
-}``
+}
+```
 
 Transformer:-
 
-``{
+```json
+{
   "Result": {
     "Header": "JsonTransform",
     "#ifgroup(#exists($.Tree.Branch))": {
@@ -892,10 +1003,12 @@ Transformer:-
       }
     }
  }
-}``
+}
+```
 
 Output:-
-``{  
+```json
+{
    "Result":{  
       "Header":"JsonTransform",
       "State":{  
@@ -903,13 +1016,15 @@ Output:-
          "Value2":"Rose"
       }
    }
-}``
+}
+```
 
 Now, for the same input if we use the following transformer, we get a diferent output.
 
 Transformer:-
 
-``{
+```json
+{
   "Result": {
     "Header": "JsonTransform",
     "#ifgroup(#exists($.Tree.Root))": {
@@ -919,14 +1034,17 @@ Transformer:-
       }
     }
  }
-}``
+}
+```
 
 Output:-
-``{  
+```json
+{
    "Result":{  
       "Header":"JsonTransform"
    }
-}``
+}
+```
 
 
 ## Dynamic Properties
@@ -935,27 +1053,33 @@ We can now create dynamic properties using the *eval* function. The function tak
 
 Consider the following input:-
 
-``{
+```json
+{
   "Tree": {    
     "Branch": "leaf",
     "Flower": "Rose"
   }
-}``
+}
+```
 
 Transformer:-
 
-``{
+```json
+{
   "Result": {
       "#eval(#valueof($.Tree.Flower))": "x"
   }
-}``
+}
+```
 
 Output:-
-``{  
+```json
+{
    "Result":{  
       "Rose":"x"
    }
-}``
+}
+```
  
 
 
@@ -983,15 +1107,18 @@ In the above case if the validation is un-successful an exception will be thrown
 
 Consider the validation input:-
 
-``{
+```json
+{
   "x.tree": { "x.branch": { "x.leaf": "1" } },
   "x.child": 1,
   "y.animal": 1
-}``
+}
+```
 
 Schema X JSON:-
 
-``{
+```json
+{
   "properties": {
     "tree": {
       "type": "object",
@@ -1007,16 +1134,18 @@ Schema X JSON:-
 },
     "child": { "type": "string" }
   }
-}``
+}
+```
 
 Schema Y JSON:-
 
-``{
+```json
+{
   "properties": {
     "animal": { "type": "string" }
   }
 }
-``
+```
 
 The exception message thrown in the above case would be:-
 
@@ -1033,7 +1162,9 @@ Two new functions have been added for this purpose:-
 `public static IEnumerable<JObject> SplitJson(JObject input, string arrayPath)`
 
 Consider the input:-
-``{
+
+```json
+{
   "cars": {
     "Ford": [
       {
@@ -1056,7 +1187,8 @@ Consider the input:-
     "firstName": "John",
     "lastName": "Smith",
   }
-}``
+}
+```
 
 Below is a sample code which splits the above input:-
 
@@ -1093,7 +1225,9 @@ Sample code to transform from JSON to XML:-
 ``string transformedString = DataTransformer.Transform(transformer, input);``
 
 Input.json:-
-``{
+
+```json
+{
   "menu": {
     "id": {
       "file": "csv"
@@ -1163,11 +1297,13 @@ Input.json:-
   "BuyDate": "2017-04-10T11:36:39+03:00",
   "ExpireDate": "",
   "LogId": 5000510625
-}``
+}
+```
 
 
 DataTransformer.xml:-
-``<?xml version="1.0" encoding="UTF-8" ?>
+```xml
+<?xml version="1.0" encoding="UTF-8" ?>
 <root>
   <root>
     <ifconditiontesttrue>#ifcondition(#valueof($.menu.id.file),csv,#valueof($.menu.value.Window),fail)</ifconditiontesttrue>
@@ -1218,10 +1354,12 @@ DataTransformer.xml:-
       <SomeValue>#valueof($.LogId)</SomeValue>
     </Record>}
   </iteration>  
-</root>``
+</root>
+```
 
 Output:-
-``<?xml version="1.0" encoding="UTF-8" ?>
+```xml
+<?xml version="1.0" encoding="UTF-8" ?>
 <root>
   <root>
     <ifconditiontesttrue>popup</ifconditiontesttrue>
@@ -1299,7 +1437,8 @@ Output:-
       <SomeValue>5000510625</SomeValue>
     </Record><!--Record ends here-->
   </iteration>
-</root>``
+</root>
+```
 
 ### Example for JSON to CSV
 
@@ -1314,8 +1453,11 @@ DataTransformer.csv:-
 ``"#loop($.numbers)": {#currentvalue(),#currentindex(),#ifcondition(#currentindex(),#lastindex(),yes,no),#lastvalue(),#valueof($.LogId)}``
 
 Output:-
-``1,0,no,5,5000510625
+
+```csv
+1,0,no,5,5000510625
 2,1,no,5,5000510625
 3,2,no,5,5000510625
 4,3,no,5,5000510625
-5,4,yes,5,5000510625``
+5,4,yes,5,5000510625
+```
