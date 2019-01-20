@@ -761,7 +761,8 @@ JUSTContext.ClearCustomFunctionRegistrations()``
 
 Consider the following input:-
 
-``{
+```
+{
   "season": {
     "characteristics": {
       "hot": true,
@@ -769,19 +770,26 @@ Consider the following input:-
       "randomDay": "2018-08-01T00:00:00.000Z"
     }
   }
-}``
+}
+```
 
 Registration:-
-`JsonTransformer.RegisterCustomFunction("SomeAssemblyName", "NameSpace.Plus.ClassName", "IsSummer");`
+
+```
+JsonTransformer.RegisterCustomFunction("SomeAssemblyName", "NameSpace.Plus.ClassName", "IsSummer");
+```
 
 Transformer:-
 
-``{
+```
+{
   "summer": "#IsSummer(#valueof($.season.characteristics.hot),#valueof($.season.characteristics.averageDaysOfRain),#valueof($.season.characteristics.randomDay))"
-}``
+}```
 
 Output:-
-``{"summer": true}``
+```
+{"summer": true}
+```
 
 ## Complex nested functions
 
