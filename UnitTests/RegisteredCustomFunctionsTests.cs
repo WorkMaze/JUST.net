@@ -9,7 +9,7 @@ namespace Just.net.Tests
         [SetUp]
         public void Setup()
         {
-            JsonTransformer.ClearCustomFunctionRegistrations();
+            JUSTContext.ClearCustomFunctionRegistrations();
         }
 
         [Test]
@@ -24,7 +24,7 @@ namespace Just.net.Tests
             const string input = "{ }";
             const string transformer = "{ \"result\": \"#StaticMethod()\" }";
 
-            JsonTransformer.RegisterCustomFunction("ExternalMethods", "ExternalMethods.ExternalClass", "StaticMethod");
+            JUSTContext.RegisterCustomFunction("ExternalMethods", "ExternalMethods.ExternalClass", "StaticMethod");
             var result = JsonTransformer.Transform(transformer, input);
 
             Assert.AreEqual("{\"result\":\"External Static\"}", result);
@@ -36,7 +36,7 @@ namespace Just.net.Tests
             const string input = "{ }";
             const string transformer = "{ \"result\": \"#StaticTypedParameters(1,true,abc,2018-10-11T11:00:00.000Z)\" }";
 
-            JsonTransformer.RegisterCustomFunction("ExternalMethods", "ExternalMethods.ExternalClass", "StaticTypedParameters");
+            JUSTContext.RegisterCustomFunction("ExternalMethods", "ExternalMethods.ExternalClass", "StaticTypedParameters");
             var result = JsonTransformer.Transform(transformer, input);
 
             Assert.AreEqual("{\"result\":\"External Static TypedParameters success\"}", result);
@@ -48,7 +48,7 @@ namespace Just.net.Tests
             const string input = "{ }";
             const string transformer = "{ \"result\": \"#InstanceMethod()\" }";
 
-            JsonTransformer.RegisterCustomFunction("ExternalMethods", "ExternalMethods.ExternalClass", "InstanceMethod");
+            JUSTContext.RegisterCustomFunction("ExternalMethods", "ExternalMethods.ExternalClass", "InstanceMethod");
             var result = JsonTransformer.Transform(transformer, input);
 
             Assert.AreEqual("{\"result\":\"External Instance\"}", result);
@@ -60,7 +60,7 @@ namespace Just.net.Tests
             const string input = "{ }";
             const string transformer = "{ \"result\": \"#TypedParameters(1,true,abc,2018-10-11T11:00:00.000Z)\" }";
 
-            JsonTransformer.RegisterCustomFunction("ExternalMethods", "ExternalMethods.ExternalClass", "TypedParameters");
+            JUSTContext.RegisterCustomFunction("ExternalMethods", "ExternalMethods.ExternalClass", "TypedParameters");
             var result = JsonTransformer.Transform(transformer, input);
 
             Assert.AreEqual("{\"result\":\"External TypedParameters success\"}", result);
@@ -72,7 +72,7 @@ namespace Just.net.Tests
             const string input = "{ \"lvl1\": { \"some-bool\": true } }";
             const string transformer = "{ \"result\": \"#NavigateTypedParameters(#valueof($.lvl1.some-bool))\" }";
 
-            JsonTransformer.RegisterCustomFunction("ExternalMethods", "ExternalMethods.ExternalClass", "NavigateTypedParameters");
+            JUSTContext.RegisterCustomFunction("ExternalMethods", "ExternalMethods.ExternalClass", "NavigateTypedParameters");
             var result = JsonTransformer.Transform(transformer, input);
 
             Assert.AreEqual("{\"result\":\"True\"}", result);
