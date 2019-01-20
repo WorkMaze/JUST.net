@@ -22,6 +22,16 @@ namespace JUST
             }
         }
 
+        public static bool UnregisterCustomFunction(string name)
+        {
+            return _customFunctions.TryRemove(name, out var removed);
+        }
+
+        public static void ClearCustomFunctionRegistrations()
+        {
+            _customFunctions.Clear();
+        }
+
         internal static MethodInfo GetCustomMethod(string key)
         {
             if (!_customFunctions.TryGetValue(key, out var result))
@@ -29,11 +39,6 @@ namespace JUST
                 throw new Exception($"Custom function {key} is not registered!");
             }
             return result;
-        }
-
-        public static void ClearCustomFunctionRegistrations()
-        {
-            _customFunctions.Clear();
         }
 
         internal static bool IsRegisteredCustomFunction(string name)
