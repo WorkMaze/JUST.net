@@ -728,14 +728,14 @@ Output:-
 You can also call your methods by name, by providing the full path (namespace including class name, method name, assembly if necessary).
 The assembly file doesn't need to be referenced in your program, it only has to exist in the same directory. It will load the assembly into
 the application's default domain, if not loaded yet.
-Here's the syntax:-
 
-#NameSpace.Plus.ClassName::Your_Method_Name(argument1.......,argumentN)
-#AssemblyName::NameSpace.Plus.ClassName::Your_Method_Name(argument1.......,argumentN)
+Here's the syntax:
+`#NameSpace.Plus.ClassName::Your_Method_Name(argument1.......,argumentN)`
+`#AssemblyName::NameSpace.Plus.ClassName::Your_Method_Name(argument1.......,argumentN)`
 
-Consider the following input:-
-
-``{
+Consider the following input:
+```
+{
   "season": {
     "characteristics": {
       "hot": true,
@@ -743,7 +743,21 @@ Consider the following input:-
       "randomDay": "2018-08-01T00:00:00.000Z"
     }
   }
-}``
+}
+```
+
+Transformer:
+
+```
+{
+  "summer": "#ExternalMethods::SeasonsHelper.Season::IsSummer(#valueof($.season.characteristics.hot),#valueof($.season.characteristics.averageDaysOfRain),#valueof($.season.characteristics.randomDay))"
+}
+```
+
+Output:
+```
+{"summer": true}
+```
 
 ## Register User Defined methods for seamless use
 
@@ -756,8 +770,8 @@ After registration you can call it like any other built-in function.
 
 The registrations are handled in a static property, so they will live as long as your application lives.
 You have the possibility to unregister a custom function or remove all registrations with the following methods:
-``JUSTContext.UnregisterCustomFunction(name)
-JUSTContext.ClearCustomFunctionRegistrations()``
+`JUSTContext.UnregisterCustomFunction(name)`
+`JUSTContext.ClearCustomFunctionRegistrations()`
 
 Consider the following input:-
 
@@ -773,20 +787,19 @@ Consider the following input:-
 }
 ```
 
-Registration:-
-
+Registration:
 ```
 JsonTransformer.RegisterCustomFunction("SomeAssemblyName", "NameSpace.Plus.ClassName", "IsSummer");
 ```
 
-Transformer:-
-
+Transformer:
 ```
 {
   "summer": "#IsSummer(#valueof($.season.characteristics.hot),#valueof($.season.characteristics.averageDaysOfRain),#valueof($.season.characteristics.randomDay))"
-}```
+}
+```
 
-Output:-
+Output:
 ```
 {"summer": true}
 ```
