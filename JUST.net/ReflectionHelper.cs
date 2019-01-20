@@ -71,7 +71,7 @@ namespace JUST
 
                 //SingleOrDefault fails, dll registrated twice????
                 //Possible alternative to AppDomain: https://github.com/dotnet/coreclr/issues/14680
-                var assembly = assemblies.FirstOrDefault(a => a.ManifestModule.Name == assemblyFileName);   
+                var assembly = assemblies.FirstOrDefault(a => a.ManifestModule.Name == assemblyFileName);
                 if (assembly == null)
                 {
                     var assemblyLocation = Path.Combine(Directory.GetCurrentDirectory(), assemblyFileName);
