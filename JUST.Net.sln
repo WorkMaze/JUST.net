@@ -7,7 +7,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JUST.net", "JUST.net\JUST.n
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ExternalMethods", "ExternalMethods\ExternalMethods.csproj", "{15F60FAC-38CF-4AA7-B369-E738702AA94E}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UnitTests", "UnitTests\UnitTests.csproj", "{EEA26C5F-B8F8-40F3-8405-8887D1F712D5}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JUST.net.UnitTests", "UnitTests\JUST.net.UnitTests.csproj", "{EEA26C5F-B8F8-40F3-8405-8887D1F712D5}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

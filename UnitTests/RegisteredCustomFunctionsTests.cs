@@ -1,7 +1,7 @@
 ﻿using JUST;
 using NUnit.Framework;
 
-namespace Just.net.Tests
+namespace JUST.UnitTests
 {
     [TestFixture, Category("CustomFunctions")]
     public class RegisteredCustomFunctionsTests

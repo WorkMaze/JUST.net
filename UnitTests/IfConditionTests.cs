@@ -1,7 +1,6 @@
-﻿using JUST;
-using NUnit.Framework;
+﻿using NUnit.Framework;
 
-namespace Just.net.Tests
+namespace JUST.UnitTests
 {
     [TestFixture, Category("IfCondition")]
     public class IfConditionTests
@@ -18,10 +17,10 @@ namespace Just.net.Tests
         }
 
         [Test]
-        public void FnFirstTrueConditionStringResult()
+        public void PrimitiveFirstTrueConditionStringResult()
         {
             const string input = "{ \"string\": \"some words\", \"integer\": 123, \"boolean\": true }";
-            const string transformer = "{ \"result\": \"#ifcondition(#valueof($.boolean),true,truevalue,falsevalue)\" }";
+            const string transformer = "{ \"result\": \"#ifcondition(true,#valueof($.boolean),truevalue,falsevalue)\" }";
 
             var result = JsonTransformer.Transform(transformer, input);
 
@@ -29,10 +28,10 @@ namespace Just.net.Tests
         }
 
         [Test]
-        public void PrimitiveFirstTrueConditionStringResult()
+        public void FnFirstTrueConditionStringResult()
         {
             const string input = "{ \"string\": \"some words\", \"integer\": 123, \"boolean\": true }";
-            const string transformer = "{ \"result\": \"#ifcondition(true,#valueof($.boolean),truevalue,falsevalue)\" }";
+            const string transformer = "{ \"result\": \"#ifcondition(#valueof($.boolean),true,truevalue,falsevalue)\" }";
 
             var result = JsonTransformer.Transform(transformer, input);
 
