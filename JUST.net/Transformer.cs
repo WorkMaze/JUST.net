@@ -1,10 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using System.Globalization;
 using System.IO;
 
 namespace JUST
@@ -25,6 +21,7 @@ namespace JUST
 
         public static string exists(string jsonPath, string inputJson)
         {
+            //TODO Return typed object
             JsonReader reader = new JsonTextReader(new StringReader(inputJson));
             reader.DateParseHandling = DateParseHandling.None;
             JToken token = JObject.Load(reader);
@@ -39,6 +36,7 @@ namespace JUST
 
         public static string existsandnotempty(string jsonPath, string inputJson)
         {
+            //TODO Return typed object
             JsonReader reader = new JsonTextReader(new StringReader(inputJson));
             reader.DateParseHandling = DateParseHandling.None;
             JToken token = JObject.Load(reader);
@@ -88,11 +86,13 @@ namespace JUST
 
         public static string firstindexof(string stringRef, string searchString, string inputJson)
         {
+            //TODO Return typed object
             return stringRef.IndexOf(searchString, 0).ToString();
         }
 
         public static string lastindexof(string stringRef, string searchString, string inputJson)
         {
+            //TODO Return typed object
             return stringRef.LastIndexOf(searchString).ToString();
         }
 
@@ -146,6 +146,7 @@ namespace JUST
 
         public static string add(string num1, string num2, string inputJson)
         {
+            //TODO Received and return typed object
             try
             {
                 return (Convert.ToInt32(num1) + Convert.ToInt32(num2)).ToString();
@@ -154,14 +155,17 @@ namespace JUST
         }
         public static string subtract(string num1, string num2, string inputJson)
         {
+            //TODO Received and return typed object
             try { return (Convert.ToInt32(num1) - Convert.ToInt32(num2)).ToString(); }
             catch { return null; }
         }
         public static string multiply(string num1, string num2, string inputJson)
         {
+            //TODO Received and return typed object
             try { return (Convert.ToInt32(num1) * Convert.ToInt32(num2)).ToString(); }
             catch { return null; }
         }
+        //TODO Received and return typed object
         public static string divide(string num1, string num2, string inputJson)
         {
             try { return (Convert.ToInt32(num1) / Convert.ToInt32(num2)).ToString(); }
@@ -172,6 +176,7 @@ namespace JUST
         #region aggregate functions
         public static string sum(string array, string inputJson)
         {
+            //TODO Return typed object
             try
             {
                 JArray parsedArray = JArray.Parse(array);
@@ -194,6 +199,7 @@ namespace JUST
 
         public static string sumatpath(string array, string jsonPath, string inputJson)
         {
+            //TODO Return typed object
             try
             {
                 double integerresult = 0;
@@ -220,6 +226,7 @@ namespace JUST
 
         public static string average(string array, string inputJson)
         {
+            //TODO Return typed object
             try
             {
                 JArray parsedArray = JArray.Parse(array);
@@ -242,6 +249,7 @@ namespace JUST
 
         public static string averageatpath(string array, string jsonPath, string inputJson)
         {
+            //TODO Return typed object
             try
             {
                 double integerresult = 0;
@@ -268,6 +276,7 @@ namespace JUST
 
         public static string max(string array, string inputJson)
         {
+            //TODO Return typed object
             try
             {
                 JArray parsedArray = JArray.Parse(array);
@@ -300,6 +309,7 @@ namespace JUST
 
         public static string maxatpath(string array, string jsonPath, string inputJson)
         {
+            //TODO Return typed object
             try
             {
                 double integerresult = 0;
@@ -338,6 +348,7 @@ namespace JUST
 
         public static string min(string array, string inputJson)
         {
+            //TODO Return typed object
             try
             {
                 JArray parsedArray = JArray.Parse(array);
@@ -370,6 +381,7 @@ namespace JUST
 
         public static string minatpath(string array, string jsonPath, string inputJson)
         {
+            //TODO Return typed object
             try
             {
                 double integerresult = 0;
@@ -407,6 +419,7 @@ namespace JUST
 
         public static string arraylength(string array, string inputJson)
         {
+            //TODO Return typed object
             try
             {
                 JArray parsedArray = JArray.Parse(array);
@@ -489,6 +502,7 @@ namespace JUST
 
         public static string xadd(object[] list)
         {
+            //TODO Return typed object
             int add = 0;
 
             for (int i = 0; i < list.Length - 1; i++)
@@ -571,6 +585,7 @@ namespace JUST
         #region operators
         public static string stringequals(object[] list)
         {
+            //TODO Return typed object
             bool result = false;
 
             if (list.Length >= 2)
@@ -584,6 +599,7 @@ namespace JUST
 
         public static string stringcontains(object[] list)
         {
+            //TODO Return typed object
             bool result = false;
 
             if (list.Length >= 2)
@@ -597,6 +613,7 @@ namespace JUST
 
         public static string mathequals(object[] list)
         {
+            //TODO Return typed object
             bool result = false;
 
 
@@ -614,6 +631,7 @@ namespace JUST
 
         public static string mathgreaterthan(object[] list)
         {
+            //TODO Return typed object
             bool result = false;
 
 
@@ -631,6 +649,7 @@ namespace JUST
 
         public static string mathlessthan(object[] list)
         {
+            //TODO Return typed object
             bool result = false;
 
 
@@ -648,6 +667,7 @@ namespace JUST
 
         public static string mathgreaterthanorequalto(object[] list)
         {
+            //TODO Return typed object
             bool result = false;
 
 
@@ -665,6 +685,7 @@ namespace JUST
 
         public static string mathlessthanorequalto(object[] list)
         {
+            //TODO Return typed object
             bool result = false;
 
 
