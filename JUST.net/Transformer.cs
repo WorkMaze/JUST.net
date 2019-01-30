@@ -16,7 +16,7 @@ namespace JUST
             JsonReader reader = new JsonTextReader(new StringReader(inputJson));
             reader.DateParseHandling = DateParseHandling.None;
             JToken token = JObject.Load(reader);
-            //JToken token = JObject.Parse(inputJson);
+            //JToken token = JsonConvert.DeserializeObject<JObject>(inputJson);
 
             JToken selectedToken = token.SelectToken(jsonPath);
             return GetValue(selectedToken);
@@ -544,7 +544,7 @@ namespace JUST
             if (!groupingElement.Contains(":"))
             {
 
-                JObject inObj = JObject.Parse(inputJson);
+                JObject inObj = JsonConvert.DeserializeObject<JObject>(inputJson);
 
                 JArray arr = (JArray)inObj.SelectToken(jsonPath);
 
@@ -556,7 +556,7 @@ namespace JUST
             {
                 string[] groupingElements = groupingElement.Split(':');
 
-                JObject inObj = JObject.Parse(inputJson);
+                JObject inObj = JsonConvert.DeserializeObject<JObject>(inputJson);
 
                 JArray arr = (JArray)inObj.SelectToken(jsonPath);
 

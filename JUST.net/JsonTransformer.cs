@@ -480,7 +480,7 @@ namespace JUST
 
             string jsonPath = inputString.Substring(indexOfStart + 1, indexOfEnd - indexOfStart - 1);
 
-            JToken token = JObject.Parse(inputJson);
+            JToken token = JsonConvert.DeserializeObject<JObject>(inputJson);
 
             JToken selectedToken = token.SelectToken(jsonPath);
 
@@ -723,7 +723,7 @@ namespace JUST
         #region Split
         public static IEnumerable<string> SplitJson(string input, string arrayPath)
         {
-            JObject inputJObject = JObject.Parse(input);
+            JObject inputJObject = JsonConvert.DeserializeObject<JObject>(input);
 
             List<JObject> jObjects = SplitJson(inputJObject, arrayPath).ToList<JObject>();
 
