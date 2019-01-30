@@ -13,22 +13,14 @@ namespace JUST
     {
         public static object valueof(string jsonPath, string inputJson)
         {
-            JsonReader reader = new JsonTextReader(new StringReader(inputJson));
-            reader.DateParseHandling = DateParseHandling.None;
-            JToken token = JObject.Load(reader);
-            //JToken token = JsonConvert.DeserializeObject<JObject>(inputJson);
-
+            JToken token = JsonConvert.DeserializeObject<JObject>(inputJson);
             JToken selectedToken = token.SelectToken(jsonPath);
             return GetValue(selectedToken);
         }
 
-
         public static string exists(string jsonPath, string inputJson)
         {
-            JsonReader reader = new JsonTextReader(new StringReader(inputJson));
-            reader.DateParseHandling = DateParseHandling.None;
-            JToken token = JObject.Load(reader);
-
+            JToken token = JsonConvert.DeserializeObject<JObject>(inputJson);
             JToken selectedToken = token.SelectToken(jsonPath);
 
             if (selectedToken != null)
@@ -39,10 +31,7 @@ namespace JUST
 
         public static string existsandnotempty(string jsonPath, string inputJson)
         {
-            JsonReader reader = new JsonTextReader(new StringReader(inputJson));
-            reader.DateParseHandling = DateParseHandling.None;
-            JToken token = JObject.Load(reader);
-
+            JToken token = JsonConvert.DeserializeObject<JObject>(inputJson);
             JToken selectedToken = token.SelectToken(jsonPath);
 
             if (selectedToken != null)

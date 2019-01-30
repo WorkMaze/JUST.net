@@ -10,6 +10,17 @@ namespace JUST
 {
     public class JsonTransformer
     {
+        static JsonTransformer()
+        {
+            if (JsonConvert.DefaultSettings == null)
+            {
+                JsonConvert.DefaultSettings = () => new JsonSerializerSettings
+                {
+                    DateParseHandling = DateParseHandling.None
+                };
+            }
+        }
+        
         public static string Transform(string transformerJson, string inputJson)
         {
             JToken result = null;
@@ -268,15 +279,14 @@ namespace JUST
                         string strArrayToken = property.Name.Substring(6, property.Name.Length - 7);
 
                         JsonReader reader = null;
+                        var jsonToLoad = inputJson;
                         if (currentArrayToken != null && property.Name.Contains("#loopwithincontext"))
                         {
                             strArrayToken = property.Name.Substring(19, property.Name.Length - 20);
-                            reader = new JsonTextReader(new StringReader(JsonConvert.SerializeObject(currentArrayToken)));
+                            jsonToLoad = JsonConvert.SerializeObject(currentArrayToken);
                         }
-                        else
-                            reader = new JsonTextReader(new StringReader(inputJson));
-                        reader.DateParseHandling = DateParseHandling.None;
-                        JToken token = JObject.Load(reader);
+                        
+                        JToken token = JsonConvert.DeserializeObject<JObject>(jsonToLoad);
                         JToken arrayToken = null;
                         if (strArrayToken.Contains("#"))
                         {
