@@ -278,7 +278,6 @@ namespace JUST
                     {
                         string strArrayToken = property.Name.Substring(6, property.Name.Length - 7);
 
-                        JsonReader reader = null;
                         var jsonToLoad = inputJson;
                         if (currentArrayToken != null && property.Name.Contains("#loopwithincontext"))
                         {
