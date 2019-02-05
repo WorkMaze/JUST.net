@@ -867,7 +867,9 @@ Consider the following input:-
   "Surname": "Nordmann",
   "MiddleName": "Inger",
   "ContactInformation": "Karl johans gate:Oslo:88880000" ,
-  "PersonalInformation": "45:Married:Norwegian"
+  "PersonalInformation": "45:Married:Norwegian",
+  "AgeOfMother": "67",
+  "AgeOfFather": "70"
 }``
 
 Transformer:-
@@ -879,7 +881,7 @@ Transformer:-
 
 
 Output:-
-``{"FullName":"Kari,Inger,Nordmann","AgeOfParents":"67"}``
+``{"FullName":"Kari,Inger,Nordmann","AgeOfParents":"137"}``
 
 ## Check for existance 
 

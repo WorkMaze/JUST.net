@@ -1,5 +1,4 @@
-﻿using JUST;
-using NUnit.Framework;
+﻿using NUnit.Framework;
 
 namespace JUST.UnitTests
 {
