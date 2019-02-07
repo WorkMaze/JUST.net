@@ -2,10 +2,10 @@
 
 namespace JUST.UnitTests
 {
-    [TestFixture, Category("IfCondition")]
-    public class IfConditionTests
+    [TestFixture, Category("ConditionalFunctions")]
+    public class ConditionalFunctionsTests
     {
-        [Test]
+        [Test, Category("IfCondition")]
         public void PrimitiveFirstTrueConditionStringResult()
         {
             const string input = "{ \"string\": \"some words\", \"integer\": 123, \"boolean\": true }";
@@ -16,6 +16,7 @@ namespace JUST.UnitTests
             Assert.AreEqual("{\"result\":\"truevalue\"}", result);
         }
 
+        [Test, Category("IfCondition")]
         public void PrimitiveFirstFalseConditionStringResult()
         {
             const string input = "{ \"string\": \"some words\", \"integer\": 123, \"boolean\": true }";
@@ -26,7 +27,7 @@ namespace JUST.UnitTests
             Assert.AreEqual("{\"result\":\"falsevalue\"}", result);
         }
 
-        [Test]
+        [Test, Category("IfCondition")]
         public void FnFirstTrueConditionStringResult()
         {
             const string input = "{ \"string\": \"some words\", \"integer\": 123, \"boolean\": true }";
@@ -37,7 +38,7 @@ namespace JUST.UnitTests
             Assert.AreEqual("{\"result\":\"truevalue\"}", result);
         }
 
-        [Test]
+        [Test, Category("IfCondition")]
         public void FnFirstFalseConditionStringResult()
         {
             const string input = "{ \"string\": \"some words\", \"integer\": 123, \"boolean\": true }";
@@ -48,7 +49,7 @@ namespace JUST.UnitTests
             Assert.AreEqual("{\"result\":\"falsevalue\"}", result);
         }
 
-        [Test]
+        [Test, Category("IfCondition")]
         public void FnBothTrueConditionStringResult()
         {
             const string input = "{ \"string\": \"some words\", \"integer\": 123, \"boolean\": true, \"same_integer\": 123 }";
@@ -59,7 +60,7 @@ namespace JUST.UnitTests
             Assert.AreEqual("{\"result\":\"truevalue\"}", result);
         }
 
-        [Test]
+        [Test, Category("IfCondition")]
         public void FnBothFalseConditionStringResult()
         {
             const string input = "{ \"string\": \"some words\", \"integer\": 123, \"boolean\": true, \"same_integer\": 123 }";
@@ -70,7 +71,7 @@ namespace JUST.UnitTests
             Assert.AreEqual("{\"result\":\"falsevalue\"}", result);
         }
 
-        [Test]
+        [Test, Category("IfCondition")]
         public void TrueFnResult()
         {
             const string input = "{ \"string\": \"some words\", \"integer\": 123, \"boolean\": true, \"same_integer\": 123 }";
@@ -81,7 +82,7 @@ namespace JUST.UnitTests
             Assert.AreEqual("{\"result\":true}", result);
         }
 
-        [Test]
+        [Test, Category("IfCondition")]
         public void FalseFnResult()
         {
             const string input = "{ \"string\": \"some words\", \"integer\": 123, \"boolean\": true, \"other_integer\": 1235 }";
@@ -92,8 +93,8 @@ namespace JUST.UnitTests
             Assert.AreEqual("{\"result\":1235}", result);
         }
 
-        [Test]
-        public void ReadmeTest()
+        [Test, Category("IfCondition")]
+        public void ReadmeIfConditionTest()
         {
             const string input = "{ \"menu\": { \"id\" : \"github\", \"repository\" : \"JUST\" } }";
             const string transformer = "{ \"ifconditiontesttrue\": \"#ifcondition(#valueof($.menu.id),github,#valueof($.menu.repository),fail)\", \"ifconditiontestfalse\": \"#ifcondition(#valueof($.menu.id),xml,#valueof($.menu.repository),fail)\" }";
@@ -101,6 +102,28 @@ namespace JUST.UnitTests
             var result = JsonTransformer.Transform(transformer, input);
 
             Assert.AreEqual("{\"ifconditiontesttrue\":\"JUST\",\"ifconditiontestfalse\":\"fail\"}", result);
+        }
+
+        [Test, Category("IfGroup")]
+        public void ConditionalGroupTrueTest()
+        {
+            const string input = "{ \"Tree\": { \"Branch\": \"leaf\", \"Flower\": \"Rose\" } }";
+            const string transformer = "{ \"Result\": { \"Header\": \"JsonTransform\", \"#ifgroup(#exists($.Tree.Branch))\": { \"State\": { \"Value1\": \"#valueof($.Tree.Branch)\", \"Value2\": \"#valueof($.Tree.Flower)\" } } } }";
+
+            var result = JsonTransformer.Transform(transformer, input);
+
+            Assert.AreEqual("{\"Result\":{\"Header\":\"JsonTransform\",\"State\":{\"Value1\":\"leaf\",\"Value2\":\"Rose\"}}}", result);
+        }
+
+        [Test, Category("IfGroup")]
+        public void ConditionalGroupFalseTest()
+        {
+            const string input = "{ \"Tree\": { \"Branch\": \"leaf\", \"Flower\": \"Rose\" } }";
+            const string transformer = "{ \"Result\": { \"Header\": \"JsonTransform\", \"#ifgroup(#exists($.Tree.Root))\": { \"State\": { \"Value1\": \"#valueof($.Tree.Branch)\", \"Value2\": \"#valueof($.Tree.Flower)\" } } } }";
+
+            var result = JsonTransformer.Transform(transformer, input);
+
+            Assert.AreEqual("{\"Result\":{\"Header\":\"JsonTransform\"}}", result);
         }
     }
 }
