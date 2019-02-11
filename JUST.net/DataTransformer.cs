@@ -3,10 +3,7 @@ using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Reflection;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace JUST
 {
@@ -251,51 +248,6 @@ namespace JUST
 
             return functionString;
         }
-
-        //private static object CallCustomFunction(object[] parameters)
-        //{
-        //    object[] customParameters = new object[parameters.Length - 3];
-        //    string functionString = string.Empty;
-        //    string dllName = string.Empty;
-        //    int i = 0;
-        //    foreach (object parameter in parameters)
-        //    {
-        //        if (i == 0)
-        //            dllName = parameter.ToString();
-        //        else if (i == 1)
-        //            functionString = parameter.ToString();
-        //        else
-        //        if (i != (parameters.Length - 1))
-        //            customParameters[i - 2] = parameter;
-
-        //        i++;
-        //    }
-
-        //    int index = functionString.LastIndexOf(".");
-
-        //    string className = functionString.Substring(0, index);
-        //    string functionName = functionString.Substring(index + 1, functionString.Length - index - 1);
-
-        //    className = className + "," + dllName;
-
-        //    return caller(className, functionName, customParameters);
-
-        //}
-
-        //private static object caller(String myclass, String mymethod, object[] parameters)
-        //{
-        //    Assembly assembly = Assembly.GetEntryAssembly();
-
-        //    Type type = Type.GetType(myclass);
-        //    // Create an instance of that type
-        //    //Object obj = Activator.CreateInstance(type);
-        //    // Retrieve the method you are looking for
-        //    MethodInfo methodInfo = type.GetTypeInfo().GetMethod(mymethod);
-        //    // Invoke the method on the instance we created above
-        //    return methodInfo.Invoke(null, parameters);
-        //}
-
-
 
         private static string[] GetArguments(string argumentString)
         {
