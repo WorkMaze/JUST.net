@@ -50,19 +50,34 @@ Every JUST function starts with "#" character.
 This function is used to extract the value of a given property. The value is extracted using JSON path of the property. For more information on how to use JSON path refer to :- 
 http://www.newtonsoft.com/json/help/html/QueryJsonSelectTokenJsonPath.htm
 
+When selecting multiple elements (applying a JSON path that returns multiple elements, like a filter over an array), an extra parameter set to true must be used. 
+The result will always be an array, even if JSON path query returns a single or no results.
+
 Consider the input:-
 
 ``{
   "menu": {   
     "popup": {
       "menuitem": [
-       {
-          "value": "Open",
-          "onclick": "OpenDoc()"
-        },
         {
+		  "value": "New",
+          "onclick": "NewDoc()",
+		  "tabindex": 1
+        },
+		{
+		  "value": "Open",
+          "onclick": "OpenDoc()",
+		  "tabindex": 2
+        },
+		{
+		  "value": "Save",
+          "onclick": "SaveDoc()",
+		  "tabindex": 3
+        },
+		{
           "value": "Close",
-          "onclick": "CloseDoc()"
+          "onclick": "CloseDoc()",
+		  "tabindex": 4
         }
       ]
     }
@@ -74,14 +89,16 @@ Transformer:-
 ``{
   "result": {
     "Open": "#valueof($.menu.popup.menuitem[?(@.value=='Open')].onclick)",
-    "Close": "#valueof($.menu.popup.menuitem[?(@.value=='Close')].onclick)"
+    "Close": "#valueof($.menu.popup.menuitem[?(@.value=='Close')].onclick)",
+	"RequiresPermission": "#valueof($.menu.popup.menuitem[?(@.tabindex<=3)].value, true)",
+	"Hidden": "#valueof($.menu.popup.menuitem[?(@.tabindex>4)].value, true)"
   }
 }``
 
 Output:-
 
 ``{
-   "result":{"Open":null,"Close":"OpenDoc()"}
+   "result":{"Open":null,"Close":"OpenDoc(),"RequiresPermission":["New","Open","Save"],"Hidden":[]}
 }``
 
 

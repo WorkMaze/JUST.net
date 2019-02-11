@@ -167,11 +167,11 @@ namespace JUST
                 }
                 else if (functionName == "currentvalue" || functionName == "currentindex" || functionName == "lastindex"
                     || functionName == "lastvalue")
-                    output = (string)caller("JUST.Transformer", functionName, new object[] { array, currentArrayElement });
+                    output = (string)ReflectionHelper.caller(null, "JUST.Transformer", functionName, new object[] { array, currentArrayElement });
                 else if (functionName == "currentvalueatpath" || functionName == "lastvalueatpath")
-                    output = (string)caller("JUST.Transformer", functionName, new object[] { array, currentArrayElement, arguments[0] });
+                    output = (string)ReflectionHelper.caller(null, "JUST.Transformer", functionName, new object[] { array, currentArrayElement, arguments[0] });
                 else if (functionName == "customfunction")
-                    output = (string)CallCustomFunction(parameters);
+                    output = (string)ReflectionHelper.CallCustomFunction(parameters);
                 else if (functionName == "xconcat" || functionName == "xadd" || functionName == "mathequals" || functionName == "mathgreaterthan" || functionName == "mathlessthan"
                     || functionName == "mathgreaterthanorequalto"
                     || functionName == "mathlessthanorequalto" || functionName == "stringcontains" ||
@@ -179,14 +179,13 @@ namespace JUST
                 {
                     object[] oParams = new object[1];
                     oParams[0] = parameters;
-                    output = caller("JUST.Transformer", functionName, oParams).ToString();
+                    output = ReflectionHelper.caller(null, "JUST.Transformer", functionName, oParams).ToString();
                 }
                 else
-                    output = caller("JUST.Transformer", functionName, parameters).ToString();
+                    output = ReflectionHelper.caller(null, "JUST.Transformer", functionName, parameters).ToString();
             }
             return output;
         }
-
 
         private static string GetLoopResult(string[] parameters,string loopArgumentString)
         {
@@ -253,48 +252,48 @@ namespace JUST
             return functionString;
         }
 
-        private static object CallCustomFunction(object[] parameters)
-        {
-            object[] customParameters = new object[parameters.Length - 3];
-            string functionString = string.Empty;
-            string dllName = string.Empty;
-            int i = 0;
-            foreach (object parameter in parameters)
-            {
-                if (i == 0)
-                    dllName = parameter.ToString();
-                else if (i == 1)
-                    functionString = parameter.ToString();
-                else
-                if (i != (parameters.Length - 1))
-                    customParameters[i - 2] = parameter;
+        //private static object CallCustomFunction(object[] parameters)
+        //{
+        //    object[] customParameters = new object[parameters.Length - 3];
+        //    string functionString = string.Empty;
+        //    string dllName = string.Empty;
+        //    int i = 0;
+        //    foreach (object parameter in parameters)
+        //    {
+        //        if (i == 0)
+        //            dllName = parameter.ToString();
+        //        else if (i == 1)
+        //            functionString = parameter.ToString();
+        //        else
+        //        if (i != (parameters.Length - 1))
+        //            customParameters[i - 2] = parameter;
 
-                i++;
-            }
+        //        i++;
+        //    }
 
-            int index = functionString.LastIndexOf(".");
+        //    int index = functionString.LastIndexOf(".");
 
-            string className = functionString.Substring(0, index);
-            string functionName = functionString.Substring(index + 1, functionString.Length - index - 1);
+        //    string className = functionString.Substring(0, index);
+        //    string functionName = functionString.Substring(index + 1, functionString.Length - index - 1);
 
-            className = className + "," + dllName;
+        //    className = className + "," + dllName;
 
-            return caller(className, functionName, customParameters);
+        //    return caller(className, functionName, customParameters);
 
-        }
+        //}
 
-        private static object caller(String myclass, String mymethod, object[] parameters)
-        {
-            Assembly assembly = Assembly.GetEntryAssembly();
+        //private static object caller(String myclass, String mymethod, object[] parameters)
+        //{
+        //    Assembly assembly = Assembly.GetEntryAssembly();
 
-            Type type = Type.GetType(myclass);
-            // Create an instance of that type
-            //Object obj = Activator.CreateInstance(type);
-            // Retrieve the method you are looking for
-            MethodInfo methodInfo = type.GetTypeInfo().GetMethod(mymethod);
-            // Invoke the method on the instance we created above
-            return methodInfo.Invoke(null, parameters);
-        }
+        //    Type type = Type.GetType(myclass);
+        //    // Create an instance of that type
+        //    //Object obj = Activator.CreateInstance(type);
+        //    // Retrieve the method you are looking for
+        //    MethodInfo methodInfo = type.GetTypeInfo().GetMethod(mymethod);
+        //    // Invoke the method on the instance we created above
+        //    return methodInfo.Invoke(null, parameters);
+        //}
 
 
 

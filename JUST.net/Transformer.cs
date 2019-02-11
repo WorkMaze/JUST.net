@@ -1,33 +1,25 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using System.Globalization;
 using System.IO;
 
 namespace JUST
 {
     internal class Transformer
     {
-        public static object valueof(string jsonPath, string inputJson)
-        {
-            JsonReader reader = new JsonTextReader(new StringReader(inputJson));
-            reader.DateParseHandling = DateParseHandling.None;
-            JToken token = JObject.Load(reader);
-            //JToken token = JObject.Parse(inputJson);
+        private static JToken ParseJson(string inputJson) => JObject.Load(new JsonTextReader(new StringReader(inputJson)) { DateParseHandling = DateParseHandling.None });
 
-            JToken selectedToken = token.SelectToken(jsonPath);
+        public static object valueof(string jsonPath, string inputJson, bool isMultiple = false)
+        {
+            JToken token = ParseJson(inputJson);
+
+            JToken selectedToken = !isMultiple ? token.SelectToken(jsonPath) : new JArray(token.SelectTokens(jsonPath));
             return GetValue(selectedToken);
         }
 
-
         public static string exists(string jsonPath, string inputJson)
         {
-            JsonReader reader = new JsonTextReader(new StringReader(inputJson));
-            reader.DateParseHandling = DateParseHandling.None;
-            JToken token = JObject.Load(reader);
+            JToken token = ParseJson(inputJson);
 
             JToken selectedToken = token.SelectToken(jsonPath);
 
@@ -39,9 +31,7 @@ namespace JUST
 
         public static string existsandnotempty(string jsonPath, string inputJson)
         {
-            JsonReader reader = new JsonTextReader(new StringReader(inputJson));
-            reader.DateParseHandling = DateParseHandling.None;
-            JToken token = JObject.Load(reader);
+            JToken token = ParseJson(inputJson);
 
             JToken selectedToken = token.SelectToken(jsonPath);
 
