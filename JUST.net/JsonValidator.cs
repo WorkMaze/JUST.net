@@ -38,9 +38,9 @@ namespace JUST
             SchemaValidationEventHandler handler = new SchemaValidationEventHandler(HandleEvent);
             if (!string.IsNullOrEmpty(schemaNoPrefix))
             {
-                JObject xSchemaToken = JObject.Parse(schemaNoPrefix);
+                JObject xSchemaToken = JsonConvert.DeserializeObject<JObject>(schemaNoPrefix);
                 JSchema schema = JSchema.Parse(JsonConvert.SerializeObject(xSchemaToken));
-                JObject json = JObject.Parse(inputJsonString);
+                JObject json = JsonConvert.DeserializeObject<JObject>(inputJsonString);
                 try
                 {
                     json.Validate(schema, handler);
@@ -57,10 +57,10 @@ namespace JUST
                 foreach(KeyValuePair<string,string> schemaPair in schemaCollection)
                 {
 
-                    JObject xSchemaToken = JObject.Parse(schemaPair.Value);
+                    JObject xSchemaToken = JsonConvert.DeserializeObject<JObject>(schemaPair.Value);
                     PrefixKey(xSchemaToken, schemaPair.Key);
                     JSchema schema = JSchema.Parse(JsonConvert.SerializeObject(xSchemaToken));
-                    JObject json = JObject.Parse(inputJsonString);
+                    JObject json = JsonConvert.DeserializeObject<JObject>(inputJsonString);
                     try
                     {
                         json.Validate(schema, handler);
