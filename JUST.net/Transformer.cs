@@ -1,26 +1,26 @@
-using System;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using System.Globalization;
 using System.IO;
 
 namespace JUST
 {
     internal class Transformer
     {
-        private static JToken ParseJson(string inputJson) => JObject.Load(new JsonTextReader(new StringReader(inputJson)) { DateParseHandling = DateParseHandling.None });
-
-        public static object valueof(string jsonPath, string inputJson, bool isMultiple = false)
+        public static object valueof(string jsonPath, string inputJson)
         {
-            JToken token = ParseJson(inputJson);
-
-            JToken selectedToken = !isMultiple ? token.SelectToken(jsonPath) : new JArray(token.SelectTokens(jsonPath));
+            JToken token = JsonConvert.DeserializeObject<JObject>(inputJson);
+            JToken selectedToken = token.SelectToken(jsonPath);
             return GetValue(selectedToken);
         }
 
         public static string exists(string jsonPath, string inputJson)
         {
-            JToken token = ParseJson(inputJson);
-
+            JToken token = JsonConvert.DeserializeObject<JObject>(inputJson);
             JToken selectedToken = token.SelectToken(jsonPath);
 
             if (selectedToken != null)
@@ -31,8 +31,7 @@ namespace JUST
 
         public static string existsandnotempty(string jsonPath, string inputJson)
         {
-            JToken token = ParseJson(inputJson);
-
+            JToken token = JsonConvert.DeserializeObject<JObject>(inputJson);
             JToken selectedToken = token.SelectToken(jsonPath);
 
             if (selectedToken != null)
@@ -534,7 +533,7 @@ namespace JUST
             if (!groupingElement.Contains(":"))
             {
 
-                JObject inObj = JObject.Parse(inputJson);
+                JObject inObj = JsonConvert.DeserializeObject<JObject>(inputJson);
 
                 JArray arr = (JArray)inObj.SelectToken(jsonPath);
 
@@ -546,7 +545,7 @@ namespace JUST
             {
                 string[] groupingElements = groupingElement.Split(':');
 
-                JObject inObj = JObject.Parse(inputJson);
+                JObject inObj = JsonConvert.DeserializeObject<JObject>(inputJson);
 
                 JArray arr = (JArray)inObj.SelectToken(jsonPath);
 
