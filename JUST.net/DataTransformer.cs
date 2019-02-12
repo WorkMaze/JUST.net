@@ -200,10 +200,7 @@ namespace JUST
             if (parameters.Length == 3)
                 input = parameters[2];
 
-            JsonReader reader = new JsonTextReader(new StringReader(input));
-            reader.DateParseHandling = DateParseHandling.None;
-            JToken token = JObject.Load(reader);
-           
+            JToken token = JsonConvert.DeserializeObject<JObject>(input);
             JToken selectedToken = token.SelectToken(parameters[0]);
 
             if (selectedToken.Type != JTokenType.Array)
