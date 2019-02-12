@@ -15,7 +15,7 @@ namespace ExternalMethods
             return "External Instance";
         }
 
-        public string StaticTypedParameters(int n, bool b, string s, DateTime d)
+        public static string StaticTypedParameters(int n, bool b, string s, DateTime d)
         {
             return "External Static TypedParameters success";
         }
