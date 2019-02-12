@@ -2,14 +2,10 @@
   "root": {
     "array": {
 
-      "fullarray": "#valueof($.x), false",
+      "fullarray": "#valueof($.x)",
       "arrayelement": "#valueof($.x[0])",
-      "specificelement": "#valueof($.x[1].v.a)",
-      "filters": {
-        "x_bigger_than_two": "#valueof($.x[?(@v.b>=2)], true)",
-        "x_sum": "#sum(#valueof($.x[?(@v.b>=2)].v.b, true))",
-        "x_empty": "#valueof($.x[?(@v.b>4)].v.b, true)"
-      }
+      "specificelement": "#valueof($.x[1].v.a)"
     }
   }
+
 }
