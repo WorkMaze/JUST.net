@@ -1,15 +1,33 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text.RegularExpressions;
 
 namespace JUST
 {
     public class JsonTransformer
     {
+
+        static JsonTransformer()
+        {
+            if (JsonConvert.DefaultSettings == null)
+            {
+                JsonConvert.DefaultSettings = () => new JsonSerializerSettings
+                {
+                    DateParseHandling = DateParseHandling.None
+                };
+            }
+        }
+        
+
+        public const string FunctionAndArgumentsRegex = "^#(.+?)[(](.*)[)]$";
+
+
         public static string Transform(string transformerJson, string inputJson)
         {
             JToken result = null;
@@ -267,16 +285,14 @@ namespace JUST
                     {
                         string strArrayToken = property.Name.Substring(6, property.Name.Length - 7);
 
-                        JsonReader reader = null;
+                        var jsonToLoad = inputJson;
                         if (currentArrayToken != null && property.Name.Contains("#loopwithincontext"))
                         {
                             strArrayToken = property.Name.Substring(19, property.Name.Length - 20);
-                            reader = new JsonTextReader(new StringReader(JsonConvert.SerializeObject(currentArrayToken)));
+                            jsonToLoad = JsonConvert.SerializeObject(currentArrayToken);
                         }
-                        else
-                            reader = new JsonTextReader(new StringReader(inputJson));
-                        reader.DateParseHandling = DateParseHandling.None;
-                        JToken token = JObject.Load(reader);
+                        
+                        JToken token = JsonConvert.DeserializeObject<JObject>(jsonToLoad);
                         JToken arrayToken = null;
                         if (strArrayToken.Contains("#"))
                         {
@@ -480,7 +496,7 @@ namespace JUST
 
             string jsonPath = inputString.Substring(indexOfStart + 1, indexOfEnd - indexOfStart - 1);
 
-            JToken token = JObject.Parse(inputJson);
+            JToken token = JsonConvert.DeserializeObject<JObject>(inputJson);
 
             JToken selectedToken = token.SelectToken(jsonPath);
 
@@ -558,18 +574,12 @@ namespace JUST
             try
             {
                 object output = null;
-                functionString = functionString.Trim();
-                output = functionString.Substring(1);
 
-                int indexOfStart = output.ToString().IndexOf("(", 0);
-                int indexOfEnd = output.ToString().LastIndexOf(")");
-
-                if (indexOfStart == -1 || indexOfEnd == -1)
-                    return functionString;
-
-                string functionName = output.ToString().Substring(0, indexOfStart);
-
-                string argumentString = output.ToString().Substring(indexOfStart + 1, indexOfEnd - indexOfStart - 1);
+                string functionName, argumentString;
+                if (!TryParseFunctionNameAndArguments(functionString, out functionName, out argumentString))
+                {
+                    return functionName;
+                }
 
                 string[] arguments = GetArguments(argumentString);
                 object[] parameters = new object[arguments.Length + 1];
@@ -603,7 +613,15 @@ namespace JUST
                 else if (functionName == "currentvalueatpath" || functionName == "lastvalueatpath")
                     output = ReflectionHelper.caller(null, "JUST.Transformer", functionName, new object[] { array, currentArrayElement, arguments[0] });
                 else if (functionName == "customfunction")
+
                     output = ReflectionHelper.CallCustomFunction(parameters);
+
+                else if (JUSTContext.IsRegisteredCustomFunction(functionName))
+                {
+                    var methodInfo = JUSTContext.GetCustomMethod(functionName);
+                    output = ReflectionHelper.InvokeCustomMethod(methodInfo, parameters, true);
+                }
+
                 else if (Regex.IsMatch(functionName, ReflectionHelper.EXTERNAL_ASSEMBLY_REGEX)){
                     output = ReflectionHelper.CallExternalAssembly(functionName, parameters);
                 }
@@ -633,6 +651,7 @@ namespace JUST
                 throw new Exception("Error while calling function : " + functionString + " - " + ex.Message, ex);
             }
         }
+
         #endregion
 
         #region GetArguments
@@ -693,7 +712,7 @@ namespace JUST
         #region Split
         public static IEnumerable<string> SplitJson(string input, string arrayPath)
         {
-            JObject inputJObject = JObject.Parse(input);
+            JObject inputJObject = JsonConvert.DeserializeObject<JObject>(input);
 
             List<JObject> jObjects = SplitJson(inputJObject, arrayPath).ToList<JObject>();
 
