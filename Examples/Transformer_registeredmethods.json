@@ -1,0 +1,15 @@
+﻿{
+  "externalStaticMethodResult": "#External_StaticMethod()",
+  "externalStaticTypedParametersResult": "#External_StaticTypedParameters(1,true,abc,2018-10-11T11:00:00.000Z)",
+  "externalInstanceMethodResult": "#External_InstanceMethod()",
+  "externalInstanceTypedParametersResult": "#External_TypedParameters(1,true,abc,2018-10-11T11:00:00.000Z)",
+  "externalInstanceNavigateTypedParametersResult": "#External_NavigateTypedParameters(#valueof($.season.characteristics.hot))",
+
+  "internalStaticMethodResult": "#StaticMethod()",
+  "internalStaticTypedParametersResult": "#StaticTypedParameters(1,true,abc,2018-10-11T11:00:00.000Z)",
+  "internalInstanceMethodResult": "#InstanceMethod()",
+  "internalInstanceTypedParametersResult": "#TypedParameters(1,true,abc,2018-10-11T11:00:00.000Z)",
+  "internalInstanceNavigateTypedParametersResult": "#NavigateTypedParameters(#valueof($.season))",
+
+  "summer": "#ExternalMethods::SeasonsHelper.Season::IsSummer(#valueof($.season.characteristics.hot),#valueof($.season.characteristics.averageDaysOfRain),#valueof($.season.characteristics.randomDay))"
+}
