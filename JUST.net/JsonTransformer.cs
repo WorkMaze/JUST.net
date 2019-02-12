@@ -182,7 +182,7 @@ namespace JUST
                     {
                         object newValue = ParseFunction(property.Value.ToString(), inputJson, parentArray, currentArrayToken);
 
-                        if (newValue != null && newValue.ToString().Contains("\""))
+                        if (newValue != null && (newValue.ToString().Contains("\"") || newValue.ToString().StartsWith("[")))
                         {
                             try
                             {
@@ -613,12 +613,15 @@ namespace JUST
                 else if (functionName == "currentvalueatpath" || functionName == "lastvalueatpath")
                     output = ReflectionHelper.caller(null, "JUST.Transformer", functionName, new object[] { array, currentArrayElement, arguments[0] });
                 else if (functionName == "customfunction")
-                    output = CallCustomFunction(parameters);
+
+                    output = ReflectionHelper.CallCustomFunction(parameters);
+
                 else if (JUSTContext.IsRegisteredCustomFunction(functionName))
                 {
                     var methodInfo = JUSTContext.GetCustomMethod(functionName);
                     output = ReflectionHelper.InvokeCustomMethod(methodInfo, parameters, true);
                 }
+
                 else if (Regex.IsMatch(functionName, ReflectionHelper.EXTERNAL_ASSEMBLY_REGEX)){
                     output = ReflectionHelper.CallExternalAssembly(functionName, parameters);
                 }
@@ -649,43 +652,6 @@ namespace JUST
             }
         }
 
-        private static bool TryParseFunctionNameAndArguments(string input, out string functionName, out string arguments)
-        {
-            var match = new Regex(FunctionAndArgumentsRegex).Match(input);
-            functionName = match.Success ? match.Groups[1].Value : input;
-            arguments = match.Success ? match.Groups[2].Value : null;
-            return match.Success;
-        }
-
-        private static object CallCustomFunction(object[] parameters)
-        {
-            object[] customParameters = new object[parameters.Length - 3];
-            string functionString = string.Empty;
-            string dllName = string.Empty;
-            int i = 0;
-            foreach (object parameter in parameters)
-            {
-                if (i == 0)
-                    dllName = parameter.ToString();
-                else if (i == 1)
-                    functionString = parameter.ToString();
-                else
-                if (i != (parameters.Length - 1))
-                    customParameters[i - 2] = parameter;
-
-                i++;
-            }
-
-            int index = functionString.LastIndexOf(".");
-
-            string className = functionString.Substring(0, index);
-            string functionName = functionString.Substring(index + 1, functionString.Length - index - 1);
-
-            className = className + "," + dllName;
-
-            return ReflectionHelper.caller(null, className, functionName, customParameters);
-
-        }
         #endregion
 
         #region GetArguments
