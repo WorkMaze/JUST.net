@@ -1,15 +1,19 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text.RegularExpressions;
 
 namespace JUST
 {
     public class JsonTransformer
     {
+        public const string FunctionAndArgumentsRegex = "^#(.+?)[(](.*)[)]$";
+
         public static string Transform(string transformerJson, string inputJson)
         {
             JToken result = null;
@@ -558,18 +562,12 @@ namespace JUST
             try
             {
                 object output = null;
-                functionString = functionString.Trim();
-                output = functionString.Substring(1);
 
-                int indexOfStart = output.ToString().IndexOf("(", 0);
-                int indexOfEnd = output.ToString().LastIndexOf(")");
-
-                if (indexOfStart == -1 || indexOfEnd == -1)
-                    return functionString;
-
-                string functionName = output.ToString().Substring(0, indexOfStart);
-
-                string argumentString = output.ToString().Substring(indexOfStart + 1, indexOfEnd - indexOfStart - 1);
+                string functionName, argumentString;
+                if (!TryParseFunctionNameAndArguments(functionString, out functionName, out argumentString))
+                {
+                    return functionName;
+                }
 
                 string[] arguments = GetArguments(argumentString);
                 object[] parameters = new object[arguments.Length + 1];
@@ -604,6 +602,11 @@ namespace JUST
                     output = ReflectionHelper.caller(null, "JUST.Transformer", functionName, new object[] { array, currentArrayElement, arguments[0] });
                 else if (functionName == "customfunction")
                     output = CallCustomFunction(parameters);
+                else if (JUSTContext.IsRegisteredCustomFunction(functionName))
+                {
+                    var methodInfo = JUSTContext.GetCustomMethod(functionName);
+                    output = ReflectionHelper.InvokeCustomMethod(methodInfo, parameters, true);
+                }
                 else if (Regex.IsMatch(functionName, ReflectionHelper.EXTERNAL_ASSEMBLY_REGEX)){
                     output = ReflectionHelper.CallExternalAssembly(functionName, parameters);
                 }
@@ -632,6 +635,14 @@ namespace JUST
             {
                 throw new Exception("Error while calling function : " + functionString + " - " + ex.Message, ex);
             }
+        }
+
+        private static bool TryParseFunctionNameAndArguments(string input, out string functionName, out string arguments)
+        {
+            var match = new Regex(FunctionAndArgumentsRegex).Match(input);
+            functionName = match.Success ? match.Groups[1].Value : input;
+            arguments = match.Success ? match.Groups[2].Value : null;
+            return match.Success;
         }
 
         private static object CallCustomFunction(object[] parameters)

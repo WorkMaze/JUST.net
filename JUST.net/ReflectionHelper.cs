@@ -12,11 +12,18 @@ namespace JUST
     {
         internal const string EXTERNAL_ASSEMBLY_REGEX = "([\\w.]+)[:]{2}([\\w.]+)[:]{0,2}([\\w.]*)";
 
-        internal static object caller(Assembly assembly, String myclass, String mymethod, object[] parameters, bool convertParameters = false)
+        internal static object caller(Assembly assembly, string myclass, string mymethod, object[] parameters, bool convertParameters = false)
         {
             Type type = assembly?.GetType(myclass) ?? Type.GetType(myclass);
             MethodInfo methodInfo = type.GetTypeInfo().GetMethod(mymethod);
             var instance = !methodInfo.IsStatic ? Activator.CreateInstance(type) : null;
+
+            return InvokeCustomMethod(methodInfo, parameters, convertParameters);
+        }
+
+        internal static object InvokeCustomMethod(MethodInfo methodInfo, object[] parameters, bool convertParameters = false)
+        {
+            var instance = !methodInfo.IsStatic ? Activator.CreateInstance(methodInfo.DeclaringType) : null;
 
             var typedParameters = new List<object>();
             if (convertParameters)
@@ -48,13 +55,23 @@ namespace JUST
             throw new MissingMethodException((assemblyName != null ? $"{assemblyName}." : string.Empty) + $"{namespc}.{methodName}");
         }
 
+        internal static MethodInfo SearchCustomFunction(string assemblyName, string namespc, string methodName)
+        {
+            var assembly = GetAssembly(assemblyName != null, assemblyName, namespc, methodName);
+            Type type = assembly?.GetType(namespc) ?? Type.GetType(namespc);
+            return type?.GetTypeInfo().GetMethod(methodName);
+        }
+
         private static Assembly GetAssembly(bool isAssemblyDefined, string assemblyName, string namespc, string methodName)
         {
             var assemblies = AppDomain.CurrentDomain.GetAssemblies();
             if (isAssemblyDefined)
             {
                 var assemblyFileName = !assemblyName.EndsWith(".dll") ? $"{assemblyName}.dll" : assemblyName;
-                var assembly = assemblies.SingleOrDefault(a => a.ManifestModule.Name == assemblyFileName);
+
+                //SingleOrDefault fails, dll registrated twice????
+                //Possible alternative to AppDomain: https://github.com/dotnet/coreclr/issues/14680
+                var assembly = assemblies.FirstOrDefault(a => a.ManifestModule.Name == assemblyFileName);
                 if (assembly == null)
                 {
                     var assemblyLocation = Path.Combine(Directory.GetCurrentDirectory(), assemblyFileName);
