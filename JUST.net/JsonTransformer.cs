@@ -584,61 +584,58 @@ namespace JUST
                 string[] arguments = GetArguments(argumentString);
                 object[] parameters = new object[arguments.Length + 1];
 
-                int i = 0;
-                if (arguments != null && arguments.Length > 0)
+                if (functionName == "ifcondition")
                 {
-                    foreach (string argument in arguments)
-                    {
-                        string trimmedArgument = argument;
-
-                        if (argument.Contains("#"))
-                            trimmedArgument = argument.Trim();
-
-                        if (trimmedArgument.StartsWith("#"))
-                        {
-                            parameters[i] = ParseFunction(trimmedArgument, inputJson, array, currentArrayElement);
-                        }
-                        else
-                            parameters[i] = trimmedArgument;
-                        i++;
-                    }
-
-                }
-
-                parameters[i] = inputJson;
-
-                if (functionName == "currentvalue" || functionName == "currentindex" || functionName == "lastindex"
-                    || functionName == "lastvalue")
-                    output = ReflectionHelper.caller(null, "JUST.Transformer", functionName, new object[] { array, currentArrayElement });
-                else if (functionName == "currentvalueatpath" || functionName == "lastvalueatpath")
-                    output = ReflectionHelper.caller(null, "JUST.Transformer", functionName, new object[] { array, currentArrayElement, arguments[0] });
-                else if (functionName == "customfunction")
-                    output = CallCustomFunction(parameters);
-                else if (JUSTContext.IsRegisteredCustomFunction(functionName))
-                {
-                    var methodInfo = JUSTContext.GetCustomMethod(functionName);
-                    output = ReflectionHelper.InvokeCustomMethod(methodInfo, parameters, true);
-                }
-                else if (Regex.IsMatch(functionName, ReflectionHelper.EXTERNAL_ASSEMBLY_REGEX)){
-                    output = ReflectionHelper.CallExternalAssembly(functionName, parameters);
-                }
-                else if (functionName == "xconcat" || functionName == "xadd"
-                    || functionName == "mathequals" || functionName == "mathgreaterthan" || functionName == "mathlessthan" 
-                    || functionName == "mathgreaterthanorequalto"
-                    || functionName == "mathlessthanorequalto" || functionName == "stringcontains" || 
-                    functionName == "stringequals")
-                {
-                    object[] oParams = new object[1];
-                    oParams[0] = parameters;
-                    output = ReflectionHelper.caller(null, "JUST.Transformer", functionName, oParams);
+                    var condition = ParseArgument(inputJson, array, currentArrayElement, arguments[0]);
+                    var value = ParseArgument(inputJson, array, currentArrayElement, arguments[1]);
+                    var index = condition.ToString().ToLower() == value.ToString().ToLower() ? 2 : 3;
+                    output = ParseArgument(inputJson, array, currentArrayElement, arguments[index]);
                 }
                 else
                 {
-                    if (currentArrayElement != null && functionName != "valueof")
+                    int i = 0;
+                    for (; i < (arguments?.Length ?? 0); i++)
                     {
-                        parameters[i] = JsonConvert.SerializeObject(currentArrayElement);
+                        string argument = arguments[i];
+                        parameters[i] = ParseArgument(inputJson, array, currentArrayElement, argument);
                     }
-                    output = ReflectionHelper.caller(null, "JUST.Transformer", functionName, parameters);
+
+                    parameters[i] = inputJson;
+
+                    if (functionName == "currentvalue" || functionName == "currentindex" || functionName == "lastindex"
+                        || functionName == "lastvalue")
+                        output = ReflectionHelper.caller(null, "JUST.Transformer", functionName, new object[] { array, currentArrayElement });
+                    else if (functionName == "currentvalueatpath" || functionName == "lastvalueatpath")
+                        output = ReflectionHelper.caller(null, "JUST.Transformer", functionName, new object[] { array, currentArrayElement, arguments[0] });
+                    else if (functionName == "customfunction")
+                        output = CallCustomFunction(parameters);
+                    else if (JUSTContext.IsRegisteredCustomFunction(functionName))
+                    {
+                        var methodInfo = JUSTContext.GetCustomMethod(functionName);
+                        output = ReflectionHelper.InvokeCustomMethod(methodInfo, parameters, true);
+                    }
+                    else if (Regex.IsMatch(functionName, ReflectionHelper.EXTERNAL_ASSEMBLY_REGEX))
+                    {
+                        output = ReflectionHelper.CallExternalAssembly(functionName, parameters);
+                    }
+                    else if (functionName == "xconcat" || functionName == "xadd"
+                        || functionName == "mathequals" || functionName == "mathgreaterthan" || functionName == "mathlessthan"
+                        || functionName == "mathgreaterthanorequalto"
+                        || functionName == "mathlessthanorequalto" || functionName == "stringcontains" ||
+                        functionName == "stringequals")
+                    {
+                        object[] oParams = new object[1];
+                        oParams[0] = parameters;
+                        output = ReflectionHelper.caller(null, "JUST.Transformer", functionName, oParams);
+                    }
+                    else
+                    {
+                        if (currentArrayElement != null && functionName != "valueof")
+                        {
+                            parameters[i] = JsonConvert.SerializeObject(currentArrayElement);
+                        }
+                        output = ReflectionHelper.caller(null, "JUST.Transformer", functionName, parameters);
+                    }
                 }
 
                 return output;
@@ -655,6 +652,21 @@ namespace JUST
             functionName = match.Success ? match.Groups[1].Value : input;
             arguments = match.Success ? match.Groups[2].Value : null;
             return match.Success;
+        }
+
+        private static object ParseArgument(string inputJson, JArray array, JToken currentArrayElement, string argument)
+        {
+            string trimmedArgument = argument;
+
+            if (argument.Contains("#"))
+                trimmedArgument = argument.Trim();
+
+            if (trimmedArgument.StartsWith("#"))
+            {
+                return ParseFunction(trimmedArgument, inputJson, array, currentArrayElement);
+            }
+            else
+                return trimmedArgument;
         }
 
         private static object CallCustomFunction(object[] parameters)
