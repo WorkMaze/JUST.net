@@ -4,11 +4,11 @@ using System.Reflection;
 
 namespace JUST
 {
-    public static class JUSTContext
+    public class JUSTContext
     {
-        private static ConcurrentDictionary<string, MethodInfo> _customFunctions = new ConcurrentDictionary<string, MethodInfo>();
+        private ConcurrentDictionary<string, MethodInfo> _customFunctions = new ConcurrentDictionary<string, MethodInfo>();
 
-        public static void RegisterCustomFunction(string assemblyName, string namespc, string methodName, string methodAlias = null)
+        public void RegisterCustomFunction(string assemblyName, string namespc, string methodName, string methodAlias = null)
         {
             var methodInfo = ReflectionHelper.SearchCustomFunction(assemblyName, namespc, methodName);
             if (methodInfo == null)
@@ -22,17 +22,17 @@ namespace JUST
             }
         }
 
-        public static bool UnregisterCustomFunction(string name)
+        public bool UnregisterCustomFunction(string name)
         {
             return _customFunctions.TryRemove(name, out var removed);
         }
 
-        public static void ClearCustomFunctionRegistrations()
+        public void ClearCustomFunctionRegistrations()
         {
             _customFunctions.Clear();
         }
 
-        internal static MethodInfo GetCustomMethod(string key)
+        internal MethodInfo GetCustomMethod(string key)
         {
             if (!_customFunctions.TryGetValue(key, out var result))
             {
@@ -41,7 +41,7 @@ namespace JUST
             return result;
         }
 
-        internal static bool IsRegisteredCustomFunction(string name)
+        internal bool IsRegisteredCustomFunction(string name)
         {
             return _customFunctions.ContainsKey(name);
         }

@@ -761,17 +761,23 @@ Output:
 
 ## Register User Defined methods for seamless use
 
-To reduce the fuzz of calling custom methods, you can register your custom functions by calling this static method: 
-`JUSTContext.RegisterCustomFunction(assemblyName, namespace, methodName, methodAlias)`
+To reduce the fuzz of calling custom methods, there's this class 'JUSTContext', where you can register your custom functions.
+'JsonTransformer' has a readonly field called 'GlobalContext' where one can register functions that will be available for all subsequent calls
+of 'Transform' methods. To only use some functions in one transformation, you can create a 'JUSTContext' instance and pass it to 'Transform' method.
+
+Examples:
+`new JUSTContext().RegisterCustomFunction(assemblyName, namespace, methodName, methodAlias)`
+`JsonTransformer.GlobalContext.RegisterCustomFunction(assemblyName, namespace, methodName, methodAlias)`
 
 Parameter 'namespace' must include the class name as well, 'assemblyName' is optional, so as 'methodAlias', which can be 
 used to register methods with the same name under diferent namespaces.
 After registration you can call it like any other built-in function.
 
-The registrations are handled in a static property, so they will live as long as your application lives.
+Global context registrations are handled in a static property, so they will live as long as your application lives.
 You have the possibility to unregister a custom function or remove all registrations with the following methods:
-`JUSTContext.UnregisterCustomFunction(name)`
-`JUSTContext.ClearCustomFunctionRegistrations()`
+`JsonTransformer.GlobalContext.UnregisterCustomFunction(name)`
+`JsonTransformer.GlobalContext.ClearCustomFunctionRegistrations()`
+
 
 Consider the following input:-
 
@@ -789,8 +795,15 @@ Consider the following input:-
 
 Registration:
 ```
-JsonTransformer.RegisterCustomFunction("SomeAssemblyName", "NameSpace.Plus.ClassName", "IsSummer");
+JsonTransformer.GlobalContext.RegisterCustomFunction("SomeAssemblyName", "NameSpace.Plus.ClassName", "IsSummer");
 ```
+or
+```
+var localContext = new JUSTContext();
+localContext.RegisterCustomFunction("SomeAssemblyName", "NameSpace.Plus.ClassName", "IsSummer");
+JsonTransformer.Transform(<transformer>, <input>, localContext);
+```
+
 
 Transformer:
 ```
@@ -803,6 +816,7 @@ Output:
 ```
 {"summer": true}
 ```
+
 
 ## Complex nested functions
 

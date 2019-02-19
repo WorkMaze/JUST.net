@@ -208,21 +208,43 @@ namespace JUST.NET.Test
             Console.WriteLine("################################################################################################");
 
             transformer = File.ReadAllText("Examples/Transformer_registeredmethods.json");
-            JUSTContext.RegisterCustomFunction("ExternalMethods", "ExternalMethods.ExternalClass", "StaticMethod", "External_StaticMethod");
-            JUSTContext.RegisterCustomFunction("ExternalMethods", "ExternalMethods.ExternalClass", "StaticTypedParameters", "External_StaticTypedParameters");
-            JUSTContext.RegisterCustomFunction("ExternalMethods", "ExternalMethods.ExternalClass", "InstanceMethod", "External_InstanceMethod");
-            JUSTContext.RegisterCustomFunction("ExternalMethods", "ExternalMethods.ExternalClass", "TypedParameters", "External_TypedParameters");
-            JUSTContext.RegisterCustomFunction("ExternalMethods", "ExternalMethods.ExternalClass", "NavigateTypedParameters", "External_NavigateTypedParameters");
+            var context = new JUSTContext();
+            context.RegisterCustomFunction("ExternalMethods", "ExternalMethods.ExternalClass", "StaticMethod", "External_StaticMethod");
+            context.RegisterCustomFunction("ExternalMethods", "ExternalMethods.ExternalClass", "StaticTypedParameters", "External_StaticTypedParameters");
+            context.RegisterCustomFunction("ExternalMethods", "ExternalMethods.ExternalClass", "InstanceMethod", "External_InstanceMethod");
+            context.RegisterCustomFunction("ExternalMethods", "ExternalMethods.ExternalClass", "TypedParameters", "External_TypedParameters");
+            context.RegisterCustomFunction("ExternalMethods", "ExternalMethods.ExternalClass", "NavigateTypedParameters", "External_NavigateTypedParameters");
 
-            JUSTContext.RegisterCustomFunction(null, "InternalMethods.InternalClass", "StaticMethod");
-            JUSTContext.RegisterCustomFunction(null, "InternalMethods.InternalClass", "StaticTypedParameters");
-            JUSTContext.RegisterCustomFunction(null, "InternalMethods.InternalClass", "InstanceMethod");
-            JUSTContext.RegisterCustomFunction(null, "InternalMethods.InternalClass", "TypedParameters");
-            JUSTContext.RegisterCustomFunction(null, "InternalMethods.InternalClass", "NavigateTypedParameters");
-            
+            context.RegisterCustomFunction(null, "InternalMethods.InternalClass", "StaticMethod");
+            context.RegisterCustomFunction(null, "InternalMethods.InternalClass", "StaticTypedParameters");
+            context.RegisterCustomFunction(null, "InternalMethods.InternalClass", "InstanceMethod");
+            context.RegisterCustomFunction(null, "InternalMethods.InternalClass", "TypedParameters");
+            context.RegisterCustomFunction(null, "InternalMethods.InternalClass", "NavigateTypedParameters");
+
+            transformedString = JsonConvert.SerializeObject
+                (JsonTransformer.Transform(JObject.Parse(transformer), JObject.Parse(input), context));
+            Console.WriteLine(transformedString);
+
+            Console.WriteLine("################################################################################################");
+
+            transformer = File.ReadAllText("Examples/Transformer_registeredmethods.json");
+            JsonTransformer.GlobalContext.RegisterCustomFunction("ExternalMethods", "ExternalMethods.ExternalClass", "StaticMethod", "External_StaticMethod");
+            JsonTransformer.GlobalContext.RegisterCustomFunction("ExternalMethods", "ExternalMethods.ExternalClass", "StaticTypedParameters", "External_StaticTypedParameters");
+            JsonTransformer.GlobalContext.RegisterCustomFunction("ExternalMethods", "ExternalMethods.ExternalClass", "InstanceMethod", "External_InstanceMethod");
+            JsonTransformer.GlobalContext.RegisterCustomFunction("ExternalMethods", "ExternalMethods.ExternalClass", "TypedParameters", "External_TypedParameters");
+            JsonTransformer.GlobalContext.RegisterCustomFunction("ExternalMethods", "ExternalMethods.ExternalClass", "NavigateTypedParameters", "External_NavigateTypedParameters");
+
+            JsonTransformer.GlobalContext.RegisterCustomFunction(null, "InternalMethods.InternalClass", "StaticMethod");
+            JsonTransformer.GlobalContext.RegisterCustomFunction(null, "InternalMethods.InternalClass", "StaticTypedParameters");
+            JsonTransformer.GlobalContext.RegisterCustomFunction(null, "InternalMethods.InternalClass", "InstanceMethod");
+            JsonTransformer.GlobalContext.RegisterCustomFunction(null, "InternalMethods.InternalClass", "TypedParameters");
+            JsonTransformer.GlobalContext.RegisterCustomFunction(null, "InternalMethods.InternalClass", "NavigateTypedParameters");
+
             transformedString = JsonConvert.SerializeObject
                 (JsonTransformer.Transform(JObject.Parse(transformer), JObject.Parse(input)));
             Console.WriteLine(transformedString);
+
+
 
             Console.ReadLine();
         }
