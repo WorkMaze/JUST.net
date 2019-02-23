@@ -670,5 +670,29 @@ namespace JUST
         }
         #endregion
 
+        public static object tointeger(object val, string inputJson)
+        {
+            return ReflectionHelper.GetTypedValue(typeof(int), val);
+        }
+
+        public static object tostring(object val, string inputJson)
+        {
+            return ReflectionHelper.GetTypedValue(typeof(string), val);
+        }
+
+        public static object toboolean(object val, string inputJson)
+        {
+            return ReflectionHelper.GetTypedValue(typeof(bool), val);
+        }
+
+        public static object tolong(object val, string inputJson)
+        {
+            return ReflectionHelper.GetTypedValue(typeof(long), val);
+        }
+
+        public static object todouble(object val, string inputJson)
+        {
+            return ReflectionHelper.GetTypedValue(typeof(double), val);
+        }
     }
 }

@@ -120,7 +120,7 @@ namespace JUST
             return parameters;
         }
 
-        private static object GetTypedValue(Type pType, object val)
+        internal static object GetTypedValue(Type pType, object val)
         {
             object typedValue = val;
             var converter = TypeDescriptor.GetConverter(pType);

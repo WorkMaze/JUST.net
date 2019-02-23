@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using JUST;
 using System.IO;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -245,6 +242,13 @@ namespace JUST.NET.Test
             Console.WriteLine(transformedString);
 
 
+
+            Console.WriteLine("################################################################################################");
+
+            input = File.ReadAllText("Examples/Input.json");
+            transformer = File.ReadAllText("Examples/Transformer_typeconversion.json");
+            transformedString = JsonTransformer.Transform(transformer, input);
+            Console.WriteLine(transformedString);
 
             Console.ReadLine();
         }
