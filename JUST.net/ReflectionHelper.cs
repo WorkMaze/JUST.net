@@ -12,16 +12,27 @@ namespace JUST
     {
         internal const string EXTERNAL_ASSEMBLY_REGEX = "([\\w.]+)[:]{2}([\\w.]+)[:]{0,2}([\\w.]*)";
 
-        internal static object caller(Assembly assembly, string myclass, string mymethod, object[] parameters, bool convertParameters = false)
+        internal static object caller(Assembly assembly, string myclass, string mymethod, object[] parameters, bool convertParameters, EvaluationMode mode)
         {
             Type type = assembly?.GetType(myclass) ?? Type.GetType(myclass);
             MethodInfo methodInfo = type.GetTypeInfo().GetMethod(mymethod);
             var instance = !methodInfo.IsStatic ? Activator.CreateInstance(type) : null;
 
-            return InvokeCustomMethod(methodInfo, parameters, convertParameters);
+            try
+            {
+                return InvokeCustomMethod(methodInfo, parameters, convertParameters, mode);
+            }
+            catch
+            {
+                if (mode == EvaluationMode.Strict) { throw; }
+                if (mode == EvaluationMode.FallbackToNull) { return null; }
+
+                var returnType = methodInfo.ReturnType;
+                return GetDefaultValue(returnType);
+            }
         }
 
-        internal static object InvokeCustomMethod(MethodInfo methodInfo, object[] parameters, bool convertParameters = false)
+        internal static object InvokeCustomMethod(MethodInfo methodInfo, object[] parameters, bool convertParameters, EvaluationMode mode)
         {
             var instance = !methodInfo.IsStatic ? Activator.CreateInstance(methodInfo.DeclaringType) : null;
 
@@ -32,13 +43,13 @@ namespace JUST
                 for (int i = 0; i < parameterInfos.Length; i++)
                 {
                     var pType = parameterInfos[i].ParameterType;
-                    typedParameters.Add(GetTypedValue(pType, parameters[i]));
+                    typedParameters.Add(GetTypedValue(pType, parameters[i], mode));
                 }
             }
             return methodInfo.Invoke(instance, convertParameters ? typedParameters.ToArray() : parameters);
         }
 
-        internal static object CallExternalAssembly(string functionName, object[] parameters)
+        internal static object CallExternalAssembly(string functionName, object[] parameters, EvaluationMode mode)
         {
             var match = Regex.Match(functionName, EXTERNAL_ASSEMBLY_REGEX);
             var isAssemblyDefined = match.Groups.Count == 4 && match.Groups[3].Value != string.Empty;
@@ -49,7 +60,7 @@ namespace JUST
             var assembly = GetAssembly(isAssemblyDefined, assemblyName, namespc, methodName);
             if (assembly != null)
             {
-                return caller(assembly, namespc, methodName, FilterParameters(parameters), true);
+                return caller(assembly, namespc, methodName, FilterParameters(parameters), true, mode);
             }
 
             throw new MissingMethodException((assemblyName != null ? $"{assemblyName}." : string.Empty) + $"{namespc}.{methodName}");
@@ -120,24 +131,44 @@ namespace JUST
             return parameters;
         }
 
-        private static object GetTypedValue(Type pType, object val)
+        internal static object GetTypedValue(Type pType, object val, EvaluationMode mode)
         {
             object typedValue = val;
             var converter = TypeDescriptor.GetConverter(pType);
-            if (converter.CanConvertFrom(val.GetType()))
+            try
             {
-                typedValue = converter.ConvertFrom(val);
+                if (val?.GetType().Equals(pType) ?? true)
+                {
+                    return val;
+                }
+                else if (converter.CanConvertFrom(val.GetType()))
+                {
+                    typedValue = converter.ConvertFrom(val);
+                }
+                else if (pType.IsPrimitive)
+                {
+                    typedValue = Convert.ChangeType(val, pType);
+                }
+                else if (!pType.IsAbstract)
+                {
+                    var parse = pType.GetMethod("Parse", BindingFlags.Static | BindingFlags.Public, null, new[] { typeof(string) }, null);
+                    typedValue = parse?.Invoke(null, new[] { val }) ?? pType.GetConstructor(new[] { typeof(string) })?.Invoke(new[] { val }) ?? val;
+                }
             }
-            else if (pType.IsPrimitive)
+            catch
             {
-                typedValue = Convert.ChangeType(val, pType);
-            }
-            else if (!pType.IsAbstract)
-            {
-                var parse = pType.GetMethod("Parse", BindingFlags.Static | BindingFlags.Public, null, new[] { typeof(string) }, null);
-                typedValue = parse?.Invoke(null, new[] { val }) ?? pType.GetConstructor(new[] { typeof(string) })?.Invoke(new[] { val }) ?? val;
+                if (mode == EvaluationMode.Strict) { throw; }
+                if (mode == EvaluationMode.FallbackToNull) { typedValue = null; }
             }
             return typedValue;
+        }
+
+        private static object GetDefaultValue(Type t)
+        {
+            if (t.IsValueType)
+                return Activator.CreateInstance(t);
+
+            return null;
         }
     }
 }

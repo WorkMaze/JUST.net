@@ -167,11 +167,11 @@ namespace JUST
                 }
                 else if (functionName == "currentvalue" || functionName == "currentindex" || functionName == "lastindex"
                     || functionName == "lastvalue")
-                    output = (string)caller("JUST.Transformer", functionName, new object[] { array, currentArrayElement });
+                    output = caller("JUST.Transformer", functionName, new object[] { array, currentArrayElement }).ToString();
                 else if (functionName == "currentvalueatpath" || functionName == "lastvalueatpath")
-                    output = (string)caller("JUST.Transformer", functionName, new object[] { array, currentArrayElement, arguments[0] });
+                    output = caller("JUST.Transformer", functionName, new object[] { array, currentArrayElement, arguments[0] }).ToString();
                 else if (functionName == "customfunction")
-                    output = (string)CallCustomFunction(parameters);
+                    output = CallCustomFunction(parameters).ToString();
                 else if (functionName == "xconcat" || functionName == "xadd" || functionName == "mathequals" || functionName == "mathgreaterthan" || functionName == "mathlessthan"
                     || functionName == "mathgreaterthanorequalto"
                     || functionName == "mathlessthanorequalto" || functionName == "stringcontains" ||
@@ -280,10 +280,13 @@ namespace JUST
 
         }
 
-        private static object caller(String myclass, String mymethod, object[] parameters)
+        private static object caller(string myclass, string mymethod, object[] parameters)
         {
             Assembly assembly = Assembly.GetEntryAssembly();
 
+            return ReflectionHelper.caller(assembly, myclass, mymethod, parameters, true, EvaluationMode.Loose);
+
+            /*
             Type type = Type.GetType(myclass);
             // Create an instance of that type
             //Object obj = Activator.CreateInstance(type);
@@ -291,6 +294,7 @@ namespace JUST
             MethodInfo methodInfo = type.GetTypeInfo().GetMethod(mymethod);
             // Invoke the method on the instance we created above
             return methodInfo.Invoke(null, parameters);
+            */
         }
 
 

@@ -226,7 +226,8 @@ namespace JUST
                         }
                         catch
                         {
-                            result = false;
+                            if (IsStrictMode(localContext)) { throw; }
+                            result =  false;
                         }
 
                         if (result == true)
@@ -350,6 +351,8 @@ namespace JUST
                         }
                         catch
                         {
+                            if (IsStrictMode(localContext)) { throw; }
+                            if (IsFallbackToNull(localContext)) { childToken.Replace(JValue.CreateNull()); };
                         }
                     }
                     else
@@ -413,7 +416,6 @@ namespace JUST
 
                     if (tokenToRemove != null)
                         tokenToRemove.Ancestors().First().Remove();
-
                 }
             }
             if (tokensToAdd != null)
@@ -571,23 +573,23 @@ namespace JUST
 
                 if (functionName == "currentvalue" || functionName == "currentindex" || functionName == "lastindex"
                     || functionName == "lastvalue")
-                    output = ReflectionHelper.caller(null, "JUST.Transformer", functionName, new object[] { array, currentArrayElement });
+                    output = ReflectionHelper.caller(null, "JUST.Transformer", functionName, new object[] { array, currentArrayElement }, true, GetEvaluationMode(localContext));
                 else if (functionName == "currentvalueatpath" || functionName == "lastvalueatpath")
-                    output = ReflectionHelper.caller(null, "JUST.Transformer", functionName, new object[] { array, currentArrayElement, arguments[0] });
+                    output = ReflectionHelper.caller(null, "JUST.Transformer", functionName, new object[] { array, currentArrayElement, arguments[0] }, true, GetEvaluationMode(localContext));
                 else if (functionName == "customfunction")
-                    output = CallCustomFunction(parameters);
+                    output = CallCustomFunction(parameters, localContext);
                 else if (localContext?.IsRegisteredCustomFunction(functionName) ?? false)
                 {
                     var methodInfo = localContext.GetCustomMethod(functionName);
-                    output = ReflectionHelper.InvokeCustomMethod(methodInfo, parameters, true);
+                    output = ReflectionHelper.InvokeCustomMethod(methodInfo, parameters, true, GetEvaluationMode(localContext));
                 }
                 else if (GlobalContext.IsRegisteredCustomFunction(functionName))
                 {
                     var methodInfo = GlobalContext.GetCustomMethod(functionName);
-                    output = ReflectionHelper.InvokeCustomMethod(methodInfo, parameters, true);
+                    output = ReflectionHelper.InvokeCustomMethod(methodInfo, parameters, true, GetEvaluationMode(localContext));
                 }
                 else if (Regex.IsMatch(functionName, ReflectionHelper.EXTERNAL_ASSEMBLY_REGEX)){
-                    output = ReflectionHelper.CallExternalAssembly(functionName, parameters);
+                    output = ReflectionHelper.CallExternalAssembly(functionName, parameters, GetEvaluationMode(localContext));
                 }
                 else if (functionName == "xconcat" || functionName == "xadd"
                     || functionName == "mathequals" || functionName == "mathgreaterthan" || functionName == "mathlessthan" 
@@ -597,7 +599,7 @@ namespace JUST
                 {
                     object[] oParams = new object[1];
                     oParams[0] = parameters;
-                    output = ReflectionHelper.caller(null, "JUST.Transformer", functionName, oParams);
+                    output = ReflectionHelper.caller(null, "JUST.Transformer", functionName, oParams, true, GetEvaluationMode(localContext));
                 }
                 else
                 {
@@ -605,7 +607,7 @@ namespace JUST
                     {
                         parameters[i] = JsonConvert.SerializeObject(currentArrayElement);
                     }
-                    output = ReflectionHelper.caller(null, "JUST.Transformer", functionName, parameters);
+                    output = ReflectionHelper.caller(null, "JUST.Transformer", functionName, parameters, true, GetEvaluationMode(localContext));
                 }
 
                 return output;
@@ -624,7 +626,7 @@ namespace JUST
             return match.Success;
         }
 
-        private static object CallCustomFunction(object[] parameters)
+        private static object CallCustomFunction(object[] parameters, JUSTContext localContext)
         {
             object[] customParameters = new object[parameters.Length - 3];
             string functionString = string.Empty;
@@ -650,7 +652,7 @@ namespace JUST
 
             className = className + "," + dllName;
 
-            return ReflectionHelper.caller(null, className, functionName, customParameters);
+            return ReflectionHelper.caller(null, className, functionName, customParameters, false, GetEvaluationMode(localContext));
 
         }
         #endregion
@@ -793,6 +795,21 @@ namespace JUST
             }
 
             return index;
+        }
+
+        private static EvaluationMode GetEvaluationMode(JUSTContext localContext)
+        {
+            return localContext?.EvaluationMode ?? GlobalContext.EvaluationMode;
+        }
+
+        private static bool IsStrictMode(JUSTContext localContext)
+        {
+            return GetEvaluationMode(localContext) == EvaluationMode.Strict;
+        }
+
+        private static bool IsFallbackToNull(JUSTContext localContext)
+        {
+            return GetEvaluationMode(localContext) == EvaluationMode.FallbackToNull;
         }
     }
 }

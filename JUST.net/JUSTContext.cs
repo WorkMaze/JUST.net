@@ -4,8 +4,17 @@ using System.Reflection;
 
 namespace JUST
 {
+    public enum EvaluationMode
+    {
+        Loose,
+        FallbackToNull,
+        Strict
+    }
+
     public class JUSTContext
     {
+        public EvaluationMode EvaluationMode = EvaluationMode.Loose;
+
         private ConcurrentDictionary<string, MethodInfo> _customFunctions = new ConcurrentDictionary<string, MethodInfo>();
 
         public void RegisterCustomFunction(string assemblyName, string namespc, string methodName, string methodAlias = null)
