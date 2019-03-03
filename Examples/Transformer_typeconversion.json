@@ -1,0 +1,14 @@
+{
+  "mathresult": {
+    "add": "#tointeger(#add(#valueof($.numbers[0]),3))",
+    "subtract": "#tolong(#subtract(#valueof($.numbers[4]),#valueof($.numbers[0])))",
+    "multiply": "#todouble(#multiply(2,#valueof($.numbers[2])))",
+    "divide": "#todouble(#divide(9,2))"
+  },
+  "aggregations": {
+    "sum": "#tointeger(#sum(#valueof($.numbers)))",
+    "avg": "#todouble(#average(#valueof($.numbers)))",
+    "min": "#tolong(#min(#valueof($.numbers)))",
+    "max": "#tointeger(#max(#valueof($.numbers)))"
+  }
+}
