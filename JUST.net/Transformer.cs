@@ -601,27 +601,27 @@ namespace JUST
 
         public static object tointeger(object val, string inputJson)
         {
-            return ReflectionHelper.GetTypedValue(typeof(int), val);
+            return ReflectionHelper.GetTypedValue(typeof(int), val, EvaluationMode.Strict);
         }
 
         public static object tostring(object val, string inputJson)
         {
-            return ReflectionHelper.GetTypedValue(typeof(string), val);
+            return ReflectionHelper.GetTypedValue(typeof(string), val, EvaluationMode.Strict);
         }
 
         public static object toboolean(object val, string inputJson)
         {
-            return ReflectionHelper.GetTypedValue(typeof(bool), val);
+            return ReflectionHelper.GetTypedValue(typeof(bool), val, EvaluationMode.Strict);
         }
 
         public static object tolong(object val, string inputJson)
         {
-            return ReflectionHelper.GetTypedValue(typeof(long), val);
+            return ReflectionHelper.GetTypedValue(typeof(long), val, EvaluationMode.Strict);
         }
 
         public static object todouble(object val, string inputJson)
         {
-            return ReflectionHelper.GetTypedValue(typeof(double), val);
+            return ReflectionHelper.GetTypedValue(typeof(double), val, EvaluationMode.Strict);
         }
     }
 }
