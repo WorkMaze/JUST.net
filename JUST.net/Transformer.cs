@@ -18,31 +18,20 @@ namespace JUST
             return GetValue(selectedToken);
         }
 
-        public static string exists(string jsonPath, string inputJson)
+        public static bool exists(string jsonPath, string inputJson)
         {
             JToken token = JsonConvert.DeserializeObject<JObject>(inputJson);
             JToken selectedToken = token.SelectToken(jsonPath);
 
-            if (selectedToken != null)
-                return "true";
-            else
-                return "false";
+            return selectedToken != null;
         }
 
-        public static string existsandnotempty(string jsonPath, string inputJson)
+        public static bool existsandnotempty(string jsonPath, string inputJson)
         {
             JToken token = JsonConvert.DeserializeObject<JObject>(inputJson);
             JToken selectedToken = token.SelectToken(jsonPath);
 
-            if (selectedToken != null)
-            {
-                if (selectedToken.ToString().Trim() != string.Empty)
-                    return "true";
-                else
-                    return "false";
-            }
-            else
-                return "false";
+            return selectedToken != null && selectedToken.ToString().Trim() != string.Empty;
         }
 
         public static object ifcondition(object condition, object value, object trueResult, object falseResult, string inputJson)
@@ -67,7 +56,7 @@ namespace JUST
         {
             try
             {
-                return stringRef.Substring(Convert.ToInt32(startIndex), Convert.ToInt32(length));
+                return stringRef.Substring(startIndex, length);
             }
             catch
             {
@@ -133,41 +122,46 @@ namespace JUST
         #region math functions
 
 
-        public static double add(double num1, double num2, string inputJson)
+        public static object add(decimal num1, decimal num2, string inputJson)
         {
-            return num1 + num2;
+            return TypedNumber(num1 + num2);
         }
-        public static double subtract(double num1, double num2, string inputJson)
+
+        public static object subtract(decimal num1, decimal num2, string inputJson)
         {
-            return num1 - num2;
+            return TypedNumber(num1 - num2);
         }
-        public static double multiply(double num1, double num2, string inputJson)
+        public static object multiply(decimal num1, decimal num2, string inputJson)
         {
-            return num1 * num2;
+            return TypedNumber(num1 * num2);
         }
-        public static double divide(double num1, double num2, string inputJson)
+        public static object divide(decimal num1, decimal num2, string inputJson)
         {
-            return num1 / num2;
+            return TypedNumber(num1 / num2);
+        }
+        private static object TypedNumber(decimal number)
+        {
+            return number * 10 % 10 == 0 ? (object)Convert.ToInt32(number) : number;
         }
         #endregion
 
         #region aggregate functions
-        public static double sum(string array, string inputJson)
+        public static object sum(string array, string inputJson)
         {
             JArray parsedArray = JArray.Parse(array);
 
-            double integerresult = 0;
+            decimal result = 0;
 
             if (parsedArray != null)
             {
                 foreach (JToken token in parsedArray.Children())
                 {
 
-                    integerresult += Convert.ToDouble(token.ToString());
+                    result += Convert.ToDecimal(token.ToString());
                 }
             }
 
-            return integerresult;
+            return TypedNumber(result);
         }
 
         public static double sumatpath(string array, string jsonPath, string inputJson)

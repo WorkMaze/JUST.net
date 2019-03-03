@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -143,7 +144,7 @@ namespace JUST
                 }
                 else if (converter.CanConvertFrom(val.GetType()))
                 {
-                    typedValue = converter.ConvertFrom(val);
+                    typedValue = converter.ConvertFrom(null, CultureInfo.InvariantCulture, val);
                 }
                 else if (pType.IsPrimitive)
                 {
@@ -151,8 +152,11 @@ namespace JUST
                 }
                 else if (!pType.IsAbstract)
                 {
-                    var parse = pType.GetMethod("Parse", BindingFlags.Static | BindingFlags.Public, null, new[] { typeof(string) }, null);
-                    typedValue = parse?.Invoke(null, new[] { val }) ?? pType.GetConstructor(new[] { typeof(string) })?.Invoke(new[] { val }) ?? val;
+                    var method =
+                        (MethodBase)pType.GetMethod("Parse", BindingFlags.Static | BindingFlags.Public, null, new[] { val.GetType() }, null) ??
+                        pType.GetConstructor(new[] { val.GetType() });
+                        //?? pType.GetConstructor(new[] { typeof(string) });
+                    typedValue = method?.IsConstructor ?? false ? Activator.CreateInstance(pType, new[] { val }) : method?.Invoke(null, new[] { val }) ?? val;
                 }
             }
             catch

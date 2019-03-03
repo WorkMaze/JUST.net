@@ -1,9 +1,25 @@
 ﻿{
   "mathresult": {
     "add": "#add(#valueof($.numbers[0]),3)",
+    "add_decimal": "#add(#valueof($.numbers[0]),3.01)",
+    "add_negative": "#add(#valueof($.numbers[1]),-10.01)",
+    "add_typed": "#add(#valueof($.typed_numbers[0]),#valueof($.typed_numbers[1]))",
+
     "subtract": "#subtract(#valueof($.numbers[4]),#valueof($.numbers[0]))",
+    "subtract_decimal": "#subtract(#valueof($.numbers[4]),5.01)",
+    "subtract_negative": "#subtract(#valueof($.numbers[4]),-10.01)",
+    "subtract_typed": "#subtract(#valueof($.typed_numbers[4]),#valueof($.typed_numbers[0]))",
+
     "multiply": "#multiply(2,#valueof($.numbers[2]))",
-    "divide": "#divide(9,3)",
+    "multiply_decimal": "#multiply(2.01,#valueof($.numbers[2]))",
+    "multiply_negative": "#multiply(-10.01,#valueof($.numbers[2]))",
+    "multiply_typed": "#multiply(#valueof($.typed_numbers[0]),#valueof($.typed_numbers[1]))",
+
+    "divide": "#divide(9,#valueof($.numbers[2]))",
+    "divide_decimal": "#divide(9.3,#valueof($.numbers[2]))",
+    "divide_negative": "#divide(-9.3,#valueof($.numbers[2]))",
+    "divide_typed": "#divide(#valueof($.typed_numbers[0]),#valueof($.typed_numbers[1]))",
+
     "third_element_equals_3": "#ifcondition(#mathequals(#valueof($.numbers[2]),3),true,yes,no)",
     "third_element_greaterthan_2": "#ifcondition(#mathgreaterthan(#valueof($.numbers[2]),2),true,yes,no)",
     "third_element_lessthan_4": "#ifcondition(#mathlessthan(#valueof($.numbers[2]),4),true,yes,no)",
