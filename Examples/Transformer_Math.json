@@ -20,6 +20,9 @@
     "divide_negative": "#divide(-9.3,#valueof($.numbers[2]))",
     "divide_typed": "#divide(#valueof($.typed_numbers[0]),#valueof($.typed_numbers[1]))",
 
+    "round_to_lower": "#round(1.234,2)",
+    "round_to_higher": "#round(1.235,2)",
+
     "third_element_equals_3": "#ifcondition(#mathequals(#valueof($.numbers[2]),3),true,yes,no)",
     "third_element_greaterthan_2": "#ifcondition(#mathgreaterthan(#valueof($.numbers[2]),2),true,yes,no)",
     "third_element_lessthan_4": "#ifcondition(#mathlessthan(#valueof($.numbers[2]),4),true,yes,no)",

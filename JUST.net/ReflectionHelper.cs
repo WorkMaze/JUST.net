@@ -13,7 +13,7 @@ namespace JUST
     {
         internal const string EXTERNAL_ASSEMBLY_REGEX = "([\\w.]+)[:]{2}([\\w.]+)[:]{0,2}([\\w.]*)";
 
-        internal static object caller(Assembly assembly, string myclass, string mymethod, object[] parameters, bool convertParameters, EvaluationMode mode)
+        internal static object caller(Assembly assembly, string myclass, string mymethod, object[] parameters, bool convertParameters, JUSTContext context)
         {
             Type type = assembly?.GetType(myclass) ?? Type.GetType(myclass);
             MethodInfo methodInfo = type.GetTypeInfo().GetMethod(mymethod);
@@ -21,10 +21,11 @@ namespace JUST
 
             try
             {
-                return InvokeCustomMethod(methodInfo, parameters, convertParameters, mode);
+                return InvokeCustomMethod(methodInfo, parameters, convertParameters, context);
             }
             catch
             {
+                EvaluationMode mode = context.EvaluationMode;
                 if (mode == EvaluationMode.Strict) { throw; }
                 if (mode == EvaluationMode.FallbackToNull) { return null; }
 
@@ -33,7 +34,7 @@ namespace JUST
             }
         }
 
-        internal static object InvokeCustomMethod(MethodInfo methodInfo, object[] parameters, bool convertParameters, EvaluationMode mode)
+        internal static object InvokeCustomMethod(MethodInfo methodInfo, object[] parameters, bool convertParameters, JUSTContext context)
         {
             var instance = !methodInfo.IsStatic ? Activator.CreateInstance(methodInfo.DeclaringType) : null;
 
@@ -44,13 +45,13 @@ namespace JUST
                 for (int i = 0; i < parameterInfos.Length; i++)
                 {
                     var pType = parameterInfos[i].ParameterType;
-                    typedParameters.Add(GetTypedValue(pType, parameters[i], mode));
+                    typedParameters.Add(GetTypedValue(pType, parameters[i], context.EvaluationMode));
                 }
             }
             return methodInfo.Invoke(instance, convertParameters ? typedParameters.ToArray() : parameters);
         }
 
-        internal static object CallExternalAssembly(string functionName, object[] parameters, EvaluationMode mode)
+        internal static object CallExternalAssembly(string functionName, object[] parameters, JUSTContext context)
         {
             var match = Regex.Match(functionName, EXTERNAL_ASSEMBLY_REGEX);
             var isAssemblyDefined = match.Groups.Count == 4 && match.Groups[3].Value != string.Empty;
@@ -61,7 +62,7 @@ namespace JUST
             var assembly = GetAssembly(isAssemblyDefined, assemblyName, namespc, methodName);
             if (assembly != null)
             {
-                return caller(assembly, namespc, methodName, FilterParameters(parameters), true, mode);
+                return caller(assembly, namespc, methodName, FilterParameters(parameters), true, context);
             }
 
             throw new MissingMethodException((assemblyName != null ? $"{assemblyName}." : string.Empty) + $"{namespc}.{methodName}");

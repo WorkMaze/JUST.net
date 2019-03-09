@@ -2,16 +2,18 @@
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Reflection;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace JUST
 {
     public class DataTransformer
     {
+        public static string Transform(string transformer, string inputJson)
+        {
+            return Parse(transformer, inputJson, null, null);
+        }
+
         private static string Parse(string transformer, string inputJson, JArray array, JToken currentArrayElement)
         {
             int startIndex = 0, index = 0;
@@ -20,7 +22,6 @@ namespace JUST
             {
                 string functionString = GetFunctionString(transformer, index);
 
-
                 if (functionString != null)
                 {
                     if (functionString.Contains("loop"))
@@ -28,7 +29,7 @@ namespace JUST
                         string loopArgsInclusive = GetLoopArguments(index, transformer, true);
                         string loopArgs = GetLoopArguments(index, transformer, false);
 
-                        string evaluatedFunction = (string)EvaluateFunction(functionString, inputJson, array, currentArrayElement, loopArgs);
+                        string evaluatedFunction = EvaluateFunction(functionString, inputJson, array, currentArrayElement, loopArgs);
                                                
 
                         StringBuilder builder = new StringBuilder(transformer);
@@ -37,16 +38,13 @@ namespace JUST
                         transformer = builder.ToString();
 
                         startIndex = index + evaluatedFunction.Length;
-                       
                     }
                     else
                     {
-
                         string evaluatedFunction = (string)EvaluateFunction(functionString, inputJson, array, currentArrayElement, null);
 
                         if (!string.IsNullOrEmpty(evaluatedFunction))
                         {
-
                             StringBuilder builder = new StringBuilder(transformer);
                             builder.Remove(index, functionString.Length);
                             builder.Insert(index, evaluatedFunction);
@@ -63,21 +61,12 @@ namespace JUST
             return transformer;
         }
 
-        public static string Transform(string transformer, string inputJson)
-        {
-
-            return Parse(transformer, inputJson,null,null);
-
-        }
-
         private static string GetLoopArguments(int startIdex, string input,bool inclusive)
         {
             string loopArgs = string.Empty;
 
-
             int openBrackettCount = 0;
             int closebrackettCount = 0;
-
 
             int bStartIndex = 0;
             int bEndIndex = 0;
@@ -98,9 +87,7 @@ namespace JUST
                     bEndIndex = i;
                     closebrackettCount++;
                 }
-
                
-
                 if (openBrackettCount > 0 && openBrackettCount == closebrackettCount)
                 {
                     if(!inclusive)
@@ -109,7 +96,6 @@ namespace JUST
                         loopArgs = input.Substring(startIdex, bEndIndex - startIdex + 1);
                     break;
                 }
-
             }
 
             if (inclusive && loopArgs == string.Empty)
@@ -129,16 +115,14 @@ namespace JUST
 
             if (indexOfStart != -1)
             {
-
                 string functionName = functionString.Substring(0, indexOfStart);
 
                 string argumentString = functionString.Substring(indexOfStart + 1, functionString.Length - indexOfStart - 2);
 
-                string[] arguments = GetArguments(argumentString);
+                string[] arguments = ExpressionHelper.GetArguments(argumentString);
 
-                string[] parameters = new string[arguments.Length + 1];
+                List<object> listParameters = new List<object>();
 
-                int i = 0;
                 if (arguments != null && arguments.Length > 0)
                 {
                     foreach (string argument in arguments)
@@ -150,16 +134,17 @@ namespace JUST
 
                         if (trimmedArgument.StartsWith("#"))
                         {
-                            parameters[i] = (string)EvaluateFunction(trimmedArgument, inputJson, array, currentArrayElement, loopArgumentString);
+                            listParameters.Add((string)EvaluateFunction(trimmedArgument, inputJson, array, currentArrayElement, loopArgumentString));
                         }
                         else
-                            parameters[i] = trimmedArgument;
-                        i++;
+                        {
+                            listParameters.Add(trimmedArgument);
+                        }
                     }
-
                 }
 
-                parameters[i] = inputJson;
+                listParameters.Add(new JUSTContext(inputJson));
+                var parameters = listParameters.ToArray();
 
                 if (functionName == "loop")
                 {
@@ -188,20 +173,15 @@ namespace JUST
         }
 
 
-        private static string GetLoopResult(string[] parameters,string loopArgumentString)
+        private static string GetLoopResult(object[] parameters,string loopArgumentString)
         {
             string returnString = string.Empty;
 
             if (parameters.Length < 2)
                 throw new Exception("Incorrect number of parameters for function #Loop");
 
-            string input = parameters[1];
-
-            if (parameters.Length == 3)
-                input = parameters[2];
-
-            JToken token = JsonConvert.DeserializeObject<JObject>(input);
-            JToken selectedToken = token.SelectToken(parameters[0]);
+            JToken token = (parameters[parameters.Length - 1] as JUSTContext).Input;
+            JToken selectedToken = token.SelectToken(parameters[0].ToString());
 
             if (selectedToken.Type != JTokenType.Array)
                 throw new Exception("The JSONPath argument inside a #loop function must be an Array");
@@ -211,11 +191,11 @@ namespace JUST
             string seperator = Environment.NewLine;
 
             if (parameters.Length == 3)
-                seperator = parameters[1];
+                seperator = parameters[1].ToString();
 
             foreach (JToken arrToken in selectedToken.Children())
             {
-                string parsedrecord = Parse(loopArgumentString, input, selectedArr, arrToken);
+                string parsedrecord = Parse(loopArgumentString, token.ToString(Formatting.None), selectedArr, arrToken);
 
                 returnString += parsedrecord.Substring(1, parsedrecord.Length - 2);
                 returnString += seperator;
@@ -283,75 +263,7 @@ namespace JUST
         private static object caller(string myclass, string mymethod, object[] parameters)
         {
             Assembly assembly = Assembly.GetEntryAssembly();
-
-            return ReflectionHelper.caller(assembly, myclass, mymethod, parameters, true, EvaluationMode.Loose);
-
-            /*
-            Type type = Type.GetType(myclass);
-            // Create an instance of that type
-            //Object obj = Activator.CreateInstance(type);
-            // Retrieve the method you are looking for
-            MethodInfo methodInfo = type.GetTypeInfo().GetMethod(mymethod);
-            // Invoke the method on the instance we created above
-            return methodInfo.Invoke(null, parameters);
-            */
-        }
-
-
-
-        private static string[] GetArguments(string argumentString)
-        {
-            bool brackettOpen = false;
-
-            List<string> arguments = null;
-            int index = 0;
-
-            int openBrackettCount = 0;
-            int closebrackettCount = 0;
-
-            for (int i = 0; i < argumentString.Length; i++)
-            {
-                char currentChar = argumentString[i];
-
-                if (currentChar == '(')
-                    openBrackettCount++;
-
-                if (currentChar == ')')
-                    closebrackettCount++;
-
-                if (openBrackettCount == closebrackettCount)
-                    brackettOpen = false;
-                else
-                    brackettOpen = true;
-
-                if ((currentChar == ',') && (!brackettOpen))
-                {
-                    if (arguments == null)
-                        arguments = new List<string>();
-
-                    if (index != 0)
-                        arguments.Add(argumentString.Substring(index + 1, i - index - 1));
-                    else
-                        arguments.Add(argumentString.Substring(index, i));
-                    index = i;
-                }
-
-            }
-
-            if (index > 0)
-            {
-                arguments.Add(argumentString.Substring(index + 1, argumentString.Length - index - 1));
-            }
-            else
-            {
-                if (arguments == null)
-                    arguments = new List<string>();
-                arguments.Add(argumentString);
-            }
-
-            return arguments.ToArray();
-        }
-
-        
+            return ReflectionHelper.caller(assembly, myclass, mymethod, parameters, true, new JUSTContext());
+        }        
     }
 }

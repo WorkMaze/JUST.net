@@ -9,8 +9,6 @@ namespace JUST
 {
     public static class JsonTransformer
     {
-        public const string FunctionAndArgumentsRegex = "^#(.+?)[(](.*)[)]$";
-
         public static readonly JUSTContext GlobalContext = new JUSTContext();
 
         static JsonTransformer()
@@ -27,7 +25,7 @@ namespace JUST
         public static string Transform(string transformerJson, string inputJson, JUSTContext localContext = null)
         {
             JToken result = null;
-            JToken transformerToken = JToken.Parse(transformerJson);
+            JToken transformerToken = JsonConvert.DeserializeObject<JToken>(transformerJson);
             switch (transformerToken.Type)
             {
                 case JTokenType.Object:
@@ -68,6 +66,7 @@ namespace JUST
 
         public static JObject Transform(JObject transformer, string input, JUSTContext localContext = null)
         {
+            (localContext ?? GlobalContext).Input = JsonConvert.DeserializeObject<JToken>(input);
             RecursiveEvaluate(transformer, input, null, null, localContext);
             return transformer;
         }
@@ -170,7 +169,7 @@ namespace JUST
                         {
                             try
                             {
-                                JToken newToken = JToken.Parse(newValue.ToString());
+                                JToken newToken = JToken.FromObject(newValue);
                                 property.Value = newToken;
                             }
                             catch
@@ -346,7 +345,7 @@ namespace JUST
                     {
                         try
                         {
-                            JToken newToken = JToken.Parse(newValue.ToString());
+                            JToken newToken = JToken.FromObject(newValue);
                             childToken.Replace(new JValue(newValue));
                         }
                         catch
@@ -504,7 +503,7 @@ namespace JUST
             object str = ParseFunction(arguments[1], inputJson, null, null, localContext);
             if (str != null && str.ToString().Contains("\""))
             {
-                newToken = JToken.Parse(str.ToString());
+                newToken = JToken.FromObject(str);
 
             }
             else
@@ -540,15 +539,14 @@ namespace JUST
                 object output = null;
 
                 string functionName, argumentString;
-                if (!TryParseFunctionNameAndArguments(functionString, out functionName, out argumentString))
+                if (!ExpressionHelper.TryParseFunctionNameAndArguments(functionString, out functionName, out argumentString))
                 {
                     return functionName;
                 }
 
-                string[] arguments = GetArguments(argumentString);
-                object[] parameters = new object[arguments.Length + 1];
+                string[] arguments = ExpressionHelper.GetArguments(argumentString);
+                var listParameters = new List<object>();
 
-                int i = 0;
                 if (arguments != null && arguments.Length > 0)
                 {
                     foreach (string argument in arguments)
@@ -560,36 +558,36 @@ namespace JUST
 
                         if (trimmedArgument.StartsWith("#"))
                         {
-                            parameters[i] = ParseFunction(trimmedArgument, inputJson, array, currentArrayElement, localContext);
+                            listParameters.Add(ParseFunction(trimmedArgument, inputJson, array, currentArrayElement, localContext));
                         }
                         else
-                            parameters[i] = trimmedArgument;
-                        i++;
+                            listParameters.Add(trimmedArgument);
                     }
 
                 }
-
-                parameters[i] = inputJson;
+                //listParameters.Add(inputJson);
+                listParameters.Add(localContext ?? GlobalContext);
+                var parameters = listParameters.ToArray();
 
                 if (functionName == "currentvalue" || functionName == "currentindex" || functionName == "lastindex"
                     || functionName == "lastvalue")
-                    output = ReflectionHelper.caller(null, "JUST.Transformer", functionName, new object[] { array, currentArrayElement }, true, GetEvaluationMode(localContext));
+                    output = ReflectionHelper.caller(null, "JUST.Transformer", functionName, new object[] { array, currentArrayElement }, true, localContext ?? GlobalContext);
                 else if (functionName == "currentvalueatpath" || functionName == "lastvalueatpath")
-                    output = ReflectionHelper.caller(null, "JUST.Transformer", functionName, new object[] { array, currentArrayElement, arguments[0] }, true, GetEvaluationMode(localContext));
+                    output = ReflectionHelper.caller(null, "JUST.Transformer", functionName, new object[] { array, currentArrayElement, arguments[0] }, true, localContext ?? GlobalContext);
                 else if (functionName == "customfunction")
                     output = CallCustomFunction(parameters, localContext);
                 else if (localContext?.IsRegisteredCustomFunction(functionName) ?? false)
                 {
                     var methodInfo = localContext.GetCustomMethod(functionName);
-                    output = ReflectionHelper.InvokeCustomMethod(methodInfo, parameters, true, GetEvaluationMode(localContext));
+                    output = ReflectionHelper.InvokeCustomMethod(methodInfo, parameters, true, localContext ?? GlobalContext);
                 }
                 else if (GlobalContext.IsRegisteredCustomFunction(functionName))
                 {
                     var methodInfo = GlobalContext.GetCustomMethod(functionName);
-                    output = ReflectionHelper.InvokeCustomMethod(methodInfo, parameters, true, GetEvaluationMode(localContext));
+                    output = ReflectionHelper.InvokeCustomMethod(methodInfo, parameters, true, localContext ?? GlobalContext);
                 }
                 else if (Regex.IsMatch(functionName, ReflectionHelper.EXTERNAL_ASSEMBLY_REGEX)){
-                    output = ReflectionHelper.CallExternalAssembly(functionName, parameters, GetEvaluationMode(localContext));
+                    output = ReflectionHelper.CallExternalAssembly(functionName, parameters, localContext ?? GlobalContext);
                 }
                 else if (functionName == "xconcat" || functionName == "xadd"
                     || functionName == "mathequals" || functionName == "mathgreaterthan" || functionName == "mathlessthan" 
@@ -599,15 +597,17 @@ namespace JUST
                 {
                     object[] oParams = new object[1];
                     oParams[0] = parameters;
-                    output = ReflectionHelper.caller(null, "JUST.Transformer", functionName, oParams, true, GetEvaluationMode(localContext));
+                    output = ReflectionHelper.caller(null, "JUST.Transformer", functionName, oParams, true, localContext ?? GlobalContext);
                 }
                 else
                 {
+                    var input = ((JUSTContext)parameters.Last()).Input;
                     if (currentArrayElement != null && functionName != "valueof")
                     {
-                        parameters[i] = JsonConvert.SerializeObject(currentArrayElement);
+                        ((JUSTContext)parameters.Last()).Input = JsonConvert.SerializeObject(currentArrayElement);
                     }
-                    output = ReflectionHelper.caller(null, "JUST.Transformer", functionName, parameters, true, GetEvaluationMode(localContext));
+                    output = ReflectionHelper.caller(null, "JUST.Transformer", functionName, parameters, true, localContext ?? GlobalContext);
+                    ((JUSTContext)parameters.Last()).Input = input;
                 }
 
                 return output;
@@ -616,14 +616,6 @@ namespace JUST
             {
                 throw new Exception("Error while calling function : " + functionString + " - " + ex.Message, ex);
             }
-        }
-
-        private static bool TryParseFunctionNameAndArguments(string input, out string functionName, out string arguments)
-        {
-            var match = new Regex(FunctionAndArgumentsRegex).Match(input);
-            functionName = match.Success ? match.Groups[1].Value : input;
-            arguments = match.Success ? match.Groups[2].Value : null;
-            return match.Success;
         }
 
         private static object CallCustomFunction(object[] parameters, JUSTContext localContext)
@@ -652,63 +644,8 @@ namespace JUST
 
             className = className + "," + dllName;
 
-            return ReflectionHelper.caller(null, className, functionName, customParameters, false, GetEvaluationMode(localContext));
+            return ReflectionHelper.caller(null, className, functionName, customParameters, false, localContext ?? GlobalContext);
 
-        }
-        #endregion
-
-        #region GetArguments
-        private static string[] GetArguments(string functionString)
-        {
-            bool brackettOpen = false;
-
-            List<string> arguments = null;
-            int index = 0;
-
-            int openBrackettCount = 0;
-            int closebrackettCount = 0;
-
-            for (int i = 0; i < functionString.Length; i++)
-            {
-                char currentChar = functionString[i];
-
-                if (currentChar == '(')
-                    openBrackettCount++;
-
-                if (currentChar == ')')
-                    closebrackettCount++;
-
-                if (openBrackettCount == closebrackettCount)
-                    brackettOpen = false;
-                else
-                    brackettOpen = true;
-
-                if ((currentChar == ',') && (!brackettOpen))
-                {
-                    if (arguments == null)
-                        arguments = new List<string>();
-
-                    if (index != 0)
-                        arguments.Add(functionString.Substring(index + 1, i - index - 1));
-                    else
-                        arguments.Add(functionString.Substring(index, i));
-                    index = i;
-                }
-
-            }
-
-            if (index > 0)
-            {
-                arguments.Add(functionString.Substring(index + 1, functionString.Length - index - 1));
-            }
-            else
-            {
-                if (arguments == null)
-                    arguments = new List<string>();
-                arguments.Add(functionString);
-            }
-
-            return arguments.ToArray();
         }
         #endregion
 

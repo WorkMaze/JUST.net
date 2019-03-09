@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json.Linq;
+using System;
 using System.Collections.Concurrent;
 using System.Reflection;
 
@@ -13,9 +14,29 @@ namespace JUST
 
     public class JUSTContext
     {
+        private ConcurrentDictionary<string, MethodInfo> _customFunctions = new ConcurrentDictionary<string, MethodInfo>();
+        private int _defaultDecimalPlaces = 28;
+
+        internal JToken Input;
+
         public EvaluationMode EvaluationMode = EvaluationMode.Loose;
 
-        private ConcurrentDictionary<string, MethodInfo> _customFunctions = new ConcurrentDictionary<string, MethodInfo>();
+        public int DefaultDecimalPlaces
+        {
+            get { return _defaultDecimalPlaces; }
+            set
+            {
+                if (value < 0 || value > 28) { throw new ArgumentException("Value must be between 1 and 28"); }
+                _defaultDecimalPlaces = value;
+            }
+        }
+
+        public JUSTContext() { }
+
+        internal JUSTContext(string inputJson)
+        {
+            Input = JToken.Parse(inputJson);
+        }
 
         public void RegisterCustomFunction(string assemblyName, string namespc, string methodName, string methodAlias = null)
         {

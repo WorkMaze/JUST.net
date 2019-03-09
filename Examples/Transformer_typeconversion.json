@@ -1,14 +1,23 @@
 {
+  "string_to_integer": "#tointeger(123)",
+  "string_to_boolean": "#toboolean(true)",
+  "string_to_decimal": "#todecimal(123.456)",
+
+  "integer_to_string": "#tostring(123)",
+  //"integer_to_boolean_false": "#toboolean(0)",
+  //"integer_to_boolean_true": "#toboolean(1)",
+  "integer_to_decimal": "#todecimal(123)",
+
   "mathresult": {
     "add": "#tointeger(#add(#valueof($.numbers[0]),3))",
-    "subtract": "#tolong(#subtract(#valueof($.numbers[4]),#valueof($.numbers[0])))",
-    "multiply": "#todouble(#multiply(2,#valueof($.numbers[2])))",
-    "divide": "#todouble(#divide(9,2))"
+    "subtract": "#todecimal(#subtract(#valueof($.numbers[4]),#valueof($.numbers[0])))",
+    "multiply": "#todecimal(#multiply(2,#valueof($.numbers[2])))",
+    "divide": "#todecimal(#divide(9,2))"
   },
   "aggregations": {
     "sum": "#tointeger(#sum(#valueof($.numbers)))",
-    "avg": "#todouble(#average(#valueof($.numbers)))",
-    "min": "#tolong(#min(#valueof($.numbers)))",
+    "avg": "#todecimal(#average(#valueof($.numbers)))",
+    "min": "#todecimal(#min(#valueof($.numbers)))",
     "max": "#tointeger(#max(#valueof($.numbers)))"
   }
 }
