@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -69,11 +70,9 @@ namespace JUST
             return stringRef.LastIndexOf(searchString);
         }
 
-        public static string concatall(string array, JUSTContext context)
+        public static string concatall(JArray parsedArray, JUSTContext context)
         {
             string result = null;
-
-            JArray parsedArray = JArray.Parse(array);
 
             if (parsedArray != null)
             {
@@ -88,11 +87,9 @@ namespace JUST
             return result;
         }
 
-        public static string concatallatpath(string array, string jsonPath, JUSTContext context)
+        public static string concatallatpath(JArray parsedArray, string jsonPath, JUSTContext context)
         {
             string result = null;
-
-            JArray parsedArray = JArray.Parse(array);
 
             if (parsedArray != null)
             {
@@ -141,9 +138,8 @@ namespace JUST
         #endregion
 
         #region aggregate functions
-        public static object sum(string array, JUSTContext context)
+        public static object sum(JArray parsedArray, JUSTContext context)
         {
-            JArray parsedArray = JArray.Parse(array);
             decimal result = 0;
             if (parsedArray != null)
             {
@@ -156,10 +152,9 @@ namespace JUST
             return TypedNumber(result);
         }
 
-        public static object sumatpath(string array, string jsonPath, JUSTContext context)
+        public static object sumatpath(JArray parsedArray, string jsonPath, JUSTContext context)
         {
             decimal result = 0;
-            JArray parsedArray = JArray.Parse(array);
             if (parsedArray != null)
             {
                 foreach (JToken token in parsedArray.Children())
@@ -172,9 +167,8 @@ namespace JUST
             return TypedNumber(result);
         }
 
-        public static object average(string array, JUSTContext context)
+        public static object average(JArray parsedArray, JUSTContext context)
         {
-            JArray parsedArray = JArray.Parse(array);
             decimal result = 0;
             if (parsedArray != null)
             {
@@ -187,10 +181,9 @@ namespace JUST
             return TypedNumber(result / parsedArray.Count);
         }
 
-        public static object averageatpath(string array, string jsonPath, JUSTContext context)
+        public static object averageatpath(JArray parsedArray, string jsonPath, JUSTContext context)
         {
             decimal result = 0;
-            JArray parsedArray = JArray.Parse(array);
 
             if (parsedArray != null)
             {
@@ -204,9 +197,8 @@ namespace JUST
             return TypedNumber(result / parsedArray.Count);
         }
 
-        public static object max(string array, JUSTContext context)
+        public static object max(JArray parsedArray, JUSTContext context)
         {
-            JArray parsedArray = JArray.Parse(array);
             decimal result = 0;
             if (parsedArray != null)
             {
@@ -220,10 +212,9 @@ namespace JUST
             return TypedNumber(result);
         }
 
-        public static object maxatpath(string array, string jsonPath, JUSTContext context)
+        public static object maxatpath(JArray parsedArray, string jsonPath, JUSTContext context)
         {
             decimal result = 0;
-            JArray parsedArray = JArray.Parse(array);
             if (parsedArray != null)
             {
                 foreach (JToken token in parsedArray.Children())
@@ -237,9 +228,8 @@ namespace JUST
             return TypedNumber(result);
         }
 
-        public static object min(string array, JUSTContext context)
+        public static object min(JArray parsedArray, JUSTContext context)
         {
-            JArray parsedArray = JArray.Parse(array);
             decimal result = 0;
             if (parsedArray != null)
             {
@@ -253,10 +243,9 @@ namespace JUST
             return TypedNumber(result);
         }
 
-        public static object minatpath(string array, string jsonPath, JUSTContext context)
+        public static object minatpath(JArray parsedArray, string jsonPath, JUSTContext context)
         {
             decimal result = 0;
-            JArray parsedArray = JArray.Parse(array);
 
             if (parsedArray != null)
             {
@@ -362,32 +351,50 @@ namespace JUST
             object output = null;
             if (selectedToken != null)
             {
-
-                if (selectedToken.Type == JTokenType.Date)
+                switch (selectedToken.Type)
                 {
-                    DateTime value = Convert.ToDateTime(selectedToken.Value<DateTime>());
-                    output = value.ToString("yyyy-MM-ddTHH:mm:ssZ");
+                    case JTokenType.Object:
+                        output = JsonConvert.SerializeObject(selectedToken);
+                        break;
+                    case JTokenType.Array:
+                        output = selectedToken.Values<object>().ToArray(); //selectedToken.ToString();
+                        break;
+                    case JTokenType.Integer:
+                        output = selectedToken.ToObject<Int64>();
+                        break;
+                    case JTokenType.Float:
+                        output = selectedToken.ToObject<float>();
+                        break;
+                    case JTokenType.String:
+                        output = selectedToken.ToString();
+                        break;
+                    case JTokenType.Boolean:
+                        output = selectedToken.ToObject<bool>();
+                        break;
+                    case JTokenType.Date:
+                        DateTime value = Convert.ToDateTime(selectedToken.Value<DateTime>());
+                        output = value.ToString("yyyy-MM-ddTHH:mm:ssZ");
+                        break;
+                    case JTokenType.Raw:
+                        break;
+                    case JTokenType.Bytes:
+                        break;
+                    case JTokenType.Guid:
+                        break;
+                    case JTokenType.Uri:
+                        break;
+                    case JTokenType.TimeSpan:
+                        break;
+                    case JTokenType.Undefined:
+                    case JTokenType.Constructor:
+                    case JTokenType.Property:
+                    case JTokenType.Comment:
+                    case JTokenType.Null:
+                    case JTokenType.None:
+                        break;
+                    default:
+                        break;
                 }
-                else
-                    output = selectedToken.ToString();
-
-                if (selectedToken.Type == JTokenType.Object)
-                {
-                    output = JsonConvert.SerializeObject(selectedToken);
-                }
-                if (selectedToken.Type == JTokenType.Boolean)
-                {
-                    output = selectedToken.ToObject<bool>();
-                }
-                if (selectedToken.Type == JTokenType.Integer)
-                {
-                    output = selectedToken.ToObject<Int64>();
-                }
-                if (selectedToken.Type == JTokenType.Float)
-                {
-                    output = selectedToken.ToObject<float>();
-                }
-
             }
             return output;
         }

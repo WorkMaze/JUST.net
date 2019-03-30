@@ -178,7 +178,17 @@ namespace JUST
                             }
                         }
                         else
-                            property.Value = new JValue(newValue);
+                        {
+                            var arr = newValue as IEnumerable<object>;
+                            if (arr != null)
+                            {
+                                property.Value = new JArray(arr);
+                            }
+                            else
+                            {
+                                property.Value = new JValue(newValue);
+                            }
+                        }
                     }
 
                     /* For looping*/

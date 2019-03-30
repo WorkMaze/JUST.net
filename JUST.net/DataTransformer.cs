@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Text;
+using System.Linq;
 
 namespace JUST
 {
@@ -29,8 +30,8 @@ namespace JUST
                         string loopArgsInclusive = GetLoopArguments(index, transformer, true);
                         string loopArgs = GetLoopArguments(index, transformer, false);
 
-                        string evaluatedFunction = EvaluateFunction(functionString, inputJson, array, currentArrayElement, loopArgs);
-                                               
+                        object result = EvaluateFunction(functionString, inputJson, array, currentArrayElement, loopArgs);
+                        string evaluatedFunction = result.ToString();
 
                         StringBuilder builder = new StringBuilder(transformer);
                         builder.Remove(index-1, loopArgsInclusive.Length+1);
@@ -41,7 +42,8 @@ namespace JUST
                     }
                     else
                     {
-                        string evaluatedFunction = (string)EvaluateFunction(functionString, inputJson, array, currentArrayElement, null);
+                        object result = EvaluateFunction(functionString, inputJson, array, currentArrayElement, null);
+                        string evaluatedFunction = result.ToString();
 
                         if (!string.IsNullOrEmpty(evaluatedFunction))
                         {
@@ -104,10 +106,10 @@ namespace JUST
             return loopArgs;
         }
 
-        private static string EvaluateFunction(string functionString, string inputJson, JArray array, JToken currentArrayElement,
+        private static object EvaluateFunction(string functionString, string inputJson, JArray array, JToken currentArrayElement,
                     string loopArgumentString)
         {
-            string output = null;
+            object output = null;
 
             functionString = functionString.Trim().Substring(1);
 
@@ -134,7 +136,7 @@ namespace JUST
 
                         if (trimmedArgument.StartsWith("#"))
                         {
-                            listParameters.Add((string)EvaluateFunction(trimmedArgument, inputJson, array, currentArrayElement, loopArgumentString));
+                            listParameters.Add(EvaluateFunction(trimmedArgument, inputJson, array, currentArrayElement, loopArgumentString));
                         }
                         else
                         {
@@ -152,11 +154,11 @@ namespace JUST
                 }
                 else if (functionName == "currentvalue" || functionName == "currentindex" || functionName == "lastindex"
                     || functionName == "lastvalue")
-                    output = caller("JUST.Transformer", functionName, new object[] { array, currentArrayElement }).ToString();
+                    output = caller("JUST.Transformer", functionName, new object[] { array, currentArrayElement });
                 else if (functionName == "currentvalueatpath" || functionName == "lastvalueatpath")
-                    output = caller("JUST.Transformer", functionName, new object[] { array, currentArrayElement, arguments[0] }).ToString();
+                    output = caller("JUST.Transformer", functionName, new object[] { array, currentArrayElement, arguments[0] });
                 else if (functionName == "customfunction")
-                    output = CallCustomFunction(parameters).ToString();
+                    output = CallCustomFunction(parameters);
                 else if (functionName == "xconcat" || functionName == "xadd" || functionName == "mathequals" || functionName == "mathgreaterthan" || functionName == "mathlessthan"
                     || functionName == "mathgreaterthanorequalto"
                     || functionName == "mathlessthanorequalto" || functionName == "stringcontains" ||
@@ -164,14 +166,26 @@ namespace JUST
                 {
                     object[] oParams = new object[1];
                     oParams[0] = parameters;
-                    output = caller("JUST.Transformer", functionName, oParams).ToString();
+                    output = caller("JUST.Transformer", functionName, oParams);
                 }
                 else
-                    output = caller("JUST.Transformer", functionName, parameters).ToString();
+                    output = caller("JUST.Transformer", functionName, parameters);
             }
             return output;
         }
 
+        private static string GetStringValue(object o)
+        {
+            if (o is JToken token)
+            {
+                return token.ToString(Formatting.None);
+            }
+            if (o is IEnumerable<object> list)
+            {
+                return string.Join(",", list.Select(el => el.ToString()));
+            }
+            return o.ToString();
+        }
 
         private static string GetLoopResult(object[] parameters,string loopArgumentString)
         {
