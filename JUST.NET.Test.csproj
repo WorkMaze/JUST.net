@@ -99,6 +99,9 @@
     <None Include="Examples\Transformer_array.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Include="Examples\Transformer_registeredmethods.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Include="Examples\Transformer_externalmethods.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

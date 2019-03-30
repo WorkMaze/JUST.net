@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json.Linq;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
@@ -153,11 +154,31 @@ namespace JUST
                 }
                 else if (!pType.IsAbstract)
                 {
-                    var method =
-                        (MethodBase)pType.GetMethod("Parse", BindingFlags.Static | BindingFlags.Public, null, new[] { val.GetType() }, null) ??
-                        pType.GetConstructor(new[] { val.GetType() });
-                        //?? pType.GetConstructor(new[] { typeof(string) });
-                    typedValue = method?.IsConstructor ?? false ? Activator.CreateInstance(pType, new[] { val }) : method?.Invoke(null, new[] { val }) ?? val;
+                    var method = (MethodBase)pType.GetMethod("Parse", BindingFlags.Static | BindingFlags.Public, null, new[] { val.GetType() }, null);
+                    if (method == null)
+                    {
+                        method = pType.GetConstructor(new[] { val.GetType() });
+                    }
+                    //?? pType.GetConstructor(new[] { typeof(string) });
+                    if (method?.IsConstructor ?? false)
+                    {
+                        typedValue = Activator.CreateInstance(pType, new[] { val });
+                    }
+                    else
+                    {
+                        typedValue = method?.Invoke(null, new[] { val });
+                        if (typedValue == null)
+                        {
+                            if (typeof(string) == pType)
+                            {
+                                typedValue = val.ToString();
+                            }
+                            else
+                            {
+                                typedValue = val;
+                            }
+                        }
+                    }
                 }
             }
             catch

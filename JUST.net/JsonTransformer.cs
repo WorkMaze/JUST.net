@@ -667,7 +667,7 @@ namespace JUST
 
             className = className + "," + dllName;
 
-            return ReflectionHelper.caller(null, className, functionName, customParameters, false, localContext ?? GlobalContext);
+            return ReflectionHelper.caller(null, className, functionName, customParameters, true, localContext ?? GlobalContext);
 
         }
         #endregion

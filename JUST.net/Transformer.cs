@@ -2,6 +2,8 @@
 using System.Linq;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using System.Globalization;
+using System.IO;
 
 namespace JUST
 {
@@ -230,7 +232,7 @@ namespace JUST
 
         public static object min(JArray parsedArray, JUSTContext context)
         {
-            decimal result = 0;
+            decimal result = decimal.MaxValue;
             if (parsedArray != null)
             {
                 foreach (JToken token in parsedArray.Children())
@@ -245,7 +247,7 @@ namespace JUST
 
         public static object minatpath(JArray parsedArray, string jsonPath, JUSTContext context)
         {
-            decimal result = 0;
+            decimal result = decimal.MaxValue;
 
             if (parsedArray != null)
             {
@@ -354,7 +356,7 @@ namespace JUST
                 switch (selectedToken.Type)
                 {
                     case JTokenType.Object:
-                        output = JsonConvert.SerializeObject(selectedToken);
+                        output = selectedToken; // JsonConvert.SerializeObject(selectedToken);
                         break;
                     case JTokenType.Array:
                         output = selectedToken.Values<object>().ToArray(); //selectedToken.ToString();
@@ -400,21 +402,21 @@ namespace JUST
         }
 
         #region grouparrayby
-        public static object grouparrayby(string jsonPath, string groupingElement, string groupedElement, JUSTContext context)
+        public static JArray grouparrayby(string jsonPath, string groupingElement, string groupedElement, JUSTContext context)
         {
+            JArray result;
             JToken inObj = context.Input;
             JArray arr = (JArray)inObj.SelectToken(jsonPath);
             if (!groupingElement.Contains(":"))
             {
-                JArray result = Utilities.GroupArray(arr, groupingElement, groupedElement);
-                return JsonConvert.SerializeObject(result);
+                result = Utilities.GroupArray(arr, groupingElement, groupedElement);
             }
             else
             {
                 string[] groupingElements = groupingElement.Split(':');
-                JArray result = Utilities.GroupArrayMultipleProperties(arr, groupingElements, groupedElement);
-                return JsonConvert.SerializeObject(result);
+                result = Utilities.GroupArrayMultipleProperties(arr, groupingElements, groupedElement);
             }
+            return result;
         }
 
         #endregion
