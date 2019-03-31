@@ -271,12 +271,11 @@ namespace JUST
             className = className + "," + dllName;
 
             return caller(className, functionName, customParameters);
-
         }
 
         private static object caller(string myclass, string mymethod, object[] parameters)
         {
-            Assembly assembly = Assembly.GetEntryAssembly();
+            Assembly assembly = null;
             return ReflectionHelper.caller(assembly, myclass, mymethod, parameters, true, new JUSTContext());
         }        
     }
