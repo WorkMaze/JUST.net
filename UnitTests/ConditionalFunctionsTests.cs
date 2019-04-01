@@ -94,6 +94,28 @@ namespace JUST.UnitTests
         }
 
         [Test, Category("IfCondition")]
+        public void LazyEvaluationTrueCondition()
+        {
+            const string input = "{ \"string\": \"some words\", \"integer\": 123, \"boolean\": true, \"other_integer\": 1235 }";
+            const string transformer = "{ \"result\": \"#ifcondition(#valueof($.boolean),true,#valueof($.other_integer),#valueof(invalid.jsonPath.$))\" }";
+
+            var result = JsonTransformer.Transform(transformer, input);
+
+            Assert.AreEqual("{\"result\":1235}", result);
+        }
+
+        [Test, Category("IfCondition")]
+        public void LazyEvaluationFalseCondition()
+        {
+            const string input = "{ \"string\": \"some words\", \"integer\": 123, \"boolean\": true, \"other_integer\": 1235 }";
+            const string transformer = "{ \"result\": \"#ifcondition(#valueof($.boolean),false,#valueof(invalid.jsonPath.$),#valueof($.other_integer))\" }";
+
+            var result = JsonTransformer.Transform(transformer, input);
+
+            Assert.AreEqual("{\"result\":1235}", result);
+        }
+
+        [Test, Category("IfCondition")]
         public void ReadmeIfConditionTest()
         {
             const string input = "{ \"menu\": { \"id\" : \"github\", \"repository\" : \"JUST\" } }";

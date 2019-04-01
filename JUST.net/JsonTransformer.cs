@@ -141,21 +141,22 @@ namespace JUST
                                     if (selectedTokens == null)
                                         selectedTokens = new List<JToken>();
 
-                                    selectedTokens.Add(Copy(arguments, GetInputToken(localContext)));
+                                    selectedTokens.Add(Copy(arguments, inputJson, localContext));
                                 }
                                 else if (functionName == "replace")
                                 {
                                     if (tokensToReplace == null)
                                         tokensToReplace = new Dictionary<string, JToken>();
 
-                                    tokensToReplace.Add(GetTokenStringToReplace(arguments), Replace(arguments, inputJson, localContext));
+                                    var replaceResult = Replace(arguments, inputJson, localContext);
+                                    tokensToReplace.Add(replaceResult.Key, replaceResult.Value);
                                 }
                                 else if (functionName == "delete")
                                 {
                                     if (tokensToDelete == null)
                                         tokensToDelete = new List<JToken>();
 
-                                    tokensToDelete.Add(arguments);
+                                    tokensToDelete.Add(Delete(arguments, inputJson, localContext));
                                 }
                             }
                         }
@@ -458,47 +459,52 @@ namespace JUST
         #endregion
 
         #region Copy
-        private static JToken Copy(string jsonPath, JToken token)
+        private static JToken Copy(string argument, string inputJson, JUSTContext localContext)
         {
-            JToken selectedToken = token.SelectToken(jsonPath);
+            var jsonPath = ParseArgument(inputJson, null, null, argument, localContext) as string;
+            if (jsonPath == null)
+            {
+                throw new ArgumentException("Invalid jsonPath for #copy!");
+            }
+            JToken selectedToken = GetInputToken(localContext).SelectToken(jsonPath);
             return selectedToken;
         }
 
         #endregion
 
         #region Replace
-        private static JToken Replace(string argumentString, string inputJson, JUSTContext localContext)
+        private static KeyValuePair<string, JToken> Replace(string arguments, string inputJson, JUSTContext localContext)
         {
-            string[] arguments = argumentString.Split(',');
-
-            if (arguments == null || arguments.Length != 2)
-                throw new Exception("#replace needs exactly two arguments - 1. xpath to be replaced, 2. token to replace with.");
-
-            JToken newToken = null;
-            object str = ParseFunction(arguments[1], inputJson, null, null, localContext);
+            string[] argumentArr = ExpressionHelper.GetArguments(arguments);
+            if (argumentArr.Length < 2)
+            {
+                throw new Exception("Function #replace needs two arguments - 1. jsonPath to be replaced, 2. token to replace with.");
+            }
+            var key = ParseArgument(inputJson, null, null, argumentArr[0], localContext) as string;
+            if (key == null)
+            {
+                throw new ArgumentException("Invalid jsonPath for #replace!");
+            }
+            object str = ParseArgument(inputJson, null, null, argumentArr[1], localContext);
 
             //TODO Check return object for JToken or string with double quotes!
-            if (str != null && str.ToString().Contains("\""))
-            {
-                newToken = JToken.FromObject(str);
-
-            }
-            else
-                newToken = str.ToString();
-
-            return newToken;
+            JToken newToken = str != null && str.ToString().Contains("\"") ? JToken.FromObject(str) : str.ToString();
+            
+            return new KeyValuePair<string, JToken>(key, newToken);
         }
 
-        private static string GetTokenStringToReplace(string argumentString)
+        #endregion
+
+        #region Delete
+        private static string Delete(string argument, string inputJson, JUSTContext localContext)
         {
-            string[] arguments = argumentString.Split(',');
-
-            if (arguments == null || arguments.Length != 2)
-                throw new Exception("#replace needs exactly two arguments - 1. xpath to be replaced, 2. token to replace with.");
-            return arguments[0];
-
+            var result = ParseArgument(inputJson, null, null, argument, localContext) as string;
+            if (result == null)
+            {
+                throw new ArgumentException("Invalid jsonPath for #delete!");
+            }
+            return result;
         }
-
         #endregion
 
         #region ParseFunction
