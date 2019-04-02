@@ -38,9 +38,9 @@ namespace JUST.UnitTests
         [Test]
         public void Divide()
         {
-            var transformer = "{ \"mathresult\": { \"divide\": \"#divide(9,3)\" }}";
+            var transformer = "{ \"mathresult\": { \"divide\": \"#divide(9,#valueof($.numbers[2]))\" }}";
 
-            var result = JsonTransformer.Transform(transformer, "{}");
+            var result = JsonTransformer.Transform(transformer, ExampleInputs.NumbersArray);
 
             Assert.AreEqual("{\"mathresult\":{\"divide\":3}}", result);
         }
