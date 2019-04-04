@@ -19,4 +19,13 @@
     <ProjectReference Include="..\JUST.net\JUST.net.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="Inputs\large_input.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Inputs\large_transformer.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>
