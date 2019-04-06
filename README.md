@@ -1225,7 +1225,7 @@ Now, for the same input if we use the following transformer, we get a diferent o
 
 Transformer:
 
-``
+```JSON
 {
   "Result": {
     "Header": "JsonTransform",
