@@ -339,7 +339,7 @@ Consider the input:
 
 Transformer:
 
-``JSON
+```JSON
 {
   "arrayconacted": "#concatallatpath(#valueof($.x),$.v.a)",
   "arraysum": "#sumatpath(#valueof($.x),$.v.c)",
