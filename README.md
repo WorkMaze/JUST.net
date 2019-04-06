@@ -12,32 +12,43 @@ The library is available as a NUGET package.
 
 This C# project has working examples of the transformations.
 
+**Types are now supported**. [New functions](#typeconvertions) were added to provide type convertions.
+Also a new enum field called 'EvaluationMode' was added to 'JUSTContext', which lets you select how type mismatches are handled:
+- option Strict mode will throw an exception on error;
+- FallbackToDefault will return the default value for the return type of the function/expression being evaluated
 
 # JUST.NET Library
 
 Pull the latest JUST.NET from https://www.nuget.org
-``Install-Package JUST``
-
-A dotnetcore version is also available 
-``Install-Package JUST.NETCore``
-
-A .net standard library is now available. This is the version which will be supported from now on.
 ``Install-Package JUST.NET``
+
+It's a .Net Standard library, so it can be used with .Net Framework and .Net Core.
+
+Older versions not updated anymore:
+- .Net Core version ``Install-Package JUST.NETCore``
+- .Net Framework version ``Install-Package JUST``
+
 
 # Write a simple C# code snippet to transform your JSON
 
-This is demonstrated with various examples in the source code. Once you install the nuget to your project you need to import the following namespace:-
+This is demonstrated with various examples in the source code. Once you install the nuget to your project you need to import the following namespace:
 
+```C#
 using JUST;
+```
 
-Below is a simple C# code snippet that you can use to transform your JSON:-
+Below is a simple C# code snippet that you can use to transform your JSON:
 
-``string input = File.ReadAllText("Examples/Input.json"); //read input from JSON file.``
+```C#
+//read input from JSON file
+string input = File.ReadAllText("Examples/Input.json"); 
 
-``string transformer = File.ReadAllText("Examples/Transformer.json"); //read the transformer from a JSON file.``
+//read the transformer from a JSON file
+string transformer = File.ReadAllText("Examples/Transformer.json");
 
-``string transformedString = JsonTransformer.Transform(transformer, input); // do the actual transformation.``
-
+// do the actual transformation
+string transformedString = JsonTransformer.Transform(transformer, input);
+```
 
 # Using JUST to transform JSON
 
@@ -47,74 +58,89 @@ Every JUST function starts with "#" character.
 
 ## valueof
 
-This function is used to extract the value of a given property. The value is extracted using JSON path of the property. For more information on how to use JSON path refer to :- 
+This function is used to extract the value of a given property. The value is extracted using JSON path of the property. For more information on how to use JSON path refer to : 
 http://www.newtonsoft.com/json/help/html/QueryJsonSelectTokenJsonPath.htm
 
-Consider the input:-
+Consider the input:
 
-``{
-  "menu": {   
+```JSON
+{
+  "menu": {
     "popup": {
-      "menuitem": [
-       {
+      "menuitem": [{
           "value": "Open",
           "onclick": "OpenDoc()"
-        },
-        {
+        }, {
           "value": "Close",
           "onclick": "CloseDoc()"
         }
       ]
     }
-  } 
-}``
+  }
+}
+```
 
-Transformer:-
+Transformer:
 
-``{
+```JSON
+{
   "result": {
     "Open": "#valueof($.menu.popup.menuitem[?(@.value=='Open')].onclick)",
     "Close": "#valueof($.menu.popup.menuitem[?(@.value=='Close')].onclick)"
   }
-}``
+}
+```
 
-Output:-
+Output:
 
-``{
-   "result":{"Open": "OpenDoc()", "Close": "CloseDoc()"}
-}``
+```JSON
+{
+  "result": {
+    "Open": "OpenDoc()",
+	"Close": "CloseDoc()"
+  }
+}
+```
 
 
 ## ifcondition
 
 This condition is used to evaluate and if-else condition.
 
-ifcondition(condition expresson, evaluation expression, true result, false result).
+ifcondition(condition expression, evaluation expression, true result, false result).
 
-All four of the parameters can be a 'valueof' expressions or constants.
+All four of the parameters can be JUST functions or constants. It will perform lazy evaluation, which means
+that only the corresponding true or false result is evaluated according with condition/evaluation result 
+(as programming languages do). 
 
-Consider the input:-
+Consider the input:
 
-``{
+```JSON
+{
   "menu": {
     "id" : "github",
     "repository" : "JUST"
   } 
-}``
+}
+```
 
-Transformer:-
+Transformer:
 
-``{
+```JSON
+{
   "ifconditiontesttrue": "#ifcondition(#valueof($.menu.id),github,#valueof($.menu.repository),fail)",
   "ifconditiontestfalse": "#ifcondition(#valueof($.menu.id),xml,#valueof($.menu.repository),fail)"
-}``
+}
+```
 
-Output:-
+Output:
 
-``{
-   "ifconditiontesttrue":"JUST",
-   "ifconditiontestfalse":"fail"
-}``
+``JSON
+{
+  "ifconditiontesttrue": "JUST",
+  "ifconditiontestfalse": "fail"
+}
+```
 
 ## string and math functions
 
@@ -126,19 +152,23 @@ At the moment only the basic and often used string and math functions are provid
 4. concat(string 1,string 2)
 5. add(value 1,value 2)
 6. subtract(value 1,value 2)
-3. multiply(value 1,value 2)
-4. divide(value 1,values 2)
+7. multiply(value 1,value 2)
+8. divide(value 1,values 2)
+9. round(value, decimal places)
 
-Consider the input:-
+Consider the input:
 
-``{
+```JSON
+{
   "stringref": "thisisandveryunuasualandlongstring",
-  "numbers": [ "1", "2", "3", "4", "5" ]
-}``
+  "numbers": [ 1, 2, 3, 4, 5 ]
+}
+```
 
-Transformer:-
+Transformer:
 
-``{
+```JSON
+{
   "stringresult": {
     "lastindexofand": "#lastindexof(#valueof($.stringref),and)",
     "firstindexofand": "#firstindexof(#valueof($.stringref),and)",
@@ -149,31 +179,35 @@ Transformer:-
     "add": "#add(#valueof($.numbers[0]),3)",
     "subtract": "#subtract(#valueof($.numbers[4]),#valueof($.numbers[0]))",
     "multiply": "#multiply(2,#valueof($.numbers[2]))",
-    "divide": "#divide(9,3)"
+    "divide": "#divide(9,3)",
+	"round": "#round(10.005,2)"
   }
-}``
+}
+```
 
-Output:-
+Output:
 
-``{"stringresult":
-   { 
-    "lastindexofand":"21",
-    "firstindexofand":"6",
-    "substring":"veryunuasua",
+``JSON
+{
+  "stringresult": { 
+    "lastindexofand": 21,
+    "firstindexofand": 6,
+    "substring": "veryunuasua",
     "concat":""
-   },
-   "mathresult":
-   {
-    "add":"4",
-    "subtract":"4",
-    "multiply":"6",
-    "divide":"3"
-   }
-}``
+  },
+  "mathresult": {
+    "add": 4,
+    "subtract": 4,
+    "multiply": 6,
+    "divide": 3,
+	"round": 10.01
+  }
+}
+```
 
-## Opearators
+## Operators
 
-The following operators have been added to compare strings and numbers :-
+The following operators have been added to compare strings and numbers :
 
 1. stringequals(string1, string2)
 2. stringcontains(string1, string2)
@@ -183,16 +217,19 @@ The following operators have been added to compare strings and numbers :-
 6. mathgreaterthanorequalto(decimal1, decimal2)
 7. mathlessthanorequalto(decimal1, decimal2)
 
-Consider the input:-
+Consider the input:
  
-``{
+```JSON
+{
   "d": [ "one", "two", "three" ],
-  "numbers": [ "1", "2", "3", "4", "5" ]
-}``
+  "numbers": [ 1, 2, 3, 4, 5 ]
+}
+```
 
-Transformer:-
+Transformer:
 
-``{
+```JSON
+{
   "mathresult": {
     "third_element_equals_3": "#ifcondition(#mathequals(#valueof($.numbers[2]),3),true,yes,no)",
     "third_element_greaterthan_2": "#ifcondition(#mathgreaterthan(#valueof($.numbers[2]),2),true,yes,no)",
@@ -202,15 +239,28 @@ Transformer:-
     "one_stringequals": "#ifcondition(#stringequals(#valueof($.d[0]),one),true,yes,no)",
     "one_stringcontains": "#ifcondition(#stringcontains(#valueof($.d[0]),n),true,yes,no)"
   }
-}``
+}
+```
 
-Output:-
+Output:
 
-``{"mathresult":   {"third_element_equals_3":"yes","third_element_greaterthan_2":"yes","third_element_lessthan_4":"yes","third_element_greaterthanorequals_4":"no","third_element_lessthanoreuals_2":"no","one_stringequals":"yes","one_stringcontains":"yes"}}
+```JSON
+{
+  "mathresult": {
+    "third_element_equals_3": "yes",
+    "third_element_greaterthan_2": "yes",
+    "third_element_lessthan_4": "yes",
+    "third_element_greaterthanorequals_4": "no",
+    "third_element_lessthanoreuals_2": "no",
+    "one_stringequals": "yes",
+    "one_stringcontains": "yes"
+  }
+}
+```
 
 ## Aggregate functions
 
-The following aggregate functions are provided for single dimensional arrays:-
+The following aggregate functions are provided for single dimensional arrays:
 
 1. concatall(array)
 2. sum(array)
@@ -218,34 +268,40 @@ The following aggregate functions are provided for single dimensional arrays:-
 4. min(array)
 5. max(array)
 
-Consider the input:-
+Consider the input:
  
-``{
+```JSON
+{
   "d": [ "one", "two", "three" ],
-  "numbers": [ "1", "2", "3", "4", "5" ]
-}``
+  "numbers": [ 1, 2, 3, 4, 5 ]
+}
+```
 
-Transformer:-
+Transformer:
 
-``{
+```JSON
+{
   "conacted": "#concatall(#valueof($.d))",
   "sum": "#sum(#valueof($.numbers))",
   "avg": "#average(#valueof($.numbers))",
   "min": "#min(#valueof($.numbers))",
   "max": "#max(#valueof($.numbers))"
-}``
+}
+```
 
-Output:-
+Output:
 
-``{
-    "conacted":"onetwothree",
-    "sum":"15",
-    "avg":"3",
-    "min":"1",
-    "max":"5"
-}``
+```JSON
+{
+  "conacted": "onetwothree",
+  "sum": 15,
+  "avg": 3,
+  "min": 1,
+  "max": 5
+}
+```
 
-## Aggregate functions for multidimensional arrays:-
+## Aggregate functions for multidimensional arrays:
 
 These functions are essentially the same as the above ones, the only difference being that you can also provide a path to point to particluar element inside the array.
 1. concatallatpath(array,path)
@@ -254,53 +310,156 @@ These functions are essentially the same as the above ones, the only difference 
 4. minatpath(array,path)
 5. maxatpath(array,path)
 
-Consider the input:-
+Consider the input:
 
-``{
-   "x": [
-    {
+```JSON
+{
+  "x": [{
       "v": {
         "a": "a1,a2,a3",
-        "b": "1",
-        "c": "10"
+        "b": 1,
+        "c": 10
       }
-    },
-    {
+    }, {
       "v": {
         "a": "b1,b2",
-        "b": "2",
-        "c": "20"
+        "b": 2,
+        "c": 20
       }
-    },
-    {
+    }, {
       "v": {
         "a": "c1,c2,c3",
-        "b": "3",
-        "c": "30"
+        "b": 3,
+        "c": 30
       }
     }
   ]
-}``
+}
+```
 
-Transformer:-
+Transformer:
 
-``{
+``JSON
+{
   "arrayconacted": "#concatallatpath(#valueof($.x),$.v.a)",
   "arraysum": "#sumatpath(#valueof($.x),$.v.c)",
   "arrayavg": "#averageatpath(#valueof($.x),$.v.c)",
   "arraymin": "#minatpath(#valueof($.x),$.v.b)",
   "arraymax": "#maxatpath(#valueof($.x),$.v.b)"
-}``
+}
+```
 
-Output:-
+Output:
 
-``{
-    "arrayconacted":"a1,a2,a3b1,b2c1,c2,c3",
-    "arraysum":"60",
-    "arrayavg":"20",
-    "arraymin":"1",
-    "arraymax":"3"
-}``
+```JSON
+{
+  "arrayconacted": "a1,a2,a3b1,b2c1,c2,c3",
+  "arraysum": 60,
+  "arrayavg": 20,
+  "arraymin": 1,
+  "arraymax": 3
+}
+```
+
+
+## <a name="typeconvertions"></a> Type convertions
+
+As type handling was introduced, functions to make type convertions are handy. 
+The following functions are available:
+
+1. tointeger
+2. tostring
+3. toboolean
+4. todecimal
+
+*Note*: some convertions will make use of application's CultureInfo to define output formats 
+(ex: comma or dot for decimal separator when converting to string)!
+
+Cosider the input:
+
+```JSON
+{
+  "booleans": {
+    "affirmative_string": "true",
+    "negative_string": "false",
+    "affirmative_int": 123,
+    "negative_int": 0,
+  },
+  "strings": {
+    "integer": 123,
+    "decimal": 12.34,
+    "affirmative_boolean": true,
+    "negative_boolean": false
+  },
+  "integers": {
+    "string": "123",
+    "decimal": 1.23,
+    "affirmative_boolean": true,
+    "negative_boolean": false
+  },
+  "decimals": {
+    "integer": 123,
+    "string": "1.23"
+  }
+}
+```
+
+Transformer:
+```JSON
+{
+  "booleans": {
+    "affirmative_string": "#toboolean(#valueof($.booleans.affirmative_string))",
+    "negative_string": "#toboolean(#valueof($.booleans.negative_string))",
+    "affirmative_int": "#toboolean(#valueof($.booleans.affirmative_int))",
+    "negative_int": "#toboolean(#valueof($.booleans.negative_int))",
+  },
+  "strings": {
+    "integer": "#tostring(#valueof($.strings.integer))",
+    "decimal": "#tostring(#valueof($.strings.decimal))",
+    "affirmative_boolean": "#tostring(#valueof($.strings.affirmative_boolean))",
+    "negative_boolean": "#tostring(#valueof($.strings.negative_boolean))"
+  },
+  "integers": {
+    "string": "#tointeger(#valueof($.integers.string))",
+    "decimal": "#tointeger(#valueof($.integers.decimal))",
+    "affirmative_boolean": "#tointeger(#valueof($.integers.affirmative_boolean))",
+    "negative_boolean": "#tointeger(#valueof($.integers.negative_boolean))"
+  },
+  "decimals": {
+    "integer": "#todecimal(#valueof($.decimals.integer))",
+    "string": "#todecimal(#valueof($.decimals.string))"
+  }
+}
+```
+
+Output:
+```JSON
+{
+  "booleans": {
+    "affirmative_string": true,
+    "negative_string": false,
+    "affirmative_int": true,
+    "negative_int": false
+  },
+  "strings": {
+    "integer": "123",
+    "decimal": "12,34",
+    "affirmative_boolean": "True",
+    "negative_boolean": "False"
+  },
+  "integers": {
+    "string": 123,
+    "decimal": 1,
+    "affirmative_boolean": 1,
+    "negative_boolean": 0
+  },
+  "decimals": {
+    "integer": 123.0,
+    "string": 1.23
+  }
+}
+```
+
 
 ## Bulk functions
 
@@ -309,15 +468,16 @@ Bulk functions are provided for this purpose. They correspond with the template-
 
 Bulk functions by law have to be the first property of the JSON object. All bulk functions are represented as array elements of the property '#'.
 
-These are the bulk functions provided as of now:-
+These are the bulk functions provided as of now:
 
 1. copy(path)
 2. replace(path)
 3. delete(path)
 
-Cosider the input:-
+Cosider the input:
 
-``{
+```JSON
+{
   "tree": {
     "branch": {
       "leaf": "green",
@@ -327,39 +487,44 @@ Cosider the input:-
     },
     "ladder": {"wood": "treehouse" }
   }
-}``
+}
+```
 
-Transformer:-
+Transformer:
 
-``{
-  "#": [ "#copy($)",  "#delete($.tree.branch.bird)", "#replace($.tree.branch.extra,#valueof($.tree.ladder))" ],
-  "othervalue" : "othervalue"
-}``
+```JSON
+{
+  "#": ["#copy($)", "#delete($.tree.branch.bird)", "#replace($.tree.branch.extra,#valueof($.tree.ladder))"],
+  "othervalue": "othervalue"
+}
+```
 
-Output:-
+Output:
 
-``{
-   "othervalue":"othervalue",
-   "tree":{
-    "branch":{
-     "leaf":"green",
-     "flower":"red",
-     "extra":{
-      "wood":"treehouse"
-     }
+```JSON
+{
+  "othervalue": "othervalue",
+  "tree": {
+    "branch": {
+      "leaf": "green",
+      "flower": "red",
+      "extra": {
+        "wood": "treehouse"
+      }
     },
-   "ladder":{
-     "wood":"treehouse"
+    "ladder": {
+      "wood": "treehouse"
     }
   }
-}``
+}
+```
 
 ## Array looping
 
 In some cases we don't want to copy the entire array to the destination JSON. We might want to transform the array into a different format, or have some special logic for each element while setting the destination JSON.
 For these cases we would use array looping.
 
-These are the functions provided for this pupose:-
+These are the functions provided for this pupose:
 
 1. loop(path) - path is the path of the array to loop
 2. currentvalue()
@@ -369,38 +534,48 @@ These are the functions provided for this pupose:-
 6. currentvalueatpath(path) - here path denotes the path inside the array
 7. lastvalueatpath(path) - here path denotes the path inside the array
 
-Cosider the input:-
+Cosider the input:
 
-``{
+```JSON
+{
   "tree": {
     "branch": {
       "leaf": "green",
       "flower": "red",
       "bird": "crow",
-     "extra": { "twig": "birdnest" }
+      "extra": {
+        "twig": "birdnest"
+      }
     },
-    "ladder": { "wood": "treehouse" }
+    "ladder": {
+      "wood": "treehouse"
+    }
   },
-  "numbers": [ "1", "2", "3", "4" ],
-  "arrayobjects": [
-    {"country": {"name": "norway","language": "norsk"}},
-    {
+  "numbers": [1, 2, 3, 4],
+  "arrayobjects": [{
+      "country": {
+        "name": "norway",
+        "language": "norsk"
+      }
+    }, {
       "country": {
         "name": "UK",
         "language": "english"
       }
-    },
-    {
+    }, {
       "country": {
         "name": "Sweden",
         "language": "swedish"
       }
-    }]
-}``
+    }
+  ]
+}
+```
 
-Transformer:-
+Transformer:
 
-``{
+```JSON
+{
   "iteration": {
     "#loop($.numbers)": {
       "CurrentValue": "#currentvalue()",
@@ -418,45 +593,75 @@ Transformer:-
     }
   },
   "othervalue": "othervalue"
-}``
+}
+```
 
-Output:-
+Output:
 
-``{"iteration":[
-   {"CurrentValue":"1","CurrentIndex":"0","IsLast":"no","LastValue":"4"},
-   {"CurrentValue":"2","CurrentIndex":"1","IsLast":"no","LastValue":"4"},
-   {"CurrentValue":"3","CurrentIndex":"2","IsLast":"no","LastValue":"4"},
-   {"CurrentValue":"4","CurrentIndex":"3","IsLast":"yes","LastValue":"4"}
+```JSON
+{
+  "iteration": [{
+      "CurrentValue": 1,
+      "CurrentIndex": 0,
+      "IsLast": "no",
+      "LastValue": 4
+    }, {
+      "CurrentValue": 2,
+      "CurrentIndex": 1,
+      "IsLast": "no",
+      "LastValue": 4
+    }, {
+      "CurrentValue": 3,
+      "CurrentIndex": 2,
+      "IsLast": "no",
+      "LastValue": 4
+    }, {
+      "CurrentValue": 4,
+      "CurrentIndex": 3,
+      "IsLast": "yes",
+      "LastValue": 4
+    }
   ],
-   "iteration2":[
-   {"CurrentValue":"norway","CurrentIndex":"0","IsLast":"no","LastValue":"swedish"},
-   {"CurrentValue":"UK","CurrentIndex":"1","IsLast":"no","LastValue":"swedish"},
-   {"CurrentValue":"Sweden","CurrentIndex":"2","IsLast":"yes","LastValue":"swedish"}
+  "iteration2": [{
+      "CurrentValue": "norway",
+      "CurrentIndex": 0,
+      "IsLast": "no",
+      "LastValue": "swedish"
+    }, {
+      "CurrentValue": "UK",
+      "CurrentIndex": 1,
+      "IsLast": "no",
+      "LastValue": "swedish"
+    }, {
+      "CurrentValue": "Sweden",
+      "CurrentIndex": 2,
+      "IsLast": "yes",
+      "LastValue": "swedish"
+    }
   ],
-"othervalue":"othervalue"}``
+  "othervalue": "othervalue"
+}
+```
 
 ## Nested array looping (looping within context)
 A new function `loopwithincontext` has been introduced to be able to loop withing the context of an outer loop.
-Cosider the input:-
-``{
+Cosider the input:
+```JSON
+{
   "NestedLoop": {
     "Organization": {
-      "Employee": [
-        {
+      "Employee": [{
           "Name": "E2",
-          "Details": [
-            {
+          "Details": [{
               "Country": "Iceland",
               "Age": "30",
               "Name": "Sven",
               "Language": "Icelandic"
             }
           ]
-        },
-        {
+        }, {
           "Name": "E1",
-          "Details": [
-            {
+          "Details": [{
               "Country": "Denmark",
               "Age": "30",
               "Name": "Svein",
@@ -467,10 +672,13 @@ Cosider the input:-
       ]
     }
   }
-}``
-Transformer:-
+}
+```
 
-``{
+Transformer:
+
+```JSON
+{
   "hello": {
     "#loop($.NestedLoop.Organization.Employee)": {
       "CurrentName": "#currentvalueatpath($.Name)",
@@ -481,17 +689,30 @@ Transformer:-
       }
     }
   }
-}``
+}
+```
 
-Output:-
+Output:
 
-``{
+```JSON
+{
   "hello":
-    [
-      {"CurrentName":"E2","Details":[{"CurrentCountry":"Iceland"}]},
-      {"CurrentName":"E1","Details":[{"CurrentCountry":"Denmark"}]}
-    ]
-}``
+  [{
+      "CurrentName": "E2",
+      "Details": [{
+          "CurrentCountry": "Iceland"
+        }
+      ]
+    }, {
+      "CurrentName": "E1",
+      "Details": [{
+          "CurrentCountry": "Denmark"
+        }
+      ]
+    }
+  ]
+}
+```
 
 ## Array grouping
 
@@ -499,202 +720,184 @@ A function similar to SQL GROUP BY clause has been introduced to group an array 
 
 grouparrayby(path,groupingElementName,groupedElementName)
 
-Input:-
+Input:
 
-``{
-  "Forest": [
-    {
+```JSON
+{
+  "Forest": [{
       "type": "Mammal",
       "qty": 1,
       "name": "Hippo"
-    },
-    {
+    }, {
       "type": "Bird",
       "qty": 2,
       "name": "Sparrow"
-    },
-    {
+    }, {
       "type": "Amphibian",
       "qty": 300,
       "name": "Lizard"
-    },
-    {
+    }, {
       "type": "Bird",
       "qty": 3,
       "name": "Parrot"
-    },
-    {
+    }, {
       "type": "Mammal",
       "qty": 1,
       "name": "Elephant"
-    },
-    {
+    }, {
       "type": "Mammal",
       "qty": 10,
       "name": "Dog"
-    }    
+    }
   ]
-}``
+}
+```
 
-Transformer:-
+Transformer:
 
-``{
+```JSON
+{
   "Result": "#grouparrayby($.Forest,type,all)" 
-}``
+}
+```
 
-Output:-
+Output:
 
-``{  
-   "Result":[  
-      {  
-         "type":"Mammal",
-         "all":[  
-            {  
-               "qty":1,
-               "name":"Hippo"
-            },
-            {  
-               "qty":1,
-               "name":"Elephant"
-            },
-            {  
-               "qty":10,
-               "name":"Dog"
-            }
-         ]
-      },
-      {  
-         "type":"Bird",
-         "all":[  
-            {  
-               "qty":2,
-               "name":"Sparrow"
-            },
-            {  
-               "qty":3,
-               "name":"Parrot"
-            }
-         ]
-      },
-      {  
-         "type":"Amphibian",
-         "all":[  
-            {  
-               "qty":300,
-               "name":"Lizard"
-            }
-         ]
-      }
-   ]
-}``
+```JSON
+{
+  "Result": [{
+      "type": "Mammal",
+      "all": [{
+          "qty": 1,
+          "name": "Hippo"
+        }, {
+          "qty": 1,
+          "name": "Elephant"
+        }, {
+          "qty": 10,
+          "name": "Dog"
+        }
+      ]
+    }, {
+      "type": "Bird",
+      "all": [{
+          "qty": 2,
+          "name": "Sparrow"
+        }, {
+          "qty": 3,
+          "name": "Parrot"
+        }
+      ]
+    }, {
+      "type": "Amphibian",
+      "all": [{
+          "qty": 300,
+          "name": "Lizard"
+        }
+      ]
+    }
+  ]
+}
+```
 
 You can group using multiple "grouping elements". They should be seperated by a semicolon (:)
 
-Input:-
+Input:
 
-``{
-  "Vehicle": [
-    {
+```JSON
+{
+  "Vehicle": [{
       "type": "air",
       "company": "Boeing",
       "name": "airplane"
-    },
-    {
+    }, {
       "type": "air",
       "company": "Concorde",
       "name": "airplane"
-    },
-    {
+    }, {
       "type": "air",
       "company": "Boeing",
       "name": "Chopper"
-    },
-    {
+    }, {
       "type": "land",
       "company": "GM",
       "name": "car"
-    },
-    {
+    }, {
       "type": "sea",
       "company": "Viking",
       "name": "ship"
-    },
-    {
+    }, {
       "type": "land",
       "company": "GM",
       "name": "truck"
     }
-  ]  
-}``
+  ]
+}
+```
 
-Transformer:-
+Transformer:
 
-``{
+```JSON
+{
   "Result": "#grouparrayby($.Vehicle,type:company,all)"
-}``
+}
+```
 
-Output:-
+Output:
 
-``{  
-   "Result":[  
-      {  
-         "type":"air",
-         "company":"Boeing",
-         "all":[  
-            {  
-               "name":"airplane"
-            },
-            {  
-               "name":"Chopper"
-            }
-         ]
-      },
-      {  
-         "type":"air",
-         "company":"Concorde",
-         "all":[  
-            {  
-               "name":"airplane"
-            }
-         ]
-      },
-      {  
-         "type":"land",
-         "company":"GM",
-         "all":[  
-            {  
-               "name":"car"
-            },
-            {  
-               "name":"truck"
-            }
-         ]
-      },
-      {  
-         "type":"sea",
-         "company":"Viking",
-         "all":[  
-            {  
-               "name":"ship"
-            }
-         ]
-      }
-   ]
-}``
+```JSON
+{
+  "Result": [{
+      "type": "air",
+      "company": "Boeing",
+      "all": [{
+          "name": "airplane"
+        }, {
+          "name": "Chopper"
+        }
+      ]
+    }, {
+      "type": "air",
+      "company": "Concorde",
+      "all": [{
+          "name": "airplane"
+        }
+      ]
+    }, {
+      "type": "land",
+      "company": "GM",
+      "all": [{
+          "name": "car"
+        }, {
+          "name": "truck"
+        }
+      ]
+    }, {
+      "type": "sea",
+      "company": "Viking",
+      "all": [{
+          "name": "ship"
+        }
+      ]
+    }
+  ]
+}
+```
 
 ## Calling Custom functions
 
 You can make your own custom functions in C# and call them from your transformer JSON.
 A custom function has to reside inside a public class and has to be a public static method.
 
-A custom function is called using the following syntax:-
+A custom function is called using the following syntax:
 
 #customfunction(dll name, FQN for the static function, argument1.......,argumentN)
 
 
-Consider the following input:-
+Consider the following input:
 
-``{
+```JSON
+{
   "tree": {
     "branch": {
       "leaf": "green",
@@ -702,26 +905,35 @@ Consider the following input:-
       "bird": "crow"
     }
   }
-}``
+}
+```
 
-Transformer:-
+Transformer:
 
-``{
+```JSON
+{
   "Season": "#customfunction(JUST.NET.Test,JUST.NET.Test.Season.findseason,#valueof($.tree.branch.leaf),#valueof($.tree.branch.flower))"
-}``
+}
+```
 
-Custom function:-
+Custom function:
 
-`public static string findseason(string leafColour, string flowerColour)
-        {
-            if (leafColour == "green" && flowerColour == "red")
-                return "summer";
-            else
-                return "winter";
-        }`
+```C#
+public static string findseason(string leafColour, string flowerColour)
+{
+  if (leafColour == "green" && flowerColour == "red")
+    return "summer";
+  else
+    return "winter";
+}
+```
 
-Output:-
-``{"Season":"summer"}``
+Output:
+```JSON
+{
+  "Season": "summer"
+}
+```
 
 ## Calling User Defined methods by name
 
@@ -734,7 +946,7 @@ Here's the syntax:
 `#AssemblyName::NameSpace.Plus.ClassName::Your_Method_Name(argument1.......,argumentN)`
 
 Consider the following input:
-```
+```JSON
 {
   "season": {
     "characteristics": {
@@ -748,15 +960,17 @@ Consider the following input:
 
 Transformer:
 
-```
+```JSON
 {
   "summer": "#ExternalMethods::SeasonsHelper.Season::IsSummer(#valueof($.season.characteristics.hot),#valueof($.season.characteristics.averageDaysOfRain),#valueof($.season.characteristics.randomDay))"
 }
 ```
 
 Output:
-```
-{"summer": true}
+```JSON
+{
+  "summer": true
+}
 ```
 
 ## Register User Defined methods for seamless use
@@ -766,8 +980,12 @@ To reduce the fuzz of calling custom methods, there's this class 'JUSTContext', 
 of 'Transform' methods. To only use some functions in one transformation, you can create a 'JUSTContext' instance and pass it to 'Transform' method.
 
 Examples:
-`new JUSTContext().RegisterCustomFunction(assemblyName, namespace, methodName, methodAlias)`
-`JsonTransformer.GlobalContext.RegisterCustomFunction(assemblyName, namespace, methodName, methodAlias)`
+```C#
+new JUSTContext().RegisterCustomFunction(assemblyName, namespace, methodName, methodAlias);
+```
+```C#
+JsonTransformer.GlobalContext.RegisterCustomFunction(assemblyName, namespace, methodName, methodAlias);
+```
 
 Parameter 'namespace' must include the class name as well, 'assemblyName' is optional, so as 'methodAlias', which can be 
 used to register methods with the same name under diferent namespaces.
@@ -779,9 +997,9 @@ You have the possibility to unregister a custom function or remove all registrat
 `JsonTransformer.GlobalContext.ClearCustomFunctionRegistrations()`
 
 
-Consider the following input:-
+Consider the following input:
 
-```
+```JSON
 {
   "season": {
     "characteristics": {
@@ -794,11 +1012,11 @@ Consider the following input:-
 ```
 
 Registration:
-```
+```C#
 JsonTransformer.GlobalContext.RegisterCustomFunction("SomeAssemblyName", "NameSpace.Plus.ClassName", "IsSummer");
 ```
 or
-```
+```C#
 var localContext = new JUSTContext();
 localContext.RegisterCustomFunction("SomeAssemblyName", "NameSpace.Plus.ClassName", "IsSummer");
 JsonTransformer.Transform(<transformer>, <input>, localContext);
@@ -806,35 +1024,40 @@ JsonTransformer.Transform(<transformer>, <input>, localContext);
 
 
 Transformer:
-```
+```JSON
 {
   "summer": "#IsSummer(#valueof($.season.characteristics.hot),#valueof($.season.characteristics.averageDaysOfRain),#valueof($.season.characteristics.randomDay))"
 }
 ```
 
 Output:
-```
-{"summer": true}
+```JSON
+{
+  "summer": true
+}
 ```
 
 
 ## Complex nested functions
 
-You can easily nest functions to do complex transformations. An example of such a transformation would be:-
+You can easily nest functions to do complex transformations. An example of such a transformation would be:
 
-Consider the following input:-
+Consider the following input:
 
-``{
+```JSON
+{
   "Name": "Kari",
   "Surname": "Nordmann",
   "MiddleName": "Inger",
-  "ContactInformation": "Karl johans gate:Oslo:88880000" ,
+  "ContactInformation": "Karl johans gate:Oslo:88880000",
   "PersonalInformation": "45:Married:Norwegian"
-}``
+}
+```
 
-Transformer:-
+Transformer:
 
-``{
+```JSON
+{
   "FullName": "#concat(#concat(#concat(#valueof($.Name), ),#concat(#valueof($.MiddleName), )),#valueof($.Surname))",
   "Contact Information": {
     "Street Name": "#substring(#valueof($.ContactInformation),0,#firstindexof(#valueof($.ContactInformation),:))",
@@ -844,92 +1067,113 @@ Transformer:-
   "Personal Information": {
     "Age": "#substring(#valueof($.PersonalInformation),0,#firstindexof(#valueof($.PersonalInformation),:))",
     "Civil Status": "#substring(#valueof($.PersonalInformation),#add(#firstindexof(#valueof($.PersonalInformation),:),1),#subtract(#subtract(#lastindexof(#valueof($.PersonalInformation),:),#firstindexof(#valueof($.PersonalInformation),:)),1))",
-"Ethnicity": "#substring(#valueof($.PersonalInformation),#add(#lastindexof(#valueof($.PersonalInformation),:),1),#subtract(#lastindexof(#valueof($.PersonalInformation),),#lastindexof(#valueof($.PersonalInformation),:)))"
-  }``
+    "Ethnicity": "#substring(#valueof($.PersonalInformation),#add(#lastindexof(#valueof($.PersonalInformation),:),1),#subtract(#lastindexof(#valueof($.PersonalInformation),),#lastindexof(#valueof($.PersonalInformation),:)))"
+  }
+}
+```
 
 
-Output:-
-``{
-   "FullName":"Kari Inger Nordmann",
-   "Contact Information":{
-     "Street Name":"Karl johans gate",
-     "City":"Oslo",
-     "PhoneNumber":"88880000"
-    },
-   "Personal Information":{
-     "Age":"45",
-     "Civil Status":"Married",
-     "Ethnicity":"Norwegian"
-    }
-}``
+Output:
+```JSON
+{
+  "FullName": "Kari Inger Nordmann",
+  "Contact Information": {
+    "Street Name": "Karl johans gate",
+    "City": "Oslo",
+    "PhoneNumber": "88880000"
+  },
+  "Personal Information": {
+    "Age": "45",
+    "Civil Status": "Married",
+    "Ethnicity": "Norwegian"
+  }
+}
+```
 
 ## Multiple argument & constant functions
 
 The transformation in the above scenario looks quite complex. And it could get quite messy when the string becomes longer. Also, since comma(,) is a reserved keyword, it is not possible to concatenate a comma to a string.
 
-Hence, the following 3 functions have been introduced:-
+Hence, the following 4 functions have been introduced:
 
 1. xconcat(string1,string2......stringx) - Concatenates multiple strings.
 2. xadd(int1,int2......intx) - Adds multiples integers.
 3. constant_comma() - Returns comma(,)
 4. constant_hash() - Returns hash(#)
 
-Consider the following input:-
+Consider the following input:
 
-``{
+```JSON
+{
   "Name": "Kari",
   "Surname": "Nordmann",
   "MiddleName": "Inger",
-  "ContactInformation": "Karl johans gate:Oslo:88880000" ,
+  "ContactInformation": "Karl johans gate:Oslo:88880000",
   "PersonalInformation": "45:Married:Norwegian",
-  "AgeOfMother": "67",
-  "AgeOfFather": "70"
-}``
+  "AgeOfMother": 67,
+  "AgeOfFather": 70
+}
+```
 
-Transformer:-
+Transformer:
 
-``{
+```JSON
+{
   "FullName": "#xconcat(#valueof($.Name),#constant_comma(),#valueof($.MiddleName),#constant_comma(),#valueof($.Surname))",
   "AgeOfParents": "#xadd(#valueof($.AgeOfMother),#valueof($.AgeOfFather))"
-}``
+}
+```
 
 
-Output:-
-``{"FullName":"Kari,Inger,Nordmann","AgeOfParents":"137"}``
+Output:
+```JSON
+{
+  "FullName":"Kari,Inger,Nordmann",
+  "AgeOfParents": 137
+}
+```
 
 ## Check for existance 
 
-The following two functions have been added to check for existance:-
+The following two functions have been added to check for existance:
 
 1. exists(path)
 2. existsandnotempty(path)
 
-Consider the following input:-
+Consider the following input:
 
-``{
-   "BuyDate": "2017-04-10T11:36:39+03:00",
-   "ExpireDate": ""
-}``
+```JSON
+{
+  "BuyDate": "2017-04-10T11:36:39+03:00",
+  "ExpireDate": ""
+}
+```
 
-Transformer:-
+Transformer:
 
-``{
+```JSON
+{
   "BuyDateString": "#ifcondition(#exists($.BuyDate),true,#concat(Buy Date : ,#valueof($.BuyDate)),NotExists)",
   "BuyDateString2": "#ifcondition(#existsandnotempty($.BuyDate),true,#concat(Buy Date : ,#valueof($.BuyDate)),EmptyOrNotExists)",
   "ExpireDateString": "#ifcondition(#exists($.ExpireDate),true,#concat(Expire Date : ,#valueof($.ExpireDate)),NotExists)",
   "ExpireDateString2": "#ifcondition(#existsandnotempty($.ExpireDate),true,#concat(Expire Date : ,#valueof($.ExpireDate)),EmptyOrNotExists)",
   "SellDateString": "#ifcondition(#exists($.SellDate),true,#concat(Sell Date : ,#valueof($.SellDate)),NotExists)",
   "SellDateString2": "#ifcondition(#existsandnotempty($.SellDate),true,#concat(Sell Date : ,#valueof($.SellDate)),EmptyOrNotExists)"
-}``
+}
+```
 
-Output:-
-``{"BuyDateString":"Buy Date : 2017-04-10T11:36:39+03:00",
-   "BuyDateString2":"Buy Date : 2017-04-10T11:36:39+03:00",
-   "ExpireDateString":"Expire Date : ",
-   "ExpireDateString2":"EmptyOrNotExists",
-   "SellDateString":"NotExists",
-   "SellDateString2":"EmptyOrNotExists"
-}``
+Output:
+```JSON
+{
+  "BuyDateString": "Buy Date : 2017-04-10T11:36:39+03:00",
+  "BuyDateString2": "Buy Date : 2017-04-10T11:36:39+03:00",
+  "ExpireDateString": "Expire Date : ",
+  "ExpireDateString2": "EmptyOrNotExists",
+  "SellDateString": "NotExists",
+  "SellDateString2": "EmptyOrNotExists"
+}
+
+```
 
 ## Conditional transformation
 
@@ -937,18 +1181,21 @@ Conditional transformation can be achieved using the *ifgroup* function.
 
 The function takes an expression as argument which should evaluate to a boolean value.
 
-Consider the following input:-
+Consider the following input:
 
-``{
+```JSON
+{
   "Tree": {    
     "Branch": "leaf",
     "Flower": "Rose"
   }
-}``
+}
+```
 
-Transformer:-
+Transformer:
 
-``{
+```JSON
+{
   "Result": {
     "Header": "JsonTransform",
     "#ifgroup(#exists($.Tree.Branch))": {
@@ -957,25 +1204,29 @@ Transformer:-
         "Value2": "#valueof($.Tree.Flower)"
       }
     }
- }
-}``
+  }
+}
+```
 
-Output:-
-``{  
-   "Result":{  
-      "Header":"JsonTransform",
-      "State":{  
-         "Value1":"leaf",
-         "Value2":"Rose"
-      }
-   }
-}``
+Output:
+```JSON
+{
+  "Result": {
+    "Header": "JsonTransform",
+    "State": {
+      "Value1": "leaf",
+      "Value2": "Rose"
+    }
+  }
+}
+```
 
 Now, for the same input if we use the following transformer, we get a diferent output.
 
-Transformer:-
+Transformer:
 
-``{
+``
+{
   "Result": {
     "Header": "JsonTransform",
     "#ifgroup(#exists($.Tree.Root))": {
@@ -984,80 +1235,100 @@ Transformer:-
         "Value2": "#valueof($.Tree.Flower)"
       }
     }
- }
-}``
+  }
+}
+```
 
-Output:-
-``{  
-   "Result":{  
-      "Header":"JsonTransform"
-   }
-}``
+Output:
+```JSON
+{  
+  "Result":{  
+    "Header": "JsonTransform"
+  }
+}
+```
 
 
 ## Dynamic Properties
 
 We can now create dynamic properties using the *eval* function. The function takes an expression as an argument.
 
-Consider the following input:-
+Consider the following input:
 
-``{
+```JSON
+{
   "Tree": {    
     "Branch": "leaf",
     "Flower": "Rose"
   }
-}``
+}
+```
 
-Transformer:-
+Transformer:
 
-``{
+```JSON
+{
   "Result": {
-      "#eval(#valueof($.Tree.Flower))": "x"
+    "#eval(#valueof($.Tree.Flower))": "x"
   }
-}``
+}
+```
 
-Output:-
-``{  
-   "Result":{  
-      "Rose":"x"
-   }
-}``
- 
+Output:
+```JSON
+{  
+  "Result":{  
+    "Rose":"x"
+  }
+}
+```
 
 
 ## Schema Validation against multiple schemas using prefixes
 
 A new feature to validate a JSON against multiple schemas has been introduced in the new Nuget 2.0.xxx. This is to enable namespace based validation using prefixes like in XSD.
 
-Below is a sample code which you need to write to validate a JSON against 2 schemas using prefixes:-
+Below is a sample code which you need to write to validate a JSON against 2 schemas using prefixes:
 
-``string inputJson = File.ReadAllText("Examples/ValidationInput.json");//read input from JSON file.``
+```C#
+//read input from JSON file
+string inputJson = File.ReadAllText("Examples/ValidationInput.json");
 
-``string schemaJsonX = File.ReadAllText("Examples/SchemaX.json");//read first schema from JSON file.``
+//read first schema from JSON file
+string schemaJsonX = File.ReadAllText("Examples/SchemaX.json");
 
-``string schemaJsonY = File.ReadAllText("Examples/SchemaY.json");//read second input from JSON file.``
+//read second input from JSON file
+string schemaJsonY = File.ReadAllText("Examples/SchemaY.json");
 
-``JsonValidator validator = new JsonValidator(inputJson);//create instance of JsonValidator using the input``
+//create instance of JsonValidator using the input
+JsonValidator validator = new JsonValidator(inputJson);
 
-``validator.AddSchema("x", schemaJsonX);//Add first schema with prefix 'x'``
+//Add first schema with prefix 'x'
+validator.AddSchema("x", schemaJsonX);
 
-``validator.AddSchema("y", schemaJsonY);//Add second schema with prefix 'y'``
+//Add second schema with prefix 'y'
+validator.AddSchema("y", schemaJsonY);
 
-``validator.Validate();//Validate``
+//Validate
+validator.Validate();
+```
 
 In the above case if the validation is un-successful an exception will be thrown with the validation errors.
 
-Consider the validation input:-
+Consider the validation input:
 
-``{
+```JSON
+{
   "x.tree": { "x.branch": { "x.leaf": "1" } },
   "x.child": 1,
   "y.animal": 1
-}``
+}
+```
 
-Schema X JSON:-
+Schema X JSON:
 
-``{
+```JSON
+{
   "properties": {
     "tree": {
       "type": "object",
@@ -1065,26 +1336,33 @@ Schema X JSON:-
         "branch": {
           "type": "object",
           "properties": {
-            "leaf": { "type": "string" }
+            "leaf": {
+              "type": "string"
+            }
           }
         }
       }
-
-},
-    "child": { "type": "string" }
-  }
-}``
-
-Schema Y JSON:-
-
-``{
-  "properties": {
-    "animal": { "type": "string" }
+    },
+    "child": {
+      "type": "string"
+    }
   }
 }
-``
+```
 
-The exception message thrown in the above case would be:-
+Schema Y JSON:
+
+```JSON
+{
+  "properties": {
+    "animal": { 
+      "type": "string"    
+    }
+  }
+}
+```
+
+The exception message thrown in the above case would be:
 
 ``Unhandled Exception: System.Exception: Invalid type. Expected String but got Integer. Path '['x.child']', line 3, position 14. AND Invalid type. Expected String but got Integer. Path '['y.animal']', line 4, position 15.``
 
@@ -1092,29 +1370,30 @@ The exception message thrown in the above case would be:-
 
 A JSON file containing an array can now be split into multiple JSON files, each representing a file for every array element.
 
-Two new functions have been added for this purpose:-
+Two new functions have been added for this purpose:
 
-`public static IEnumerable<string> SplitJson(string input,string arrayPath)`
+```C#
+public static IEnumerable<string> SplitJson(string input,string arrayPath)
+```
 
-`public static IEnumerable<JObject> SplitJson(JObject input, string arrayPath)`
+```C#
+public static IEnumerable<JObject> SplitJson(JObject input, string arrayPath)
+```
 
-Consider the input:-
-``{
+Consider the input:
+```JSON
+{
   "cars": {
-    "Ford": [
-      {
+    "Ford": [{
         "model": "Taurus",
         "doors": 4
-      },
-      {
+      }, {
         "model": "Escort",
         "doors": 4
-      },
-      {
+      }, {
         "model": "Fiesta",
         "doors": 3
-      },
-      {
+      }, {
         "model": "Bronco",
         "doors": 5
       }
@@ -1122,30 +1401,42 @@ Consider the input:-
     "firstName": "John",
     "lastName": "Smith",
   }
-}``
+}
+```
 
-Below is a sample code which splits the above input:-
+Below is a sample code which splits the above input:
 
-``string input = File.ReadAllText("Input.json");``
+```C#
+string input = File.ReadAllText("Input.json");
+List<string> outputs = JsonTransformer.SplitJson(input, "$.cars.Ford").ToList<string>();
+```
 
-``List<string> outputs = JsonTransformer.SplitJson(input, "$.cars.Ford").ToList<string>();``
+The output will contain 4 JSON files:
 
-The output will contain 4 JSON files:-
+```JSON
+{"cars":{"Ford":{"model":"Taurus","doors":4},"firstName":"John","lastName":"Smith"}}
+```
 
-``{"cars":{"Ford":{"model":"Taurus","doors":4},"firstName":"John","lastName":"Smith"}}``
+```JSON
+{"cars":{"Ford":{"model":"Escort","doors":4},"firstName":"John","lastName":"Smith"}}
+```
 
-``{"cars":{"Ford":{"model":"Escort","doors":4},"firstName":"John","lastName":"Smith"}}``
+```JSON
+{"cars":{"Ford":{"model":"Fiesta","doors":3},"firstName":"John","lastName":"Smith"}}
+```
 
-``{"cars":{"Ford":{"model":"Fiesta","doors":3},"firstName":"John","lastName":"Smith"}}``
-
-``{"cars":{"Ford":{"model":"Bronco","doors":5},"firstName":"John","lastName":"Smith"}}``
+```JSON
+{"cars":{"Ford":{"model":"Bronco","doors":5},"firstName":"John","lastName":"Smith"}}
+```
 
 ## Transforming JSON to other data formats
 
 JUST.NET can now transform JSON data into other generic formats too. All functions except the BULK FUNCTIONS are supported in this feature.
 The #loop functions excepts an extra argument which defines the seperator between the individual records.
 
-`#loop(path,seaperator)`
+```JSON
+#loop(path,seaperator)
+```
 
 If the seperator is not defined, the default seperator used is NEWLINE.
 
@@ -1153,13 +1444,16 @@ A new class called `DataTransformer` has been introduced for this new feature.
 
 ### Example for JSON to XML
 
-Sample code to transform from JSON to XML:-
-``string input = File.ReadAllText("Input.json");``
-``string transformer = File.ReadAllText("DataTransformer.xml");``
-``string transformedString = DataTransformer.Transform(transformer, input);``
+Sample code to transform from JSON to XML:
+```C#
+string input = File.ReadAllText("Input.json");``
+string transformer = File.ReadAllText("DataTransformer.xml");
+string transformedString = DataTransformer.Transform(transformer, input);
+```
 
-Input.json:-
-``{
+Input.json:
+```JSON
+{
   "menu": {
     "id": {
       "file": "csv"
@@ -1168,40 +1462,34 @@ Input.json:-
       "Window": "popup"
     },
     "popup": {
-      "menuitem": [
-        {
+      "menuitem": [{
           "value": "New",
           "onclick": {
             "action": "CreateNewDoc()"
           }
-        },
-        {
+        }, {
           "value": "Open",
           "onclick": "OpenDoc()"
-        },
-        {
+        }, {
           "value": "Close",
           "onclick": "CloseDoc()"
         }
       ]
     }
   },
-  "x": [
-    {
+  "x": [{
       "v": {
         "a": "a1,a2,a3",
         "b": "1",
         "c": "10"
       }
-    },
-    {
+    }, {
       "v": {
         "a": "b1,b2",
         "b": "2",
         "c": "20"
       }
-    },
-    {
+    }, {
       "v": {
         "a": "c1,c2,c3",
         "b": "3",
@@ -1210,8 +1498,8 @@ Input.json:-
     }
   ],
   "stringref": "thisisandveryunuasualandlongstring",
-  "d": [ "one", "two", "three" ],
-  "numbers": [ "1", "2", "3", "4", "5" ],
+  "d": ["one", "two", "three"],
+  "numbers": ["1", "2", "3", "4", "5"],
   "tree": {
     "branch": {
       "leaf": "green",
@@ -1229,11 +1517,13 @@ Input.json:-
   "BuyDate": "2017-04-10T11:36:39+03:00",
   "ExpireDate": "",
   "LogId": 5000510625
-}``
+}
+```
 
 
-DataTransformer.xml:-
-``<?xml version="1.0" encoding="UTF-8" ?>
+DataTransformer.xml:
+```XML
+<?xml version="1.0" encoding="UTF-8" ?>
 <root>
   <root>
     <ifconditiontesttrue>#ifcondition(#valueof($.menu.id.file),csv,#valueof($.menu.value.Window),fail)</ifconditiontesttrue>
@@ -1284,10 +1574,12 @@ DataTransformer.xml:-
       <SomeValue>#valueof($.LogId)</SomeValue>
     </Record>}
   </iteration>  
-</root>``
+</root>
+``
 
-Output:-
-``<?xml version="1.0" encoding="UTF-8" ?>
+Output:
+```XML
+<?xml version="1.0" encoding="UTF-8" ?>
 <root>
   <root>
     <ifconditiontesttrue>popup</ifconditiontesttrue>
@@ -1365,23 +1657,30 @@ Output:-
       <SomeValue>5000510625</SomeValue>
     </Record><!--Record ends here-->
   </iteration>
-</root>``
+</root>
+```
 
 ### Example for JSON to CSV
 
-Sample code to transform from JSON to CSV:-
-``string transformer = File.ReadAllText("Input.json");``
-``string transformer = File.ReadAllText("DataTransformer.csv");``
-``string transformedString = DataTransformer.Transform(transformer, input);``
+Sample code to transform from JSON to CSV:
+```C#
+string transformer = File.ReadAllText("Input.json");
+string transformer = File.ReadAllText("DataTransformer.csv");
+string transformedString = DataTransformer.Transform(transformer, input);
+```
 
 The input file is same as the xml example.
 
-DataTransformer.csv:-
-``"#loop($.numbers)": {#currentvalue(),#currentindex(),#ifcondition(#currentindex(),#lastindex(),yes,no),#lastvalue(),#valueof($.LogId)}``
+DataTransformer.csv:
+```
+"#loop($.numbers)": {#currentvalue(),#currentindex(),#ifcondition(#currentindex(),#lastindex(),yes,no),#lastvalue(),#valueof($.LogId)}
+```
 
-Output:-
-``1,0,no,5,5000510625
+Output:
+```CSV
+1,0,no,5,5000510625
 2,1,no,5,5000510625
 3,2,no,5,5000510625
 4,3,no,5,5000510625
-5,4,yes,5,5000510625``
+5,4,yes,5,5000510625
+```

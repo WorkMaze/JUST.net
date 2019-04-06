@@ -45,6 +45,19 @@ namespace JUST.UnitTests
             Assert.AreEqual("{\"mathresult\":{\"divide\":3}}", result);
         }
 
+        [TestCase("0.00154", "0.00", 2)]
+        [TestCase("0.01554", "0.02", 2)]
+        [TestCase("0.66489", "1.0", 0)]
+        public void Round(string typedValue, string expectedResult, int decimalPlaces)
+        {
+            var input = $"{{ \"value\": {typedValue} }}";
+            var transformer = $"{{ \"result\": \"#round(#valueof($.value),{decimalPlaces})\" }}";
+
+            var result = JsonTransformer.Transform(transformer, input);
+
+            Assert.AreEqual($"{{\"result\":{expectedResult}}}", result);
+        }
+
         [Test]
         public void Equals()
         {

@@ -78,15 +78,5 @@ namespace JUST.UnitTests
 
             Assert.AreEqual("{\"root\":{\"array\":{\"specific_field\":\"b1,b2\"}}}", result);
         }
-
-        [Test]
-        public void ReadmeTest()
-        {
-            const string transformer = "{\"root\": {\"menu1\": \"#valueof($.menu.popup.menuitem[?(@.value=='New')].onclick)\", \"menu2\": \"#valueof($.menu.popup.menuitem[?(@.value=='Open')].onclick)\"}}";
-
-            var result = JsonTransformer.Transform(transformer, ExampleInputs.Menu);
-
-            Assert.AreEqual("{\"root\":{\"menu1\":{\"action\":\"CreateNewDoc()\"},\"menu2\":\"OpenDoc()\"}}", result);
-        }
     }
 }

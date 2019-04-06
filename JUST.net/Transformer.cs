@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Linq;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using System.Globalization;
-using System.IO;
 
 namespace JUST
 {
@@ -542,7 +539,7 @@ namespace JUST
 
         public static decimal round(decimal val, int decimalPlaces, JUSTContext context)
         {
-            return decimal.Round(val, decimalPlaces);
+            return decimal.Round(val, decimalPlaces, MidpointRounding.AwayFromZero);
         }
     }
 }

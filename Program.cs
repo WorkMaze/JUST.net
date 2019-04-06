@@ -253,7 +253,7 @@ namespace JUST.NET.Test
 
             Console.WriteLine("################################################################################################");
 
-            JsonTransformer.GlobalContext.EvaluationMode = EvaluationMode.Loose;
+            JsonTransformer.GlobalContext.EvaluationMode = EvaluationMode.FallbackToDefault;
 
             inputDyn = File.ReadAllText("Examples/InputDynamic.json");
             transformer = "{ \"Result\": { \"Header\": \"JsonTransform\", \"#ifgroup(1)\": { \"State\": { \"Value1\": \"#valueof($.Tree.Branch)\", \"Value2\": \"#valueof($.Tree.Flower)\" }} } }";
@@ -261,31 +261,6 @@ namespace JUST.NET.Test
             transformedString = JsonConvert.SerializeObject
                 (JsonTransformer.Transform(JObject.Parse(transformer), JObject.Parse(inputDyn)));
             Console.WriteLine(transformedString);
-
-            Console.WriteLine("################################################################################################");
-
-            JsonTransformer.GlobalContext.EvaluationMode = EvaluationMode.Strict;
-
-            inputDyn = File.ReadAllText("Examples/InputDynamic.json");
-            transformer = "{ \"Result\": { \"Header\": \"JsonTransform\", \"#ifgroup(1)\": { \"State\": { \"Value1\": \"#valueof($.Tree.Branch)\", \"Value2\": \"#valueof($.Tree.Flower)\" }} } }";
-            try
-            {
-                transformedString = JsonConvert.SerializeObject
-                    (JsonTransformer.Transform(JObject.Parse(transformer), JObject.Parse(inputDyn)));
-                Console.WriteLine(transformedString);
-                throw new NotSupportedException("Transformation should have failed!");
-            }
-            catch (Exception ex)
-            {
-                if (ex is NotSupportedException)
-                {
-                    throw;
-                }
-                else
-                {
-                    Console.WriteLine("Expected exception due to Strict Evaluation Mode: " + ex.Message);
-                } 
-            }
 
             Console.WriteLine("################################################################################################");
 

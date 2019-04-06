@@ -9,8 +9,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JUST.net", "JUST.net\JUST.n
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ExternalMethods", "ExternalMethods\ExternalMethods.csproj", "{15F60FAC-38CF-4AA7-B369-E738702AA94E}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JUST.net.UnitTests", "UnitTests\JUST.net.UnitTests.csproj", "{8EDD169B-1F28-47F8-8825-EAD22322E2C2}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -29,10 +27,6 @@ Global
 		{15F60FAC-38CF-4AA7-B369-E738702AA94E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{15F60FAC-38CF-4AA7-B369-E738702AA94E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{15F60FAC-38CF-4AA7-B369-E738702AA94E}.Release|Any CPU.Build.0 = Release|Any CPU
-		{8EDD169B-1F28-47F8-8825-EAD22322E2C2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{8EDD169B-1F28-47F8-8825-EAD22322E2C2}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{8EDD169B-1F28-47F8-8825-EAD22322E2C2}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{8EDD169B-1F28-47F8-8825-EAD22322E2C2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

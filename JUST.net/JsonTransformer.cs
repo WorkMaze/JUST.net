@@ -227,7 +227,7 @@ namespace JUST
 
                         try
                         {
-                            result = Convert.ToBoolean(functionResult);
+                            result = (bool)ReflectionHelper.GetTypedValue(typeof(bool), functionResult, GetEvaluationMode(localContext));
                         }
                         catch
                         {
@@ -358,7 +358,7 @@ namespace JUST
                         catch
                         {
                             if (IsStrictMode(localContext)) { throw; }
-                            if (IsFallbackToNull(localContext)) { childToken.Replace(JValue.CreateNull()); };
+                            if (IsFallbackToDefault(localContext)) { childToken.Replace(JValue.CreateNull()); };
                         }
                     }
                     else
@@ -739,9 +739,9 @@ namespace JUST
             return GetEvaluationMode(localContext) == EvaluationMode.Strict;
         }
 
-        private static bool IsFallbackToNull(JUSTContext localContext)
+        private static bool IsFallbackToDefault(JUSTContext localContext)
         {
-            return GetEvaluationMode(localContext) == EvaluationMode.FallbackToNull;
+            return GetEvaluationMode(localContext) == EvaluationMode.FallbackToDefault;
         }
     }
 }

@@ -7,8 +7,7 @@ namespace JUST
 {
     public enum EvaluationMode
     {
-        Loose,
-        FallbackToNull,
+        FallbackToDefault,
         Strict
     }
 
@@ -19,7 +18,7 @@ namespace JUST
 
         internal JToken Input;
 
-        public EvaluationMode EvaluationMode = EvaluationMode.Loose;
+        public EvaluationMode EvaluationMode = EvaluationMode.FallbackToDefault;
 
         public int DefaultDecimalPlaces
         {

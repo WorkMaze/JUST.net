@@ -105,15 +105,5 @@ namespace JUST.UnitTests
 
             Assert.AreEqual("Invalid jsonPath for #delete!", result.Message);
         }
-
-        [Test]
-        public void ReadmeTest()
-        {
-            const string transformer = "{ \"#\": [ \"#copy($)\", \"#delete($.tree.branch.bird)\", \"#replace($.tree.branch.extra,#valueof($.tree.ladder))\" ], \"othervalue\" : \"othervalue\" }";
-
-            var result = JsonTransformer.Transform(transformer, ExampleInputs.Tree);
-
-            Assert.AreEqual("{\"othervalue\":\"othervalue\",\"tree\":{\"branch\":{\"leaf\":\"green\",\"flower\":\"red\",\"extra\":{\"wood\":\"treehouse\"}},\"ladder\":{\"wood\":\"treehouse\"}}}", result);
-        }
     }
 }

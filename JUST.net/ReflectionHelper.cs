@@ -10,7 +10,7 @@ using System.Text.RegularExpressions;
 
 namespace JUST
 {
-    internal class ReflectionHelper
+    internal static class ReflectionHelper
     {
         internal const string EXTERNAL_ASSEMBLY_REGEX = "([\\w.]+)[:]{2}([\\w.]+)[:]{0,2}([\\w.]*)";
 
@@ -28,10 +28,7 @@ namespace JUST
             {
                 EvaluationMode mode = context.EvaluationMode;
                 if (mode == EvaluationMode.Strict) { throw; }
-                if (mode == EvaluationMode.FallbackToNull) { return null; }
-
-                var returnType = methodInfo.ReturnType;
-                return GetDefaultValue(returnType);
+                return GetDefaultValue(methodInfo.ReturnType);
             }
         }
 
@@ -159,7 +156,6 @@ namespace JUST
                     {
                         method = pType.GetConstructor(new[] { val.GetType() });
                     }
-                    //?? pType.GetConstructor(new[] { typeof(string) });
                     if (method?.IsConstructor ?? false)
                     {
                         typedValue = Activator.CreateInstance(pType, new[] { val });
@@ -184,7 +180,7 @@ namespace JUST
             catch
             {
                 if (mode == EvaluationMode.Strict) { throw; }
-                if (mode == EvaluationMode.FallbackToNull) { typedValue = null; }
+                typedValue = GetDefaultValue(pType);
             }
             return typedValue;
         }

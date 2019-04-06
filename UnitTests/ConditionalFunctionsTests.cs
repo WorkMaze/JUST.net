@@ -1,4 +1,5 @@
 ﻿using NUnit.Framework;
+using System;
 
 namespace JUST.UnitTests
 {
@@ -115,17 +116,6 @@ namespace JUST.UnitTests
             Assert.AreEqual("{\"result\":1235}", result);
         }
 
-        [Test, Category("IfCondition")]
-        public void ReadmeIfConditionTest()
-        {
-            const string input = "{ \"menu\": { \"id\" : \"github\", \"repository\" : \"JUST\" } }";
-            const string transformer = "{ \"ifconditiontesttrue\": \"#ifcondition(#valueof($.menu.id),github,#valueof($.menu.repository),fail)\", \"ifconditiontestfalse\": \"#ifcondition(#valueof($.menu.id),xml,#valueof($.menu.repository),fail)\" }";
-
-            var result = JsonTransformer.Transform(transformer, input);
-
-            Assert.AreEqual("{\"ifconditiontesttrue\":\"JUST\",\"ifconditiontestfalse\":\"fail\"}", result);
-        }
-
         [Test, Category("IfGroup")]
         public void ConditionalGroupTrueTest()
         {
@@ -142,6 +132,26 @@ namespace JUST.UnitTests
         {
             const string input = "{ \"Tree\": { \"Branch\": \"leaf\", \"Flower\": \"Rose\" } }";
             const string transformer = "{ \"Result\": { \"Header\": \"JsonTransform\", \"#ifgroup(#exists($.Tree.Root))\": { \"State\": { \"Value1\": \"#valueof($.Tree.Branch)\", \"Value2\": \"#valueof($.Tree.Flower)\" } } } }";
+
+            var result = JsonTransformer.Transform(transformer, input);
+
+            Assert.AreEqual("{\"Result\":{\"Header\":\"JsonTransform\"}}", result);
+        }
+
+        [Test, Category("IfGroup"), Category("Strict")]
+        public void ConditionalGroupException()
+        {
+            const string input = "{ \"Tree\": { \"Branch\": \"leaf\", \"Flower\": \"Rose\" } }";
+            const string transformer = "{ \"Result\": { \"Header\": \"JsonTransform\", \"#ifgroup(wrong_val)\": { \"State\": { \"Value1\": \"#valueof($.Tree.Branch)\", \"Value2\": \"#valueof($.Tree.Flower)\" }} } }";
+
+            Assert.Throws<FormatException>(() => JsonTransformer.Transform(transformer, input, new JUSTContext { EvaluationMode = EvaluationMode.Strict }));
+        }
+
+        [Test, Category("IfGroup"), Category("FallbackToDefault")]
+        public void ConditionalGroupExceptionFallbackToDefault()
+        {
+            const string input = "{ \"Tree\": { \"Branch\": \"leaf\", \"Flower\": \"Rose\" } }";
+            const string transformer = "{ \"Result\": { \"Header\": \"JsonTransform\", \"#ifgroup(wrong_val)\": { \"State\": { \"Value1\": \"#valueof($.Tree.Branch)\", \"Value2\": \"#valueof($.Tree.Flower)\" }} } }";
 
             var result = JsonTransformer.Transform(transformer, input);
 
