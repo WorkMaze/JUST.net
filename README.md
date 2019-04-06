@@ -135,7 +135,7 @@ Transformer:
 
 Output:
 
-``JSON
+```JSON
 {
   "ifconditiontesttrue": "JUST",
   "ifconditiontestfalse": "fail"
