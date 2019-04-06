@@ -187,7 +187,7 @@ Transformer:
 
 Output:
 
-``JSON
+```JSON
 {
   "stringresult": { 
     "lastindexofand": 21,
