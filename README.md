@@ -13,9 +13,9 @@ The library is available as a NUGET package.
 This C# project has working examples of the transformations.
 
 **Types are now supported**. [New functions](#typeconvertions) were added to provide type convertions.
-Also a new enum field called 'EvaluationMode' was added to 'JUSTContext', which lets you select how type mismatches are handled:
-- option Strict mode will throw an exception on error;
-- FallbackToDefault will return the default value for the return type of the function/expression being evaluated
+Also a new enum field called `EvaluationMode` was added to `JUSTContext`, which lets you select how type mismatches are handled:
+- option `Strict` mode will throw an exception on error;
+- option `FallbackToDefault` will return the default value for the return type of the function/expression being evaluated
 
 # JUST.NET Library
 
@@ -975,9 +975,9 @@ Output:
 
 ## Register User Defined methods for seamless use
 
-To reduce the fuzz of calling custom methods, there's this class 'JUSTContext', where you can register your custom functions.
-'JsonTransformer' has a readonly field called 'GlobalContext' where one can register functions that will be available for all subsequent calls
-of 'Transform' methods. To only use some functions in one transformation, you can create a 'JUSTContext' instance and pass it to 'Transform' method.
+To reduce the fuzz of calling custom methods, there's this class `JUSTContext`, where you can register your custom functions.
+`JsonTransformer` has a readonly field called `GlobalContext` where one can register functions that will be available for all subsequent calls
+of `Transform` methods. To only use some functions in one transformation, you can create a `JUSTContext` instance and pass it to `Transform` method.
 
 Examples:
 ```C#
@@ -1575,7 +1575,7 @@ DataTransformer.xml:
     </Record>}
   </iteration>  
 </root>
-``
+```
 
 Output:
 ```XML
