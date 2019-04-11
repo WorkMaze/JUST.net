@@ -1,4 +1,5 @@
-﻿using NUnit.Framework;
+﻿using System.Globalization;
+using NUnit.Framework;
 
 namespace JUST.UnitTests
 {
@@ -78,7 +79,8 @@ namespace JUST.UnitTests
 
             var result = JsonTransformer.Transform(transformer, input);
 
-            Assert.AreEqual("{\"booleans\":{\"affirmative_string\":true,\"negative_string\":false,\"affirmative_int\":true,\"negative_int\":false},\"strings\":{\"integer\":\"123\",\"decimal\":\"12,34\",\"affirmative_boolean\":\"True\",\"negative_boolean\":\"False\"},\"integers\":{\"string\":123,\"decimal\":1,\"affirmative_boolean\":1,\"negative_boolean\":0},\"decimals\":{\"integer\":123.0,\"string\":1.23}}", result);
+            var decimalSeparator = CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator;
+            Assert.AreEqual($"{{\"booleans\":{{\"affirmative_string\":true,\"negative_string\":false,\"affirmative_int\":true,\"negative_int\":false}},\"strings\":{{\"integer\":\"123\",\"decimal\":\"12{decimalSeparator}34\",\"affirmative_boolean\":\"True\",\"negative_boolean\":\"False\"}},\"integers\":{{\"string\":123,\"decimal\":1,\"affirmative_boolean\":1,\"negative_boolean\":0}},\"decimals\":{{\"integer\":123.0,\"string\":1.23}}}}", result);
         }
 
         [Test]

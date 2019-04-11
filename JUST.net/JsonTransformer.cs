@@ -167,32 +167,7 @@ namespace JUST
                         && !property.Name.Contains("#loop"))
                     {
                         object newValue = ParseFunction(property.Value.ToString(), inputJson, parentArray, currentArrayToken, localContext);
-
-                        //TODO Check return object for JToken or string with double quotes!
-                        if (newValue != null && newValue.ToString().Contains("\""))
-                        {
-                            try
-                            {
-                                JToken newToken = JToken.FromObject(newValue);
-                                property.Value = newToken;
-                            }
-                            catch
-                            {
-                                property.Value = new JValue(newValue);
-                            }
-                        }
-                        else
-                        {
-                            var arr = newValue as IEnumerable<object>;
-                            if (arr != null)
-                            {
-                                property.Value = new JArray(arr);
-                            }
-                            else
-                            {
-                                property.Value = new JValue(newValue);
-                            }
-                        }
+                        property.Value = GetToken(newValue, localContext);
                     }
 
                     /* For looping*/
@@ -347,22 +322,8 @@ namespace JUST
                 {
                     object newValue = ParseFunction(childToken.Value<string>(), inputJson, parentArray, currentArrayToken, localContext);
 
-                    //TODO Check return object for JToken or string with double quotes!
-                    if (newValue != null && newValue.ToString().Contains("\""))
-                    {
-                        try
-                        {
-                            JToken newToken = JToken.FromObject(newValue);
-                            childToken.Replace(new JValue(newValue));
-                        }
-                        catch
-                        {
-                            if (IsStrictMode(localContext)) { throw; }
-                            if (IsFallbackToDefault(localContext)) { childToken.Replace(JValue.CreateNull()); };
-                        }
-                    }
-                    else
-                        childToken.Replace(new JValue(newValue));
+                    JToken replaceToken = GetToken(newValue, localContext);
+                    childToken.Replace(replaceToken);
                 }
 
                 if (!isLoop)
@@ -458,6 +419,51 @@ namespace JUST
         }
         #endregion
 
+        private static JToken GetToken(object newValue, JUSTContext localContext)
+        {
+            JToken result = null;
+            if (newValue != null)
+            {
+                if (newValue is JToken token)
+                {
+                    result = token;
+                }
+                else
+                {
+                    try
+                    {
+                        //JToken newToken = JToken.FromObject(newValue);
+                        if (newValue is IEnumerable<object> newArray)
+                        {
+                            result = new JArray(newArray);
+                        }
+                        else
+                        {
+                            result = new JValue(newValue);
+                        }
+                    }
+                    catch
+                    {
+                        if (IsStrictMode(localContext))
+                        {
+                            throw;
+                        }
+
+                        if (IsFallbackToDefault(localContext))
+                        {
+                            result = JValue.CreateNull();
+                        }
+                    }
+                }
+            }
+            else
+            {
+                result = JValue.CreateNull();
+            }
+
+            return result;
+        }
+
         #region Copy
         private static JToken Copy(string argument, string inputJson, JUSTContext localContext)
         {
@@ -487,9 +493,7 @@ namespace JUST
             }
             object str = ParseArgument(inputJson, null, null, argumentArr[1], localContext);
 
-            //TODO Check return object for JToken or string with double quotes!
-            JToken newToken = str != null && str.ToString().Contains("\"") ? JToken.FromObject(str) : str.ToString();
-            
+            JToken newToken = GetToken(str, localContext); 
             return new KeyValuePair<string, JToken>(key, newToken);
         }
 

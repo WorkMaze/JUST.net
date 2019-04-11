@@ -1,4 +1,5 @@
-﻿using NUnit.Framework;
+﻿using System.Globalization;
+using NUnit.Framework;
 
 namespace JUST.UnitTests
 {
@@ -25,8 +26,8 @@ namespace JUST.UnitTests
         [TestCase("0", "0")]
         [TestCase("123", "123")]
         [TestCase("-456", "-456")]
-        [TestCase("1.23", "1,23")]
-        [TestCase("-4.56", "-4,56")]
+        [TestCase("1.23", "1<decimalSeparator>23")]
+        [TestCase("-4.56", "-4<decimalSeparator>56")]
         public void ToStringConvertion(string typedValue, string expectedResult)
         {
             var input = $"{{ \"value\": {typedValue} }}";
@@ -34,6 +35,8 @@ namespace JUST.UnitTests
 
             var result = JsonTransformer.Transform(transformer, input);
 
+            var decimalSeparator = CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator;
+            expectedResult = expectedResult.Replace("<decimalSeparator>", decimalSeparator);
             Assert.AreEqual($"{{\"result\":\"{expectedResult}\"}}", result);
         }
 
