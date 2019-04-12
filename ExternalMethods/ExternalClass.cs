@@ -28,5 +28,10 @@ namespace ExternalMethods
         {
             return val.ToString();
         }
+
+        public string NavigateTypedNullParameters(object val)
+        {
+            return val?.ToString();
+        }
     }
 }

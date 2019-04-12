@@ -77,5 +77,17 @@ namespace JUST.UnitTests
 
             Assert.AreEqual("{\"result\":\"True\"}", result);
         }
+
+        [Test]
+        public void ExternalNavigateTypedNullParameters()
+        {
+            const string input = "{ \"lvl1\": { \"some-bool\": true } }";
+            const string transformer = "{ \"result\": \"#NavigateTypedNullParameters(#valueof($.non-existent))\" }";
+
+            _context.RegisterCustomFunction("ExternalMethods", "ExternalMethods.ExternalClass", "NavigateTypedNullParameters");
+            var result = JsonTransformer.Transform(transformer, input, _context);
+
+            Assert.AreEqual("{\"result\":null}", result);
+        }
     }
 }
