@@ -74,5 +74,15 @@ namespace JUST.UnitTests.Arrays
 
             Assert.AreEqual("{\"hello\":[{\"Details\":[{\"CurrentCountry\":\"Iceland\"}]},{\"Details\":[{\"CurrentCountry\":\"Denmark\"}]}]}", result);
         }
+
+        [Test]
+        public void FunctionAsLoopArgument()
+        {
+            const string transformer = "{ \"hello\": { \"#loop(#xconcat($.NestedLoop.,Organization,.Employee))\": { \"Details\": { \"#loopwithincontext(#concat($.,Details))\": { \"CurrentCountry\": \"#currentvalueatpath($.Country)\" } } } } }";
+
+            var result = JsonTransformer.Transform(transformer, ExampleInputs.NestedArrays);
+
+            Assert.AreEqual("{\"hello\":[{\"Details\":[{\"CurrentCountry\":\"Iceland\"}]},{\"Details\":[{\"CurrentCountry\":\"Denmark\"}]}]}", result);
+        }
     }
 }
