@@ -6,7 +6,7 @@
     <stringresult>
       <lastindexofand>#lastindexof(#valueof($.stringref),and)</lastindexofand>
       <firstindexofand>#firstindexof(#valueof($.stringref),and)</firstindexofand>
-      <subsrting>#substring(#valueof($.stringref),8,10)</subsrting>
+      <substring>#substring(#valueof($.stringref),8,10)</substring>
       <concat>#concat(#valueof($.menu.id.file),#valueof($.menu.value.Window))</concat>
     </stringresult>
     <mathresult>

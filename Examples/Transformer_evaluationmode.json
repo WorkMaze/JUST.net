@@ -1,0 +1,17 @@
+﻿{
+  "Result": {
+    "Header": "JsonTransform",
+    "#ifgroup(1)": {
+      "State": {
+        "Value1": "#valueof($.Tree.Branch)",
+        "Value2": "#valueof($.Tree.Flower)"
+      }
+    },
+    "#eval(#valueof($.Tree.Flower))": "x",
+    "#ifgroup(#exists($.Tree.Flower))": {
+      "Comment": {
+        "Statement": "Flower Exists"
+      }
+    }
+  }
+}
