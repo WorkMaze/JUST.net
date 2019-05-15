@@ -1,5 +1,4 @@
-﻿using Newtonsoft.Json.Linq;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
@@ -24,12 +23,11 @@ namespace JUST
             {
                 return InvokeCustomMethod(methodInfo, parameters, convertParameters, context);
             }
-            catch
+            catch (Exception ex)
             {
-                EvaluationMode mode = context.EvaluationMode;
-                if (mode == EvaluationMode.Strict) { throw; }
-                return GetDefaultValue(methodInfo.ReturnType);
+                ExceptionHelper.HandleException(ex, context.EvaluationMode);
             }
+            return GetDefaultValue(methodInfo.ReturnType);
         }
 
         internal static object InvokeCustomMethod(MethodInfo methodInfo, object[] parameters, bool convertParameters, JUSTContext context)
@@ -177,9 +175,9 @@ namespace JUST
                     }
                 }
             }
-            catch
+            catch (Exception ex)
             {
-                if (mode == EvaluationMode.Strict) { throw; }
+                ExceptionHelper.HandleException(ex, mode);
                 typedValue = GetDefaultValue(pType);
             }
             return typedValue;

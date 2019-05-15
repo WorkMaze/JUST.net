@@ -1,4 +1,5 @@
 ﻿using NUnit.Framework;
+using System;
 
 namespace JUST.UnitTests.Arrays
 {
@@ -16,6 +17,17 @@ namespace JUST.UnitTests.Arrays
         }
 
         [Test]
+        public void ConcatAllStrictError()
+        {
+            const string input = "{ \"arr\": [ \"string\", 0 ] }";
+            const string transformer = "{ \"concat_all\": \"#concatall(#valueof($.arr))\" }";
+
+            var result = Assert.Throws<Exception>(() => JsonTransformer.Transform(transformer, input, new JUSTContext { EvaluationMode = EvaluationMode.Strict }));
+
+            Assert.AreEqual("Error while calling function : #concatall(#valueof($.arr)) - Invalid value in array to concatenate: 0", result.Message);
+        }
+
+        [Test]
         public void ConcatAllAtPath()
         {
             const string transformer = "{ \"concat_all_at_path\": \"#concatallatpath(#valueof($.x),$.v.a)\" }";
@@ -23,6 +35,17 @@ namespace JUST.UnitTests.Arrays
             var result = JsonTransformer.Transform(transformer, ExampleInputs.MultiDimensionalArray);
 
             Assert.AreEqual("{\"concat_all_at_path\":\"a1,a2,a3b1,b2c1,c2,c3\"}", result);
+        }
+
+        [Test]
+        public void ConcatAllAtPathStrictError()
+        {
+            const string input = "{ \"arr\": [ { \"str\": \"\" }, { \"str\": 0 }] }";
+            const string transformer = "{ \"concat_all_at_path\": \"#concatallatpath(#valueof($.arr),$.str)\" }";
+
+            var result = Assert.Throws<Exception>(() => JsonTransformer.Transform(transformer, input, new JUSTContext { EvaluationMode = EvaluationMode.Strict }));
+
+            Assert.AreEqual("Error while calling function : #concatallatpath(#valueof($.arr),$.str) - Invalid value in array to concatenate: 0", result.Message);
         }
 
         [Test]

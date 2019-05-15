@@ -43,7 +43,7 @@ namespace JUST
 
         public static string concat(string string1, string string2, JUSTContext context)
         {
-            string string2Result = (string2 != null) ? string2 : string.Empty;
+            string string2Result = string2 ?? string.Empty;
             return string1 != null ? string1 + string2Result : string.Empty + string2Result;
         }
 
@@ -53,10 +53,11 @@ namespace JUST
             {
                 return stringRef.Substring(startIndex, length);
             }
-            catch
+            catch (Exception ex)
             {
-                return null;
+                ExceptionHelper.HandleException(ex, context.EvaluationMode);
             }
+            return null;
         }
 
         public static int firstindexof(string stringRef, string searchString, JUSTContext context)
@@ -75,10 +76,16 @@ namespace JUST
 
             if (parsedArray != null)
             {
+                if (result == null)
+                {
+                    result = string.Empty;
+                }
                 foreach (JToken token in parsedArray.Children())
                 {
-                    if (result == null)
-                        result = string.Empty;
+                    if (context.EvaluationMode == EvaluationMode.Strict && token.Type != JTokenType.String)
+                    {
+                        throw new Exception($"Invalid value in array to concatenate: {token.ToString()}");
+                    }
                     result += token.ToString();
                 }
             }
@@ -92,15 +99,17 @@ namespace JUST
 
             if (parsedArray != null)
             {
-
+                if (result == null)
+                {
+                    result = string.Empty;
+                }
                 foreach (JToken token in parsedArray.Children())
                 {
-
                     JToken selectedToken = token.SelectToken(jsonPath);
-
-                    if (result == null)
-                        result = string.Empty;
-
+                    if (context.EvaluationMode == EvaluationMode.Strict && selectedToken.Type != JTokenType.String)
+                    {
+                        throw new Exception($"Invalid value in array to concatenate: {selectedToken.ToString()}");
+                    }
                     result += selectedToken.ToString();
                 }
             }
