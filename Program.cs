@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using JUST;
 using System.IO;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -244,7 +241,33 @@ namespace JUST.NET.Test
                 (JsonTransformer.Transform(JObject.Parse(transformer), JObject.Parse(input)));
             Console.WriteLine(transformedString);
 
+            Console.WriteLine("################################################################################################");
 
+            JsonTransformer.GlobalContext.EvaluationMode = EvaluationMode.Strict;
+
+            inputDyn = File.ReadAllText("Examples/InputDynamic.json");
+            transformer = "{ \"Result\": { \"Header\": \"JsonTransform\", \"#eval(#valueof($.Tree.Flower))\": \"x\", \"#ifgroup(#exists($.Tree.Flower))\": { \"Comment\": { \"Statement\": \"Flower Exists\" } } }}";
+            transformedString = JsonConvert.SerializeObject
+                (JsonTransformer.Transform(JObject.Parse(transformer), JObject.Parse(inputDyn)));
+            Console.WriteLine(transformedString);
+
+            Console.WriteLine("################################################################################################");
+
+            JsonTransformer.GlobalContext.EvaluationMode = EvaluationMode.FallbackToDefault;
+
+            inputDyn = File.ReadAllText("Examples/InputDynamic.json");
+            transformer = "{ \"Result\": { \"Header\": \"JsonTransform\", \"#ifgroup(1)\": { \"State\": { \"Value1\": \"#valueof($.Tree.Branch)\", \"Value2\": \"#valueof($.Tree.Flower)\" }} } }";
+
+            transformedString = JsonConvert.SerializeObject
+                (JsonTransformer.Transform(JObject.Parse(transformer), JObject.Parse(inputDyn)));
+            Console.WriteLine(transformedString);
+
+            Console.WriteLine("################################################################################################");
+
+            input = File.ReadAllText("Examples/Input.json");
+            transformer = File.ReadAllText("Examples/Transformer_typeconversion.json");
+            transformedString = JsonTransformer.Transform(transformer, input);
+            Console.WriteLine(transformedString);
 
             Console.ReadLine();
         }

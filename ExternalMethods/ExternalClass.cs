@@ -1,5 +1,4 @@
-﻿using Newtonsoft.Json.Linq;
-using System;
+﻿using System;
 
 namespace ExternalMethods
 {
@@ -28,6 +27,11 @@ namespace ExternalMethods
         public string NavigateTypedParameters(bool val)
         {
             return val.ToString();
+        }
+
+        public string NavigateTypedNullParameters(object val)
+        {
+            return val?.ToString();
         }
     }
 }
