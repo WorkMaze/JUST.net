@@ -67,13 +67,13 @@ namespace JUST
         public static JObject Transform(JObject transformer, string input, JUSTContext localContext = null)
         {
             (localContext ?? GlobalContext).Input = JsonConvert.DeserializeObject<JToken>(input);
-            RecursiveEvaluate(transformer, input, null, null, localContext);
+            RecursiveEvaluate(transformer, null, null, localContext);
             return transformer;
         }
         #region RecursiveEvaluate
 
 
-        private static void RecursiveEvaluate(JToken parentToken, string inputJson, JArray parentArray, JToken currentArrayToken, JUSTContext localContext)
+        private static void RecursiveEvaluate(JToken parentToken, JArray parentArray, JToken currentArrayToken, JUSTContext localContext)
         {
             if (parentToken == null)
                 return;
@@ -105,7 +105,7 @@ namespace JUST
 
                         if (arrEl.Type == JTokenType.String && arrEl.ToString().Trim().StartsWith("#"))
                         {
-                            object value = ParseFunction(arrEl.ToString(), inputJson, parentArray, currentArrayToken, localContext);
+                            object value = ParseFunction(arrEl.ToString(), parentArray, currentArrayToken, localContext);
                             itemToAdd = value;
                         }
 
@@ -141,14 +141,14 @@ namespace JUST
                                     if (selectedTokens == null)
                                         selectedTokens = new List<JToken>();
 
-                                    selectedTokens.Add(Copy(arguments, inputJson, localContext));
+                                    selectedTokens.Add(Copy(arguments, localContext));
                                 }
                                 else if (functionName == "replace")
                                 {
                                     if (tokensToReplace == null)
                                         tokensToReplace = new Dictionary<string, JToken>();
 
-                                    var replaceResult = Replace(arguments, inputJson, localContext);
+                                    var replaceResult = Replace(arguments, localContext);
                                     tokensToReplace.Add(replaceResult.Key, replaceResult.Value);
                                 }
                                 else if (functionName == "delete")
@@ -156,7 +156,7 @@ namespace JUST
                                     if (tokensToDelete == null)
                                         tokensToDelete = new List<JToken>();
 
-                                    tokensToDelete.Add(Delete(arguments, inputJson, localContext));
+                                    tokensToDelete.Add(Delete(arguments, localContext));
                                 }
                             }
                         }
@@ -166,7 +166,7 @@ namespace JUST
                         && !property.Name.Contains("#eval")  && !property.Name.Contains("#ifgroup")
                         && !property.Name.Contains("#loop"))
                     {
-                        object newValue = ParseFunction(property.Value.ToString(), inputJson, parentArray, currentArrayToken, localContext);
+                        object newValue = ParseFunction(property.Value.ToString(), parentArray, currentArrayToken, localContext);
                         property.Value = GetToken(newValue, localContext);
                     }
 
@@ -176,7 +176,7 @@ namespace JUST
                     if (property.Name != null && property.Name.Contains("#eval"))
                     {
                         ExpressionHelper.TryParseFunctionNameAndArguments(property.Name, out string functionName, out string functionString);
-                        object functionResult = ParseFunction(functionString, inputJson, null, null, localContext);
+                        object functionResult = ParseFunction(functionString, null, null, localContext);
 
                         JProperty clonedProperty = new JProperty(functionResult.ToString(), property.Value);
 
@@ -197,7 +197,7 @@ namespace JUST
                     if (property.Name != null && property.Name.Contains("#ifgroup"))
                     {
                         ExpressionHelper.TryParseFunctionNameAndArguments(property.Name, out string functionName, out string functionString);
-                        object functionResult = ParseFunction(functionString, inputJson, null, null, localContext);
+                        object functionResult = ParseFunction(functionString, null, null, localContext);
                         bool result = false;
 
                         try
@@ -217,7 +217,7 @@ namespace JUST
 
                             loopProperties.Add(property.Name);
 
-                            RecursiveEvaluate(childToken, inputJson, parentArray, currentArrayToken, localContext);
+                            RecursiveEvaluate(childToken, parentArray, currentArrayToken, localContext);
 
                             if (tokenToForm == null)
                             {
@@ -242,15 +242,14 @@ namespace JUST
                     {
                         string strArrayToken = property.Name.Substring(6, property.Name.Length - 7);
 
-                        var jsonToLoad = inputJson;
+                        JToken token = GetInputToken(localContext);
                         if (currentArrayToken != null && property.Name.Contains("#loopwithincontext"))
                         {
                             strArrayToken = property.Name.Substring(19, property.Name.Length - 20);
-                            jsonToLoad = JsonConvert.SerializeObject(currentArrayToken);
+                            token = currentArrayToken;
                         }
                         
-                        JToken token = JsonConvert.DeserializeObject<JObject>(jsonToLoad);
-                        JToken arrayToken = null;
+                        JToken arrayToken;
                         if (strArrayToken.Contains("#"))
                         {
                             int sIndex = strArrayToken.IndexOf("#");
@@ -262,7 +261,7 @@ namespace JUST
                             {
                                 string sub2 = strArrayToken.Substring(indexOfENdFubction + 1, strArrayToken.Length - indexOfENdFubction - 1);
 
-                                string functionResult = ParseFunction(strArrayToken.Substring(sIndex, indexOfENdFubction - sIndex + 1), inputJson, parentArray, currentArrayToken, localContext).ToString();
+                                string functionResult = ParseFunction(strArrayToken.Substring(sIndex, indexOfENdFubction - sIndex + 1), parentArray, currentArrayToken, localContext).ToString();
 
                                 strArrayToken = sub1 + functionResult + sub2;
                             }
@@ -300,7 +299,7 @@ namespace JUST
 
                                 JToken clonedToken = childToken.DeepClone();
 
-                                RecursiveEvaluate(clonedToken, inputJson, array, elements.Current, localContext);
+                                RecursiveEvaluate(clonedToken, array, elements.Current, localContext);
 
                                 foreach (JToken replacedProperty in clonedToken.Children())
                                 {
@@ -320,14 +319,14 @@ namespace JUST
                 if (childToken.Type == JTokenType.String && childToken.Value<string>().Trim().StartsWith("#") 
                     && parentArray != null && currentArrayToken != null)
                 {
-                    object newValue = ParseFunction(childToken.Value<string>(), inputJson, parentArray, currentArrayToken, localContext);
+                    object newValue = ParseFunction(childToken.Value<string>(), parentArray, currentArrayToken, localContext);
 
                     JToken replaceToken = GetToken(newValue, localContext);
                     childToken.Replace(replaceToken);
                 }
 
                 if (!isLoop)
-                    RecursiveEvaluate(childToken, inputJson, parentArray, currentArrayToken, localContext);
+                    RecursiveEvaluate(childToken, parentArray, currentArrayToken, localContext);
             }
 
             if (selectedTokens != null)
@@ -465,9 +464,9 @@ namespace JUST
         }
 
         #region Copy
-        private static JToken Copy(string argument, string inputJson, JUSTContext localContext)
+        private static JToken Copy(string argument, JUSTContext localContext)
         {
-            var jsonPath = ParseArgument(inputJson, null, null, argument, localContext) as string;
+            var jsonPath = ParseArgument(null, null, argument, localContext) as string;
             if (jsonPath == null)
             {
                 throw new ArgumentException("Invalid jsonPath for #copy!");
@@ -479,19 +478,19 @@ namespace JUST
         #endregion
 
         #region Replace
-        private static KeyValuePair<string, JToken> Replace(string arguments, string inputJson, JUSTContext localContext)
+        private static KeyValuePair<string, JToken> Replace(string arguments, JUSTContext localContext)
         {
             string[] argumentArr = ExpressionHelper.GetArguments(arguments);
             if (argumentArr.Length < 2)
             {
                 throw new Exception("Function #replace needs two arguments - 1. jsonPath to be replaced, 2. token to replace with.");
             }
-            var key = ParseArgument(inputJson, null, null, argumentArr[0], localContext) as string;
+            var key = ParseArgument(null, null, argumentArr[0], localContext) as string;
             if (key == null)
             {
                 throw new ArgumentException("Invalid jsonPath for #replace!");
             }
-            object str = ParseArgument(inputJson, null, null, argumentArr[1], localContext);
+            object str = ParseArgument(null, null, argumentArr[1], localContext);
 
             JToken newToken = GetToken(str, localContext); 
             return new KeyValuePair<string, JToken>(key, newToken);
@@ -500,9 +499,9 @@ namespace JUST
         #endregion
 
         #region Delete
-        private static string Delete(string argument, string inputJson, JUSTContext localContext)
+        private static string Delete(string argument, JUSTContext localContext)
         {
-            var result = ParseArgument(inputJson, null, null, argument, localContext) as string;
+            var result = ParseArgument(null, null, argument, localContext) as string;
             if (result == null)
             {
                 throw new ArgumentException("Invalid jsonPath for #delete!");
@@ -513,7 +512,7 @@ namespace JUST
 
         #region ParseFunction
 
-        private static object ParseFunction(string functionString, string inputJson, JArray array, JToken currentArrayElement, JUSTContext localContext)
+        private static object ParseFunction(string functionString, JArray array, JToken currentArrayElement, JUSTContext localContext)
         {
             try
             {
@@ -530,17 +529,17 @@ namespace JUST
 
                 if (functionName == "ifcondition")
                 {
-                    var condition = ParseArgument(inputJson, array, currentArrayElement, arguments[0], localContext);
-                    var value = ParseArgument(inputJson, array, currentArrayElement, arguments[1], localContext);
+                    var condition = ParseArgument(array, currentArrayElement, arguments[0], localContext);
+                    var value = ParseArgument(array, currentArrayElement, arguments[1], localContext);
                     var index = condition.ToString().ToLower() == value.ToString().ToLower() ? 2 : 3;
-                    output = ParseArgument(inputJson, array, currentArrayElement, arguments[index], localContext);
+                    output = ParseArgument(array, currentArrayElement, arguments[index], localContext);
                 }
                 else
                 {
                     int i = 0;
                     for (; i < (arguments?.Length ?? 0); i++)
                     {
-                        listParameters.Add(ParseArgument(inputJson, array, currentArrayElement, arguments[i], localContext));
+                        listParameters.Add(ParseArgument(array, currentArrayElement, arguments[i], localContext));
                     }
 
                     listParameters.Add(localContext ?? GlobalContext);
@@ -597,7 +596,7 @@ namespace JUST
             }
         }
 
-        private static object ParseArgument(string inputJson, JArray array, JToken currentArrayElement, string argument, JUSTContext localContext)
+        private static object ParseArgument(JArray array, JToken currentArrayElement, string argument, JUSTContext localContext)
         {
             string trimmedArgument = argument;
 
@@ -606,7 +605,7 @@ namespace JUST
 
             if (trimmedArgument.StartsWith("#"))
             {
-                return ParseFunction(trimmedArgument, inputJson, array, currentArrayElement, localContext);
+                return ParseFunction(trimmedArgument, array, currentArrayElement, localContext);
             }
             else
                 return trimmedArgument;
