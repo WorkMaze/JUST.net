@@ -89,5 +89,38 @@ namespace JUST.UnitTests
 
             Assert.AreEqual("{\"root\":{\"array\":{\"specific_field\":\"b1,b2\"}}}", result);
         }
+
+        [Test]
+        public void MultidimensionArrays()
+        {
+            const string input = "{\"paths\": [{\"points\": {\"coordinates\": [[ 106.621279, 10.788109 ],[ 106.621672, 10.787869 ],[ 106.621992, 10.787717 ]]}}]}";
+            const string transformer = "{ \"result\": \"#valueof($.paths)\" }";
+
+            var result = JsonTransformer.Transform(transformer, input);
+
+            Assert.AreEqual("{\"result\":[{\"points\":{\"coordinates\":[[106.621279,10.788109],[106.621672,10.787869],[106.621992,10.787717]]}}]}", result);
+        }
+
+        [Test]
+        public void PrimitiveElementsArray()
+        {
+            const string input = "{\"root\": [\"elem1\",\"elem2\"]}";
+            const string transformer = "{ \"result\": \"#valueof($.root)\" }";
+
+            var result = JsonTransformer.Transform(transformer, input);
+
+            Assert.AreEqual("{\"result\":[\"elem1\",\"elem2\"]}", result);
+        }
+
+        [Test]
+        public void MultipleLevelArray()
+        {
+            const string input = "{\"outer_array\": [ { \"inner_array\": [\"elem1\",\"elem2\" ] } ] }";
+            const string transformer = "{ \"result\": \"#valueof($.outer_array..inner_array)\" }";
+
+            var result = JsonTransformer.Transform(transformer, input);
+
+            Assert.AreEqual("{\"result\":[\"elem1\",\"elem2\"]}", result);
+        }
     }
 }
