@@ -95,25 +95,9 @@ namespace JUST
             {
                 if (childToken.Type == JTokenType.Array && (parentToken as JProperty)?.Name.Trim() != "#")
                 {
+                    IEnumerable<object> itemsToAdd = TransformArray(childToken.Children(), parentArray, currentArrayToken, localContext);
                     JArray arrayToken = childToken as JArray;
-
-                    List<object> itemsToAdd = new List<object>();
-
-                    foreach (JToken arrEl in childToken.Children())
-                    {
-                        object itemToAdd = arrEl.Value<JToken>();
-
-                        if (arrEl.Type == JTokenType.String && arrEl.ToString().Trim().StartsWith("#"))
-                        {
-                            object value = ParseFunction(arrEl.ToString(), parentArray, currentArrayToken, localContext);
-                            itemToAdd = value;
-                        }
-
-                        itemsToAdd.Add(itemToAdd);
-                    }
-
                     arrayToken.RemoveAll();
-
                     foreach (object itemToAdd in itemsToAdd)
                     {
                         arrayToken.Add(itemToAdd);
@@ -278,7 +262,6 @@ namespace JUST
                         catch
                         {
                             var multipleTokens = token.SelectTokens(strArrayToken);
-
                             arrayToken = new JArray(multipleTokens);
                         }
 
@@ -458,6 +441,26 @@ namespace JUST
             else
             {
                 result = JValue.CreateNull();
+            }
+
+            return result;
+        }
+
+        private static IEnumerable<object> TransformArray(JEnumerable<JToken> children, JArray parentArray, JToken currentArrayToken, JUSTContext localContext)
+        {
+            var result = new List<object>();
+
+            foreach (JToken arrEl in children)
+            {
+                object itemToAdd = arrEl.Value<JToken>();
+
+                if (arrEl.Type == JTokenType.String && arrEl.ToString().Trim().StartsWith("#"))
+                {
+                    object value = ParseFunction(arrEl.ToString(), parentArray, currentArrayToken, localContext);
+                    itemToAdd = value;
+                }
+
+                result.Add(itemToAdd);
             }
 
             return result;
