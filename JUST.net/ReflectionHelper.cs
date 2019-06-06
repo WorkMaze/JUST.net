@@ -18,6 +18,10 @@ namespace JUST
         {
             Type type = assembly?.GetType(myclass) ?? Type.GetType(myclass);
             MethodInfo methodInfo = type.GetTypeInfo().GetMethod(mymethod);
+            if (methodInfo == null)
+            {
+                throw new Exception($"Invalid function: #{mymethod}");
+            }
             var instance = !methodInfo.IsStatic ? Activator.CreateInstance(type) : null;
 
             try

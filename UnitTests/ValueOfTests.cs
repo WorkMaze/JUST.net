@@ -60,6 +60,17 @@ namespace JUST.UnitTests
         }
 
         [Test]
+        public void ArrayEmpty()
+        {
+            const string transformer = "{ \"array\": \"#valueof($.x)\" }";
+            const string input = "{ \"x\": [ { \"y\": [] } ] }";
+
+            var result = JsonTransformer.Transform(transformer, input);
+
+            Assert.AreEqual("{\"array\":[{\"y\":[]}]}", result);
+        }
+
+        [Test]
         public void ArrayElement()
         {
             const string transformer = "{ \"root\": { \"array\": { \"arrayelement\": \"#valueof($.x[0])\" } }}";

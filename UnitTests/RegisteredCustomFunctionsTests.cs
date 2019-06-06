@@ -1,4 +1,5 @@
 ﻿using NUnit.Framework;
+using System;
 
 namespace JUST.UnitTests
 {
@@ -88,6 +89,18 @@ namespace JUST.UnitTests
             var result = JsonTransformer.Transform(transformer, input, _context);
 
             Assert.AreEqual("{\"result\":null}", result);
+        }
+
+        [Test]
+        public void InvalidFunctionInTransformer()
+        {
+            const string input = "{ \"lvl1\": { \"some-bool\": true } }";
+            const string transformer = "{ \"result\": \"#SomeInvalid(#valueof($.non-existent))\" }";
+
+            _context.RegisterCustomFunction("ExternalMethods", "ExternalMethods.ExternalClass", "NavigateTypedNullParameters");
+            var result = Assert.Throws<Exception>(() => JsonTransformer.Transform(transformer, input, _context));
+
+            Assert.AreEqual("Invalid function: #SomeInvalid", result.InnerException.Message);
         }
     }
 }
