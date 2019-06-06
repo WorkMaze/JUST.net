@@ -93,7 +93,7 @@ namespace JUST
 
             foreach (JToken childToken in tokens)
             {
-                if (childToken.Type == JTokenType.Array && (parentToken as JProperty).Name.Trim() != "#")
+                if (childToken.Type == JTokenType.Array && (parentToken as JProperty)?.Name.Trim() != "#")
                 {
                     JArray arrayToken = childToken as JArray;
 
