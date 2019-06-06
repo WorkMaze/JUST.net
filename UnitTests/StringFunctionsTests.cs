@@ -1,4 +1,5 @@
 ﻿using NUnit.Framework;
+using System;
 
 namespace JUST.UnitTests
 {
@@ -33,6 +34,24 @@ namespace JUST.UnitTests
             var result = JsonTransformer.Transform(transformer, ExampleInputs.StringRef);
 
             Assert.AreEqual("{\"stringresult\":{\"substring\":\"dveryunuas\"}}", result);
+        }
+
+        [Test]
+        public void SubstringFallbackToDefault()
+        {
+            var transformer = "{ \"stringresult\": { \"substring\": \"#substring(#valueof($.stringref),100,100)\" }}";
+
+            var result = JsonTransformer.Transform(transformer, ExampleInputs.StringRef);
+
+            Assert.AreEqual("{\"stringresult\":{\"substring\":null}}", result);
+        }
+
+        [Test]
+        public void SubstringStrictError()
+        {
+            var transformer = "{ \"stringresult\": { \"substring\": \"#substring(#valueof($.stringref),100,100)\" }}";
+
+            Assert.Throws<Exception>(() => JsonTransformer.Transform(transformer, ExampleInputs.StringRef, new JUSTContext { EvaluationMode = EvaluationMode.Strict }));
         }
 
         [Test]
