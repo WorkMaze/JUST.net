@@ -579,6 +579,14 @@ namespace JUST
                         oParams[0] = parameters;
                         output = ReflectionHelper.caller(null, "JUST.Transformer", functionName, oParams, true, localContext ?? GlobalContext);
                     }
+                    else if (functionName == "applyover")
+                    {
+                        var contextInput = GetInputToken(localContext);
+                        var input = JToken.Parse(Transform(parameters[0].ToString(), contextInput.ToString(), localContext));
+                        (localContext ?? GlobalContext).Input = input;
+                        output = ParseFunction(parameters[1].ToString().Trim('\''), array, currentArrayElement, localContext ?? GlobalContext);
+                        (localContext ?? GlobalContext).Input = contextInput;
+                    }
                     else
                     {
                         var input = ((JUSTContext)parameters.Last()).Input;
