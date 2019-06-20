@@ -120,7 +120,7 @@ namespace JUST
                         {
                             foreach (var item in itemToAdd as Array)
                             {
-                                arrayToken.Add(JToken.FromObject(item));
+                                arrayToken.Add(Utilities.GetNestedData(item));
                             }
                         }
                         else
