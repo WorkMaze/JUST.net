@@ -584,7 +584,7 @@ namespace JUST
                         var input = ((JUSTContext)parameters.Last()).Input;
                         if (currentArrayElement != null && functionName != "valueof")
                         {
-                            ((JUSTContext)parameters.Last()).Input = JsonConvert.SerializeObject(currentArrayElement);
+                            ((JUSTContext)parameters.Last()).Input = currentArrayElement;
                         }
                         output = ReflectionHelper.caller(null, "JUST.Transformer", functionName, parameters, true, localContext ?? GlobalContext);
                         ((JUSTContext)parameters.Last()).Input = input;

@@ -74,5 +74,15 @@ namespace JUST.UnitTests.Arrays
 
             Assert.AreEqual("{\"hello\":[{\"Details\":[{\"CurrentCountry\":\"Iceland\"}]},{\"Details\":[{\"CurrentCountry\":\"Denmark\"}]}]}", result);
         }
+
+        [Test]
+        public void ContextInputIsJToken()
+        {
+            const string transformer = "{ \"iteration\": { \"#loop($.arrayobjects)\": { \"exists\": \"#exists($.country.name)\", \"current_value_at_path\": \"#currentvalueatpath($.country.name)\" } } }";
+
+            var result = JsonTransformer.Transform(transformer, ExampleInputs.ObjectArray);
+
+            Assert.AreEqual("{\"iteration\":[{\"exists\":true,\"current_value_at_path\":\"Norway\"},{\"exists\":true,\"current_value_at_path\":\"UK\"},{\"exists\":true,\"current_value_at_path\":\"Sweden\"}]}", result);
+        }
     }
 }
