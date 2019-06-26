@@ -1,0 +1,94 @@
+﻿{
+  "data": [
+    {
+      "year": "2017",
+      "season": "summer",
+      "temperature": 40
+    },
+    {
+      "year": "2017",
+      "season": "summer",
+      "temperature": 38
+    },
+    {
+      "year": "2017",
+      "season": "summer",
+      "temperature": 42
+    },
+    {
+      "year": "2017",
+      "season": "spring",
+      "temperature": 20
+    },
+    {
+      "year": "2017",
+      "season": "fall",
+      "temperature": 25
+    },
+    {
+      "year": "2017",
+      "season": "winter",
+      "temperature": 10
+    },
+    {
+      "year": "2018",
+      "season": "summer",
+      "temperature": 40
+    },
+    {
+      "year": "2018",
+      "season": "summer",
+      "temperature": 38
+    },
+    {
+      "year": "2018",
+      "season": "summer",
+      "temperature": 42
+    },
+    {
+      "year": "2018",
+      "season": "spring",
+      "temperature": 20
+    },
+    {
+      "year": "2018",
+      "season": "fall",
+      "temperature": 25
+    },
+    {
+      "year": "2018",
+      "season": "winter",
+      "temperature": 10
+    },
+    {
+      "year": "2019",
+      "season": "summer",
+      "temperature": 40
+    },
+    {
+      "year": "2019",
+      "season": "summer",
+      "temperature": 38
+    },
+    {
+      "year": "2019",
+      "season": "summer",
+      "temperature": 42
+    },
+    {
+      "year": "2019",
+      "season": "spring",
+      "temperature": 20
+    },
+    {
+      "year": "2019",
+      "season": "fall",
+      "temperature": 25
+    },
+    {
+      "year": "2019",
+      "season": "winter",
+      "temperature": 10
+    }
+  ]
+}
