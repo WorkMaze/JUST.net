@@ -160,9 +160,9 @@ namespace JUST
                     if (property.Name != null && property.Name.Contains("#eval"))
                     {
                         ExpressionHelper.TryParseFunctionNameAndArguments(property.Name, out string functionName, out string functionString);
-                        object functionResult = ParseFunction(functionString, null, null, localContext);
+                        object functionResult = ParseFunction(functionString, parentArray, currentArrayToken, localContext);
 
-                        JProperty clonedProperty = new JProperty(functionResult.ToString(), property.Value);
+                        JProperty clonedProperty = new JProperty(functionResult.ToString(), ParseFunction(property.Value.Value<string>(), parentArray, currentArrayToken, localContext));
 
                         if (loopProperties == null)
                             loopProperties = new List<string>();
@@ -181,7 +181,7 @@ namespace JUST
                     if (property.Name != null && property.Name.Contains("#ifgroup"))
                     {
                         ExpressionHelper.TryParseFunctionNameAndArguments(property.Name, out string functionName, out string functionString);
-                        object functionResult = ParseFunction(functionString, null, null, localContext);
+                        object functionResult = ParseFunction(functionString, parentArray, currentArrayToken, localContext);
                         bool result = false;
 
                         try

@@ -15,5 +15,15 @@ namespace JUST.UnitTests
 
             Assert.AreEqual("{\"Result\":{\"Rose\":\"is red\"}}", result);
         }
+
+        [Test, Category("Loops")]
+        public void EvalInsideLoop()
+        {
+            const string transformer = "{ \"iteration\": { \"#loop($.arrayobjects)\": { \"#eval(#currentvalueatpath($.country.name))\": \"#currentvalueatpath($.country.language)\" } } }";
+
+            var result = JsonTransformer.Transform(transformer, ExampleInputs.ObjectArray);
+
+            Assert.AreEqual("{\"iteration\":[{\"Norway\":\"norsk\"},{\"UK\":\"english\"},{\"Sweden\":\"swedish\"}]}", result);
+        }
     }
 }

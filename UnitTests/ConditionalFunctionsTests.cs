@@ -157,5 +157,15 @@ namespace JUST.UnitTests
 
             Assert.AreEqual("{\"Result\":{\"Header\":\"JsonTransform\"}}", result);
         }
+
+        [Test, Category("IfGroup"), Category("Loops")]
+        public void ConditionalGroupInsideLoop()
+        {
+            const string transformer = "{ \"iteration\": { \"#loop($.arrayobjects)\": { \"#ifgroup(#stringequals(#currentvalueatpath($.country.name),UK))\": { \"current_value_at_path\": \"#currentvalueatpath($.country.name)\" } } }}";
+
+            var result = JsonTransformer.Transform(transformer, ExampleInputs.ObjectArray);
+
+            Assert.AreEqual("{\"iteration\":[{},{\"current_value_at_path\":\"UK\"},{}]}", result);
+        }
     }
 }
