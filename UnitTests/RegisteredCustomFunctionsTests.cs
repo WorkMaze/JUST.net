@@ -89,5 +89,5 @@ namespace JUST.UnitTests
 
             Assert.AreEqual("{\"result\":null}", result);
         }
-    }
+       }
 }

@@ -93,7 +93,7 @@ namespace JUST
 
             foreach (JToken childToken in tokens)
             {
-                if (childToken.Type == JTokenType.Array && (parentToken as JProperty).Name.Trim() != "#")
+                if (childToken.Type == JTokenType.Array && (parentToken as JProperty)?.Name.Trim() != "#")
                 {
                     JArray arrayToken = childToken as JArray;
 
@@ -116,7 +116,17 @@ namespace JUST
 
                     foreach (object itemToAdd in itemsToAdd)
                     {
-                        arrayToken.Add(itemToAdd);
+                        if (itemToAdd is Array)
+                        {
+                            foreach (var item in itemToAdd as Array)
+                            {
+                                arrayToken.Add(Utilities.GetNestedData(item));
+                            }
+                        }
+                        else
+                        {
+                            arrayToken.Add(JToken.FromObject(itemToAdd));
+                        }
                     }
                 }
 
