@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Linq;
 using Newtonsoft.Json.Linq;
 
@@ -551,6 +552,27 @@ namespace JUST
         public static decimal round(decimal val, int decimalPlaces, JUSTContext context)
         {
             return decimal.Round(val, decimalPlaces, MidpointRounding.AwayFromZero);
+        }
+
+        public static int length(object val, JUSTContext context)
+        {
+            int result = 0;
+            if (val is IEnumerable enumerable)
+            {
+                var enumerator = enumerable.GetEnumerator();
+                while (enumerator.MoveNext())
+                {
+                    result++;
+                }
+            }
+            else
+            {
+                if (context.EvaluationMode == EvaluationMode.Strict)
+                {
+                    throw new ArgumentException($"Argument not elegible for #length: {val.ToString()}");
+                }
+            }
+            return result;
         }
     }
 }

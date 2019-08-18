@@ -234,36 +234,15 @@ namespace JUST
 
                     if (property.Name != null && property.Name.Contains("#loop"))
                     {
-                        string strArrayToken = property.Name.Substring(6, property.Name.Length - 7);
+                        ExpressionHelper.TryParseFunctionNameAndArguments(property.Name, out string functionName, out string arguments);
+                        var token = currentArrayToken != null && functionName == "loopwithincontext" ? currentArrayToken : GetInputToken(localContext);
 
-                        JToken token = GetInputToken(localContext);
-                        if (currentArrayToken != null && property.Name.Contains("#loopwithincontext"))
-                        {
-                            strArrayToken = property.Name.Substring(19, property.Name.Length - 20);
-                            token = currentArrayToken;
-                        }
-                        
+                        var strArrayToken = ParseArgument(parentArray, currentArrayToken, arguments, localContext) as string;
+
                         JToken arrayToken;
-                        if (strArrayToken.Contains("#"))
-                        {
-                            int sIndex = strArrayToken.IndexOf("#");
-                            string sub1 = strArrayToken.Substring(0, sIndex);
-
-                            int indexOfENdFubction = GetIndexOfFunctionEnd(strArrayToken);
-
-                            if (indexOfENdFubction > sIndex && sIndex > 0)
-                            {
-                                string sub2 = strArrayToken.Substring(indexOfENdFubction + 1, strArrayToken.Length - indexOfENdFubction - 1);
-
-                                string functionResult = ParseFunction(strArrayToken.Substring(sIndex, indexOfENdFubction - sIndex + 1), parentArray, currentArrayToken, localContext).ToString();
-
-                                strArrayToken = sub1 + functionResult + sub2;
-                            }
-                        }
                         try
                         {
                             arrayToken = token.SelectToken(strArrayToken);
-
                             if (arrayToken is JObject)
                             {
                                 arrayToken = new JArray(arrayToken);
