@@ -162,7 +162,17 @@ namespace JUST
                         ExpressionHelper.TryParseFunctionNameAndArguments(property.Name, out string functionName, out string functionString);
                         object functionResult = ParseFunction(functionString, parentArray, currentArrayToken, localContext);
 
-                        JProperty clonedProperty = new JProperty(functionResult.ToString(), ParseFunction(property.Value.Value<string>(), parentArray, currentArrayToken, localContext));
+                        JProperty clonedProperty = new JProperty(functionResult.ToString(),
+                            property.Value.Type != JTokenType.Null ? 
+                                ReflectionHelper.GetTypedValue(
+                                    property.Value.Type, 
+                                    ParseFunction(
+                                        property.Value.Value<string>(), 
+                                        parentArray, 
+                                        currentArrayToken, 
+                                        localContext), 
+                                    GetEvaluationMode(localContext)) : 
+                                null);
 
                         if (loopProperties == null)
                             loopProperties = new List<string>();

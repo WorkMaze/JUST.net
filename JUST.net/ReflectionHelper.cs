@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json.Linq;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
@@ -131,6 +132,60 @@ namespace JUST
                 parameters = parameters.Take(parameters.Length - 1).ToArray();
             }
             return parameters;
+        }
+
+        internal static Type GetType(JTokenType jType)
+        {
+            Type result = null;
+            switch (jType)
+            {
+                case JTokenType.Object:
+                    result = typeof(object);
+                    break;
+                case JTokenType.Array:
+                    result = typeof(Array);
+                    break;
+                case JTokenType.Integer:
+                    result = typeof(int);
+                    break;
+                case JTokenType.Float:
+                    result = typeof(float);
+                    break;
+                case JTokenType.String:
+                    result = typeof(string);
+                    break;
+                case JTokenType.Boolean:
+                    result = typeof(bool);
+                    break;
+                case JTokenType.Date:
+                    result = typeof(DateTime);
+                    break;
+                case JTokenType.Bytes:
+                    result = typeof(byte);
+                    break;
+                case JTokenType.Guid:
+                    result = typeof(Guid);
+                    break;
+                case JTokenType.TimeSpan:
+                    result = typeof(TimeSpan);
+                    break;
+                case JTokenType.Comment:
+                case JTokenType.Property:
+                case JTokenType.Constructor:
+                case JTokenType.Undefined:
+                case JTokenType.Raw:
+                case JTokenType.None:
+                case JTokenType.Uri:
+                case JTokenType.Null:
+                default:
+                    break;
+            }
+            return result;
+        }
+
+        internal static object GetTypedValue(JTokenType jType, object val, EvaluationMode mode)
+        {
+            return GetTypedValue(GetType(jType), val, mode);
         }
 
         internal static object GetTypedValue(Type pType, object val, EvaluationMode mode)

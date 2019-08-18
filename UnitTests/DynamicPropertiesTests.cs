@@ -1,19 +1,24 @@
 ﻿using NUnit.Framework;
+using System.Globalization;
 
 namespace JUST.UnitTests
 {
     [TestFixture]
     public class DynamicPropertiesTests
     {
-        [Test]
-        public void Eval()
+        [TestCase("\"is red\"", "\"is red\"")]
+        [TestCase(true, "true")]
+        [TestCase(12.2, "12.2")]
+        [TestCase(null, "null")]
+        [TestCase("\"#valueof($.Tree.Branch)\"", "\"leaf\"")]
+        public void Eval(object val, object result)
         {
-            const string input = "{ \"Tree\": { \"Branch\": \"leaf\", \"Flower\": \"Rose\" } }";
-            const string transformer = "{ \"Result\": { \"#eval(#valueof($.Tree.Flower))\": \"is red\" } }";
+            const string input = "{ \"tree\": { \"branch\": \"leaf\", \"flower\": \"rose\" } }";
+            string transformer = "{ \"result\": { \"#eval(#valueof($.tree.flower))\": " + (val?.ToString().ToLower().Replace(",", ".") ?? "null") + " } }";
 
-            var result = JsonTransformer.Transform(transformer, input);
+            var actual = JsonTransformer.Transform(transformer, input);
 
-            Assert.AreEqual("{\"Result\":{\"Rose\":\"is red\"}}", result);
+            Assert.AreEqual("{\"result\":{\"rose\":" + result.ToString() + "}}", actual);
         }
 
         [Test, Category("Loops")]

@@ -380,19 +380,21 @@ namespace JUST
                         output = selectedToken.ToObject<bool>();
                         break;
                     case JTokenType.Date:
-                        DateTime value = Convert.ToDateTime(selectedToken.Value<DateTime>());
+                        DateTime value = selectedToken.Value<DateTime>();
                         output = value.ToString("yyyy-MM-ddTHH:mm:ssZ");
                         break;
                     case JTokenType.Raw:
                         break;
                     case JTokenType.Bytes:
+                        output = selectedToken.Value<byte[]>();
                         break;
                     case JTokenType.Guid:
-                        break;
-                    case JTokenType.Uri:
+                        output = selectedToken.Value<Guid>();
                         break;
                     case JTokenType.TimeSpan:
+                        output = selectedToken.Value<TimeSpan>();
                         break;
+                    case JTokenType.Uri:
                     case JTokenType.Undefined:
                     case JTokenType.Constructor:
                     case JTokenType.Property:
