@@ -100,7 +100,17 @@ namespace JUST
                     arrayToken.RemoveAll();
                     foreach (object itemToAdd in itemsToAdd)
                     {
-                        arrayToken.Add(itemToAdd);
+                        if (itemToAdd is Array)
+                        {
+                            foreach (var item in itemToAdd as Array)
+                            {
+                                arrayToken.Add(Utilities.GetNestedData(item));
+                            }
+                        }
+                        else
+                        {
+                            arrayToken.Add(JToken.FromObject(itemToAdd));
+                        }
                     }
                 }
 
