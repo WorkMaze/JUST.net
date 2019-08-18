@@ -1,6 +1,8 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace SeasonsHelper
 {
@@ -38,6 +40,26 @@ namespace SeasonsHelper
             returnObj.Add("namevaluecollection", array);
 
             return returnObj;
+        }
+
+        public static object findseasontemperaturetable(object data)
+        {
+            var temperatures = JArray.Parse(JsonConvert.SerializeObject(data));
+            var seasons = new string[] { "summer", "spring", "fall", "winter" };
+            var years = new string[] { "2017", "2018", "2019" };
+            var dataIn = JArray.Parse(JsonConvert.SerializeObject(data));
+            var result = new List<List<string[]>>();
+            foreach (string year in years)
+            {
+                var resultRow = new List<string[]> { new string[] { year } };
+                foreach (string season in seasons)
+                {
+                    var current = temperatures.Where(x => x["year"].ToString() == year && x["season"].ToString() == season).Select(x => x["temperature"].Value<decimal>()).Average();
+                    resultRow.Add(new string[] { current.ToString() });
+                }
+                result.Add(resultRow);
+            }
+            return result;
         }
     }
 }

@@ -93,7 +93,7 @@ namespace JUST
 
             foreach (JToken childToken in tokens)
             {
-                if (childToken.Type == JTokenType.Array && (parentToken as JProperty).Name.Trim() != "#")
+                if (childToken.Type == JTokenType.Array && (parentToken as JProperty)?.Name.Trim() != "#")
                 {
                     JArray arrayToken = childToken as JArray;
 
@@ -116,7 +116,17 @@ namespace JUST
 
                     foreach (object itemToAdd in itemsToAdd)
                     {
-                        arrayToken.Add(itemToAdd);
+                        if (itemToAdd is Array)
+                        {
+                            foreach (var item in itemToAdd as Array)
+                            {
+                                arrayToken.Add(Utilities.GetNestedData(item));
+                            }
+                        }
+                        else
+                        {
+                            arrayToken.Add(JToken.FromObject(itemToAdd));
+                        }
                     }
                 }
 
@@ -240,37 +250,15 @@ namespace JUST
 
                     if (property.Name != null && property.Name.Contains("#loop"))
                     {
-                        string strArrayToken = property.Name.Substring(6, property.Name.Length - 7);
+                        ExpressionHelper.TryParseFunctionNameAndArguments(property.Name, out string functionName, out string arguments);
+                        var token = currentArrayToken != null && functionName == "loopwithincontext" ? currentArrayToken : JsonConvert.DeserializeObject<JObject>(inputJson);
 
-                        var jsonToLoad = inputJson;
-                        if (currentArrayToken != null && property.Name.Contains("#loopwithincontext"))
-                        {
-                            strArrayToken = property.Name.Substring(19, property.Name.Length - 20);
-                            jsonToLoad = JsonConvert.SerializeObject(currentArrayToken);
-                        }
-                        
-                        JToken token = JsonConvert.DeserializeObject<JObject>(jsonToLoad);
-                        JToken arrayToken = null;
-                        if (strArrayToken.Contains("#"))
-                        {
-                            int sIndex = strArrayToken.IndexOf("#");
-                            string sub1 = strArrayToken.Substring(0, sIndex);
+                        var strArrayToken = ParseArgument(inputJson, parentArray, currentArrayToken, arguments, localContext) as string;
 
-                            int indexOfENdFubction = GetIndexOfFunctionEnd(strArrayToken);
-
-                            if (indexOfENdFubction > sIndex && sIndex > 0)
-                            {
-                                string sub2 = strArrayToken.Substring(indexOfENdFubction + 1, strArrayToken.Length - indexOfENdFubction - 1);
-
-                                string functionResult = ParseFunction(strArrayToken.Substring(sIndex, indexOfENdFubction - sIndex + 1), inputJson, parentArray, currentArrayToken, localContext).ToString();
-
-                                strArrayToken = sub1 + functionResult + sub2;
-                            }
-                        }
+                        JToken arrayToken;
                         try
                         {
                             arrayToken = token.SelectToken(strArrayToken);
-
                             if (arrayToken is JObject)
                             {
                                 arrayToken = new JArray(arrayToken);

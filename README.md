@@ -150,11 +150,12 @@ At the moment only the basic and often used string and math functions are provid
 2. firstindexof(input string,search string)
 3. substring(input string,start indes,length)
 4. concat(string 1,string 2)
-5. add(value 1,value 2)
-6. subtract(value 1,value 2)
-7. multiply(value 1,value 2)
-8. divide(value 1,values 2)
-9. round(value, decimal places)
+5. length(string or array)
+6. add(value 1,value 2)
+7. subtract(value 1,value 2)
+8. multiply(value 1,value 2)
+9. divide(value 1,values 2)
+10. round(value, decimal places)
 
 Consider the input:
 
@@ -173,7 +174,9 @@ Transformer:
     "lastindexofand": "#lastindexof(#valueof($.stringref),and)",
     "firstindexofand": "#firstindexof(#valueof($.stringref),and)",
     "substring": "#substring(#valueof($.stringref),9,11)",
-    "concat": "#concat(#valueof($.menu.id.file),#valueof($.menu.value.Window))"
+    "concat": "#concat(#valueof($.menu.id.file),#valueof($.menu.value.Window))",
+	"length_string": "#length(#valueof($.stringref))",
+	"length_array": "#length(#valueof($.numbers))"
   },
   "mathresult": {
     "add": "#add(#valueof($.numbers[0]),3)",
@@ -193,7 +196,9 @@ Output:
     "lastindexofand": 21,
     "firstindexofand": 6,
     "substring": "veryunuasua",
-    "concat":""
+    "concat":"",
+	"length_string": 34,
+	"length_array": 5
   },
   "mathresult": {
     "add": 4,

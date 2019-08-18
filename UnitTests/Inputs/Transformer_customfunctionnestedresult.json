@@ -1,0 +1,5 @@
+﻿{
+  "Seasons": [
+    "#customfunction(ExternalMethods,SeasonsHelper.Season.findseasontemperaturetable,#valueof($.data))"
+  ]
+}
