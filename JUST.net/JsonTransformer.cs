@@ -58,10 +58,12 @@ namespace JUST
             return result;
         }
 
-        public static JObject Transform(JObject transformer, JObject input, JUSTContext localContext = null)
+        public static JObject Transform(JObject transformer, JToken input, JUSTContext localContext = null)
         {
+            (localContext ?? GlobalContext).Input = input;
             string inputJson = JsonConvert.SerializeObject(input);
-            return Transform(transformer, inputJson, localContext);
+            RecursiveEvaluate(transformer, inputJson, null, null, localContext);
+            return transformer;
         }
 
         public static JObject Transform(JObject transformer, string input, JUSTContext localContext = null)
@@ -251,7 +253,7 @@ namespace JUST
                     if (property.Name != null && property.Name.Contains("#loop"))
                     {
                         ExpressionHelper.TryParseFunctionNameAndArguments(property.Name, out string functionName, out string arguments);
-                        var token = currentArrayToken != null && functionName == "loopwithincontext" ? currentArrayToken : JsonConvert.DeserializeObject<JObject>(inputJson);
+                        var token = currentArrayToken != null && functionName == "loopwithincontext" ? currentArrayToken : JsonConvert.DeserializeObject<JToken>(inputJson);
 
                         var strArrayToken = ParseArgument(inputJson, parentArray, currentArrayToken, arguments, localContext) as string;
 
