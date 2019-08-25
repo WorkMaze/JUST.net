@@ -58,20 +58,18 @@ namespace JUST
             return result;
         }
 
+        public static JObject Transform(JObject transformer, string input, JUSTContext localContext = null)
+        {
+            return Transform(transformer, JsonConvert.DeserializeObject<JToken>(input), localContext);
+        }
+
         public static JObject Transform(JObject transformer, JToken input, JUSTContext localContext = null)
         {
             (localContext ?? GlobalContext).Input = input;
-            string inputJson = JsonConvert.SerializeObject(input);
-            RecursiveEvaluate(transformer, inputJson, null, null, localContext);
-            return transformer;
-        }
-
-        public static JObject Transform(JObject transformer, string input, JUSTContext localContext = null)
-        {
-            (localContext ?? GlobalContext).Input = JsonConvert.DeserializeObject<JToken>(input);
             RecursiveEvaluate(transformer, null, null, localContext);
             return transformer;
         }
+
         #region RecursiveEvaluate
 
 
