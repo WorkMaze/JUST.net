@@ -2,7 +2,7 @@
 
 namespace JUST.UnitTests.Arrays
 {
-    [TestFixture]
+    [TestFixture, Category("Loops")]
     public class LoopingTests
     {
         [Test]
@@ -73,6 +73,38 @@ namespace JUST.UnitTests.Arrays
             var result = JsonTransformer.Transform(transformer, ExampleInputs.NestedArrays);
 
             Assert.AreEqual("{\"hello\":[{\"Details\":[{\"CurrentCountry\":\"Iceland\"}]},{\"Details\":[{\"CurrentCountry\":\"Denmark\"}]}]}", result);
+        }
+
+        [Test]
+        public void FunctionAsLoopArgument()
+        {
+            const string transformer = "{ \"hello\": { \"#loop(#xconcat($.NestedLoop.,Organization,.Employee))\": { \"Details\": { \"#loopwithincontext(#concat($.,Details))\": { \"CurrentCountry\": \"#currentvalueatpath($.Country)\" } } } } }";
+
+            var result = JsonTransformer.Transform(transformer, ExampleInputs.NestedArrays);
+
+            Assert.AreEqual("{\"hello\":[{\"Details\":[{\"CurrentCountry\":\"Iceland\"}]},{\"Details\":[{\"CurrentCountry\":\"Denmark\"}]}]}", result);
+        }
+
+        [Test]
+        public void PrimitiveTypeArrayResult()
+        {
+            const string input = "[{ \"id\": 1, \"name\": \"Person 1\", \"gender\": \"M\" },{ \"id\": 2, \"name\": \"Person 2\", \"gender\": \"F\" },{ \"id\": 3, \"name\": \"Person 3\", \"gender\": \"M\" }]";
+            const string transformer = "{ \"result\": { \"#loop([?(@.gender=='M')])\": \"#currentvalueatpath($.name)\" } }";
+
+            var result = JsonTransformer.Transform(transformer, input, new JUSTContext {EvaluationMode = EvaluationMode.Strict});
+
+            Assert.AreEqual("{\"result\":[\"Person 1\",\"Person 3\"]}", result);
+        }
+
+        [Test]
+        public void ObjectTypeArrayResult()
+        {
+            const string input = "[{ \"id\": 1, \"name\": \"Person 1\", \"gender\": \"M\" },{ \"id\": 2, \"name\": \"Person 2\", \"gender\": \"F\" },{ \"id\": 3, \"name\": \"Person 3\", \"gender\": \"M\" }]";
+            const string transformer = "{ \"result\": { \"#loop([?(@.gender=='M')])\": \"#currentvalue()\" } }";
+
+            var result = JsonTransformer.Transform(transformer, input, new JUSTContext { EvaluationMode = EvaluationMode.Strict });
+
+            Assert.AreEqual("{\"result\":[{\"id\":1,\"name\":\"Person 1\",\"gender\":\"M\"},{\"id\":3,\"name\":\"Person 3\",\"gender\":\"M\"}]}", result);
         }
     }
 }

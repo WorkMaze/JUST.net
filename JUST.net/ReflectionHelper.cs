@@ -48,7 +48,18 @@ namespace JUST
                     typedParameters.Add(GetTypedValue(pType, parameters[i], context.EvaluationMode));
                 }
             }
-            return methodInfo.Invoke(instance, convertParameters ? typedParameters.ToArray() : parameters);
+            try
+            {
+                return methodInfo.Invoke(instance, convertParameters ? typedParameters.ToArray() : parameters);
+            }
+            catch(Exception ex)
+            {
+                if (ex.InnerException != null)
+                {
+                    throw ex.InnerException;
+                }
+                throw;
+            }
         }
 
         internal static object CallExternalAssembly(string functionName, object[] parameters, JUSTContext context)

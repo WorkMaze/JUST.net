@@ -193,5 +193,22 @@ namespace JUST
 
             return resultObj;
         }
+
+        public static JToken GetNestedData(object item)
+        {
+            var result = new JArray();
+            if (item is Array)
+            {
+                foreach (var innerItem in item as Array)
+                {
+                    result.Add(GetNestedData(innerItem));
+                }
+            }
+            else
+            {
+                return JToken.FromObject(item);
+            }
+            return result;
+        }
     }
 }
