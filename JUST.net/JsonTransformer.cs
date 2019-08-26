@@ -24,15 +24,20 @@ namespace JUST
 
         public static string Transform(string transformerJson, string inputJson, JUSTContext localContext = null)
         {
+            return Transform(transformerJson, JsonConvert.DeserializeObject<JToken>(inputJson), localContext);
+        }
+
+        public static string Transform(string transformerJson, JToken input, JUSTContext localContext = null)
+        {
             JToken result = null;
             JToken transformerToken = JsonConvert.DeserializeObject<JToken>(transformerJson);
             switch (transformerToken.Type)
             {
                 case JTokenType.Object:
-                    result = Transform(transformerToken as JObject, inputJson, localContext);
+                    result = Transform(transformerToken as JObject, input, localContext);
                     break;
                 case JTokenType.Array:
-                    result = Transform(transformerToken as JArray, inputJson, localContext);
+                    result = Transform(transformerToken as JArray, input, localContext);
                     break;
                 default:
                     throw new NotSupportedException($"Transformer of type '{transformerToken.Type}' not supported!");
@@ -44,6 +49,11 @@ namespace JUST
         }
 
         public static JArray Transform(JArray transformerArray, string input, JUSTContext localContext = null)
+        {
+            return Transform(transformerArray, JsonConvert.DeserializeObject<JToken>(input), localContext);
+        }
+
+        public static JArray Transform(JArray transformerArray, JToken input, JUSTContext localContext = null)
         {
             var result = new JArray();
             foreach (var transformer in transformerArray)
@@ -58,20 +68,18 @@ namespace JUST
             return result;
         }
 
+        public static JObject Transform(JObject transformer, string input, JUSTContext localContext = null)
+        {
+            return Transform(transformer, JsonConvert.DeserializeObject<JToken>(input), localContext);
+        }
+
         public static JObject Transform(JObject transformer, JToken input, JUSTContext localContext = null)
         {
             (localContext ?? GlobalContext).Input = input;
-            string inputJson = JsonConvert.SerializeObject(input);
-            RecursiveEvaluate(transformer, inputJson, null, null, localContext);
-            return transformer;
-        }
-
-        public static JObject Transform(JObject transformer, string input, JUSTContext localContext = null)
-        {
-            (localContext ?? GlobalContext).Input = JsonConvert.DeserializeObject<JToken>(input);
             RecursiveEvaluate(transformer, null, null, localContext);
             return transformer;
         }
+
         #region RecursiveEvaluate
 
 
@@ -237,9 +245,9 @@ namespace JUST
                     if (property.Name != null && property.Name.Contains("#loop"))
                     {
                         ExpressionHelper.TryParseFunctionNameAndArguments(property.Name, out string functionName, out string arguments);
-                        var token = currentArrayToken != null && functionName == "loopwithincontext" ? currentArrayToken : JsonConvert.DeserializeObject<JToken>(inputJson);
+                        var token = currentArrayToken != null && functionName == "loopwithincontext" ? currentArrayToken : GetInputToken(localContext);
 
-                        var strArrayToken = ParseArgument(inputJson, parentArray, currentArrayToken, arguments, localContext) as string;
+                        var strArrayToken = ParseArgument(parentArray, currentArrayToken, arguments, localContext) as string;
 
                         JToken arrayToken;
                         try
