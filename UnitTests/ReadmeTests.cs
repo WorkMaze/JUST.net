@@ -186,5 +186,19 @@ namespace JUST.UnitTests
 
             Assert.AreEqual("{\"Result\":{\"Rose\":\"x\"}}", result);
         }
+
+        [Test]
+        public void ApplyOver()
+        {
+            var input = "{\"d\": [ \"one\", \"two\", \"three\" ], \"values\": [ \"z\", \"c\", \"n\" ]}";
+            var transformer = "{ \"result\": \"#applyover({ 'result': { '#loop($.values)': { 'test': '#ifcondition(#stringcontains(#valueof($.d[0]),#currentvalue()),true,yes,no)' } } }, '#exists($.result[?(@.test=='yes')])')\" }";
+            var context = new JUSTContext
+            {
+                EvaluationMode = EvaluationMode.Strict
+            };
+            var result = JsonTransformer.Transform(transformer, input, context);
+
+            Assert.AreEqual("{\"result\":true}", result);
+        }
     }
 }
