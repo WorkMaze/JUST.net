@@ -1289,6 +1289,35 @@ Output:
 ```
 
 
+## Apply function over transformation
+
+Sometimes you cannnot achieve what you want directly from a single function (or composition). To overcome this you may want to apply a function over a previous transformation. That's what #applyover does.
+
+Consider the following input:
+
+```JSON
+{
+  "d": [ "one", "two", "three" ], 
+  "values": [ "z", "c", "n" ]
+}
+```
+
+Transformer:
+
+```JSON
+{
+  "result": "#applyover({ 'condition': { '#loop($.values)': { 'test': '#ifcondition(#stringcontains(#valueof($.d[0]),#currentvalue()),true,yes,no)' } } }, '#exists($.condition[?(@.test=='yes')])')" 
+}
+```
+
+Output:
+```JSON
+{
+  "result": true
+}
+```
+
+
 ## Schema Validation against multiple schemas using prefixes
 
 A new feature to validate a JSON against multiple schemas has been introduced in the new Nuget 2.0.xxx. This is to enable namespace based validation using prefixes like in XSD.
