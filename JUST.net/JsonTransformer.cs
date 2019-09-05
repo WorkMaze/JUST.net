@@ -191,11 +191,9 @@ namespace JUST
 
                         if (tokensToAdd == null)
                         {
-                            tokensToAdd = new List<JToken>
-                            {
-                                clonedProperty
-                            };
+                            tokensToAdd = new List<JToken>();
                         }
+                        tokensToAdd.Add(clonedProperty);
                     }
 
                     if (property.Name != null && property.Name.Contains("#ifgroup"))
@@ -234,7 +232,9 @@ namespace JUST
                         else
                         {
                             if (loopProperties == null)
+                            {
                                 loopProperties = new List<string>();
+                            }
 
                             loopProperties.Add(property.Name);
                         }

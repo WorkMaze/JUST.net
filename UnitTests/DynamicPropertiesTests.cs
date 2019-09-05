@@ -30,5 +30,18 @@ namespace JUST.UnitTests
 
             Assert.AreEqual("{\"iteration\":[{\"Norway\":\"norsk\"},{\"UK\":\"english\"},{\"Sweden\":\"swedish\"}]}", result);
         }
+
+        [Test, Category("Loops")]
+        public void MultipleEvals()
+        {
+            const string input = "{\"people\": [{ \"name\": \"Jim\", \"number\": \"0123-4567-8888\" }, { \"name\": \"John\", \"number\": \"0134523-4567-8910\" }]}";
+            const string transformer = "{ \"root\": { \"#loop($.people)\": { \"#eval(#xconcat(name, #add(#currentindex(),1)))\": \"#currentvalueatpath($.name)\", \"#eval(#xconcat(number, #add(#currentindex(),1)))\": \"#currentvalueatpath($.number)\" } } }";
+
+            var context = new JUSTContext();
+            context.EvaluationMode = EvaluationMode.Strict;
+            var result = JsonTransformer.Transform(transformer, input, context);
+
+            Assert.AreEqual("{\"root\":[{\"name1\":\"Jim\",\"number1\":\"0123-4567-8888\"},{\"name2\":\"John\",\"number2\":\"0134523-4567-8910\"}]}", result);
+        }
     }
 }
