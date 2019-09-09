@@ -363,16 +363,16 @@ namespace JUST
                 switch (selectedToken.Type)
                 {
                     case JTokenType.Object:
-                        output = selectedToken; // JsonConvert.SerializeObject(selectedToken);
+                        output = selectedToken;
                         break;
                     case JTokenType.Array:
-                        output = selectedToken.Values<object>().ToArray(); //selectedToken.ToString();
+                        output = selectedToken.Values<object>().ToArray();
                         break;
                     case JTokenType.Integer:
-                        output = selectedToken.ToObject<Int64>();
+                        output = selectedToken.ToObject<long>();
                         break;
                     case JTokenType.Float:
-                        output = selectedToken.ToObject<float>();
+                        output = selectedToken.ToObject<double>();
                         break;
                     case JTokenType.String:
                         output = selectedToken.ToString();

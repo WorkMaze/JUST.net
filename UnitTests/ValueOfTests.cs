@@ -121,6 +121,17 @@ namespace JUST.UnitTests
             var result = JsonTransformer.Transform(transformer, input);
 
             Assert.AreEqual("{\"result\":[\"elem1\",\"elem2\"]}", result);
+		}
+        
+		[Test]
+		public void DoublePrecision()
+        {
+            const string input = "{ \"Latitude\": 38.978378, \"Longitude\": -122.032861 }";
+            const string transformer = "{ \"LatitudeInDecimalDegrees\": \"#valueof($.Latitude)\", \"LongitudeInDecimalDegrees\": \"#valueof($.Longitude)\" }";
+
+            var result = JsonTransformer.Transform(transformer, input);
+
+            Assert.AreEqual("{\"LatitudeInDecimalDegrees\":38.978378,\"LongitudeInDecimalDegrees\":-122.032861}", result);
         }
     }
 }
