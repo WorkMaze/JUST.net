@@ -24,15 +24,20 @@ namespace JUST
 
         public static string Transform(string transformerJson, string inputJson, JUSTContext localContext = null)
         {
+            return Transform(transformerJson, JsonConvert.DeserializeObject<JToken>(inputJson), localContext);
+        }
+
+        public static string Transform(string transformerJson, JToken input, JUSTContext localContext = null)
+        {
             JToken result = null;
             JToken transformerToken = JsonConvert.DeserializeObject<JToken>(transformerJson);
             switch (transformerToken.Type)
             {
                 case JTokenType.Object:
-                    result = Transform(transformerToken as JObject, inputJson, localContext);
+                    result = Transform(transformerToken as JObject, input, localContext);
                     break;
                 case JTokenType.Array:
-                    result = Transform(transformerToken as JArray, inputJson, localContext);
+                    result = Transform(transformerToken as JArray, input, localContext);
                     break;
                 default:
                     throw new NotSupportedException($"Transformer of type '{transformerToken.Type}' not supported!");
@@ -44,6 +49,11 @@ namespace JUST
         }
 
         public static JArray Transform(JArray transformerArray, string input, JUSTContext localContext = null)
+        {
+            return Transform(transformerArray, JsonConvert.DeserializeObject<JToken>(input), localContext);
+        }
+
+        public static JArray Transform(JArray transformerArray, JToken input, JUSTContext localContext = null)
         {
             var result = new JArray();
             foreach (var transformer in transformerArray)
@@ -577,6 +587,14 @@ namespace JUST
                         object[] oParams = new object[1];
                         oParams[0] = parameters;
                         output = ReflectionHelper.caller(null, "JUST.Transformer", functionName, oParams, true, localContext ?? GlobalContext);
+                    }
+                    else if (functionName == "applyover")
+                    {
+                        var contextInput = GetInputToken(localContext);
+                        var input = JToken.Parse(Transform(parameters[0].ToString(), contextInput.ToString(), localContext));
+                        (localContext ?? GlobalContext).Input = input;
+                        output = ParseFunction(parameters[1].ToString().Trim('\''), array, currentArrayElement, localContext ?? GlobalContext);
+                        (localContext ?? GlobalContext).Input = contextInput;
                     }
                     else
                     {
