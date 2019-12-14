@@ -526,7 +526,8 @@ Output:
 
 ## Array looping
 
-In some cases we don't want to copy the entire array to the destination JSON. We might want to transform the array into a different format, or have some special logic for each element while setting the destination JSON.
+In some cases we don't want to copy the entire array to the destination JSON. We might want to transform the array into a different format, or have some special logic for each element while setting the destination JSON. 
+Also we might want to traverse all properties of an object, just like in JavaScript, and perform some tranformation over values. When applying JsonPath over looped properties beware that each property/value will be considered an object (note the two dots in the example below \[$..sounds\]).
 For these cases we would use array looping.
 
 These are the functions provided for this pupose:
@@ -534,10 +535,11 @@ These are the functions provided for this pupose:
 1. loop(path) - path is the path of the array to loop
 2. currentvalue()
 3. currentindex()
-4. lastindex()
-5. lastvalue()
-6. currentvalueatpath(path) - here path denotes the path inside the array
-7. lastvalueatpath(path) - here path denotes the path inside the array
+4. currentproperty() - when looping over properties of an object
+5. lastindex()
+6. lastvalue()
+7. currentvalueatpath(path) - here path denotes the path inside the array
+8. lastvalueatpath(path) - here path denotes the path inside the array
 
 Cosider the input:
 
@@ -573,7 +575,26 @@ Cosider the input:
         "language": "swedish"
       }
     }
-  ]
+  ],
+  "animals": {
+    "cat": {
+      "number_of_legs": 4,
+      "sound": "meow"
+    },
+    "dog": {
+      "number_of_legs": 4,
+      "sound": "woof"
+    },
+    "human": {
+      "number_of_legs": 2,
+      "sound": "@!#$?"
+    }
+  },
+  "spell_numbers": {
+	"3": "three",
+    "2": "two",
+	"1": "one"
+  }
 }
 ```
 
@@ -596,6 +617,16 @@ Transformer:
       "IsLast": "#ifcondition(#currentindex(),#lastindex(),yes,no)",
       "LastValue": "#lastvalueatpath($.country.language)"
     }
+  },
+  "sounds": { 
+	"#loop($.animals)": { 
+		"#eval(#currentproperty())": "#currentvalueatpath($..sound)" 
+	} 
+  },
+  "number_index": { 
+    "#loop($.spell_numbers)": { 
+	  "#eval(#currentindex())": "#currentvalueatpath(#concat($.,#currentproperty()))" 
+	} 
   },
   "othervalue": "othervalue"
 }
@@ -644,6 +675,16 @@ Output:
       "LastValue": "swedish"
     }
   ],
+  "sounds": {
+    "cat": "meow",
+	"dog": "woof",
+	"human": "@!#$?"
+  },
+  "number_index": {
+    "0": "three",
+	"1": "two",
+	"2": "one"
+  },
   "othervalue": "othervalue"
 }
 ```
