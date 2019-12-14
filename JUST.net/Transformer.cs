@@ -305,6 +305,16 @@ namespace JUST
             return GetValue(selectedToken);
         }
 
+        public static object currentproperty(JArray array, JToken currentElement, JUSTContext context)
+        {
+            var prop = (currentElement.First as JProperty);
+            if (prop == null && context.EvaluationMode == EvaluationMode.Strict)
+            {
+                throw new InvalidOperationException("Element is not a property: " + prop.ToString());
+            }
+            return prop.Name;
+        }
+
         public static object lastvalueatpath(JArray array, JToken currentElement, string jsonPath)
         {
             JToken selectedToken = array.Last.SelectToken(jsonPath);
