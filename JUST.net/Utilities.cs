@@ -1,8 +1,6 @@
 ﻿using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace JUST
 {
@@ -18,10 +16,8 @@ namespace JUST
             
             return result;
         }
-
-       
-
-        private static Dictionary<string, string>  PopulateRecursively(JToken parent, Dictionary<string, string> result)
+        
+        private static Dictionary<string, string> PopulateRecursively(JToken parent, Dictionary<string, string> result)
         {
             if (parent.HasValues)
             {
@@ -48,16 +44,16 @@ namespace JUST
             return result;
         }
 
-        public static JArray GroupArray(JArray array, string groupingPropertyName, string groupedPropertyName)
+        public static JArray GroupArray<T>(JArray array, string groupingPropertyName, string groupedPropertyName, JUSTContext context) where T: ISelectableToken
         {
-
             Dictionary<string, JArray> groupedPair = null;
 
             if (array != null)
             {
                 foreach (JObject eachObj in array.Children())
                 {
-                    JToken groupToken = eachObj.SelectToken("$." + groupingPropertyName);
+                    var selectable = context.Resolve<T>(eachObj);
+                    JToken groupToken = selectable.Select(selectable.RootReference + groupingPropertyName);
 
                     if (groupedPair == null)
                         groupedPair = new Dictionary<string, JArray>();
@@ -108,9 +104,8 @@ namespace JUST
             return resultObj;
         }
 
-        public static JArray GroupArrayMultipleProperties(JArray array, string[] groupingPropertyNames, string groupedPropertyName)
+        public static JArray GroupArrayMultipleProperties<T>(JArray array, string[] groupingPropertyNames, string groupedPropertyName, JUSTContext context) where T: ISelectableToken
         {
-
             Dictionary<string, JArray> groupedPair = null;
 
             if (array != null)
@@ -120,7 +115,10 @@ namespace JUST
                     List<JToken> groupTokens = new List<JToken>();
 
                     foreach (string groupPropertyName in groupingPropertyNames)
-                        groupTokens.Add(eachObj.SelectToken("$." + groupPropertyName));
+                    {
+                        var selectable = context.Resolve<T>(eachObj);
+                        groupTokens.Add(selectable.Select(selectable.RootReference + groupPropertyName));
+                    }
 
                     if (groupedPair == null)
                         groupedPair = new Dictionary<string, JArray>();

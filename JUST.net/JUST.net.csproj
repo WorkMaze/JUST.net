@@ -17,6 +17,7 @@ https://github.com/WorkMaze/JUST.net/issues/25</PackageReleaseNotes>
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="JmesPath.Net" Version="1.0.125" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.1" />
     <PackageReference Include="Newtonsoft.Json.Schema" Version="3.0.10" />
     <PackageReference Include="System.Reflection" Version="4.3.0" />

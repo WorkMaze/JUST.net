@@ -200,5 +200,19 @@ namespace JUST.UnitTests
 
             Assert.AreEqual("{\"result\":true}", result);
         }
+
+        [Test]
+        public void JmesPath()
+        {
+            var input = "{\"locations\": [{\"name\": \"Seattle\", \"state\": \"WA\"},{\"name\": \"New York\", \"state\": \"NY\"},{\"name\": \"Bellevue\", \"state\": \"WA\"},{\"name\": \"Olympia\", \"state\": \"WA\"}]}";
+            var transformer = "{ \"result\": \"#valueof(locations[?state == 'WA'].name | sort(@) | {WashingtonCities: join(', ', @)})\" }";
+            var context = new JUSTContext
+            {
+                EvaluationMode = EvaluationMode.Strict
+            };
+            var result = JsonTransformer<JmesPathSelectable>.Transform(transformer, input, context);
+
+            Assert.AreEqual("{\"result\":{\"WashingtonCities\":\"Bellevue, Olympia, Seattle\"}}", result);
+        }
     }
 }

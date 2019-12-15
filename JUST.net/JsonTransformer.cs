@@ -7,7 +7,11 @@ using System.Text.RegularExpressions;
 
 namespace JUST
 {
-    public static class JsonTransformer
+    public class JsonTransformer : JsonTransformer<JsonPathSelectable>
+    {
+    }
+
+    public class JsonTransformer<T> where T: ISelectableToken
     {
         public static readonly JUSTContext GlobalContext = new JUSTContext();
 
@@ -264,17 +268,14 @@ namespace JUST
                         JToken arrayToken;
                         try
                         {
-                            arrayToken = token.SelectToken(strArrayToken);
-                            if (arrayToken is JObject)
+                            arrayToken = GetSelectableToken(token, localContext).Select(strArrayToken);
+                            if (arrayToken is IDictionary<string, JToken> dict) //JObject is a dictionary
                             {
                                 isDictionary = true;
                                 JArray arr = new JArray();
-                                var dict = arrayToken.ToDictionary(t => (t as JProperty).Name, t => (t as JProperty).Value);
                                 foreach (var item in dict)
                                 {
-                                    var obj = new JObject();
-                                    obj.Add(item.Key, item.Value);
-                                    arr.Add(obj);
+                                    arr.Add(new JObject { { item.Key, item.Value } });
                                 }
 
                                 arrayToken = arr;
@@ -373,7 +374,7 @@ namespace JUST
             {
                 foreach (KeyValuePair<string, JToken> tokenToReplace in tokensToReplace)
                 {
-                    JToken selectedToken = (parentToken as JObject).SelectToken(tokenToReplace.Key);
+                    JToken selectedToken = GetSelectableToken(parentToken as JObject, localContext).Select(tokenToReplace.Key);
 
                     if (selectedToken != null && selectedToken is JObject)
                     {
@@ -400,7 +401,7 @@ namespace JUST
             {
                 foreach (string selectedToken in tokensToDelete)
                 {
-                    JToken tokenToRemove = parentToken.SelectToken(selectedToken);
+                    JToken tokenToRemove = GetSelectableToken(parentToken,localContext).Select(selectedToken);
 
                     if (tokenToRemove != null)
                         tokenToRemove.Ancestors().First().Remove();
@@ -529,12 +530,12 @@ namespace JUST
         #region Copy
         private static JToken Copy(string argument, JUSTContext localContext)
         {
-            var jsonPath = ParseArgument(null, null, argument, localContext) as string;
-            if (jsonPath == null)
+            var path = ParseArgument(null, null, argument, localContext) as string;
+            if (path == null)
             {
-                throw new ArgumentException("Invalid jsonPath for #copy!");
+                throw new ArgumentException($"Invalid path for #copy: '{argument}' resolved to null");
             }
-            JToken selectedToken = GetInputToken(localContext).SelectToken(jsonPath);
+            JToken selectedToken = GetSelectableToken(GetInputToken(localContext),localContext).Select(path);
             return selectedToken;
         }
 
@@ -609,28 +610,34 @@ namespace JUST
                     var parameters = listParameters.ToArray();
 
                     if (new[] { "currentvalue", "currentindex", "lastindex", "lastvalue" }.Contains(functionName))
-                        output = ReflectionHelper.caller(null, "JUST.Transformer", functionName, new object[] { array, currentArrayElement }, true, localContext ?? GlobalContext);
+                        output = ReflectionHelper.caller<T>(null, "JUST.Transformer`1", functionName, new object[] { array, currentArrayElement }, true, localContext ?? GlobalContext);
                     else if (new[] { "currentvalueatpath", "lastvalueatpath" }.Contains(functionName))
-                        output = ReflectionHelper.caller(null, "JUST.Transformer", functionName, new object[] { array, currentArrayElement, parameters[0] }, true, localContext ?? GlobalContext);
+                        output = ReflectionHelper.caller<T>(
+                            null, 
+                            "JUST.Transformer`1", 
+                            functionName, 
+                            new [] { array, currentArrayElement }.Concat(parameters).ToArray(), 
+                            true, 
+                            localContext ?? GlobalContext);
                     else if (functionName == "currentproperty")
-                        output = ReflectionHelper.caller(null, "JUST.Transformer", functionName, 
+                        output = ReflectionHelper.caller<T>(null, "JUST.Transformer`1", functionName, 
                             new object[] { array, currentArrayElement, localContext ?? GlobalContext }, 
                             false, localContext ?? GlobalContext);
                     else if (functionName == "customfunction")
-                        output = CallCustomFunction(parameters, localContext);
+                        output = CallCustomFunction<T>(parameters, localContext);
                     else if (localContext?.IsRegisteredCustomFunction(functionName) ?? false)
                     {
                         var methodInfo = localContext.GetCustomMethod(functionName);
-                        output = ReflectionHelper.InvokeCustomMethod(methodInfo, parameters, true, localContext ?? GlobalContext);
+                        output = ReflectionHelper.InvokeCustomMethod<T>(methodInfo, parameters, true, localContext ?? GlobalContext);
                     }
                     else if (GlobalContext.IsRegisteredCustomFunction(functionName))
                     {
                         var methodInfo = GlobalContext.GetCustomMethod(functionName);
-                        output = ReflectionHelper.InvokeCustomMethod(methodInfo, parameters, true, localContext ?? GlobalContext);
+                        output = ReflectionHelper.InvokeCustomMethod<T>(methodInfo, parameters, true, localContext ?? GlobalContext);
                     }
                     else if (Regex.IsMatch(functionName, ReflectionHelper.EXTERNAL_ASSEMBLY_REGEX))
                     {
-                        output = ReflectionHelper.CallExternalAssembly(functionName, parameters, localContext ?? GlobalContext);
+                        output = ReflectionHelper.CallExternalAssembly<T>(functionName, parameters, localContext ?? GlobalContext);
                     }
                     else if (new[] { "xconcat", "xadd",
                         "mathequals", "mathgreaterthan", "mathlessthan", "mathgreaterthanorequalto", "mathlessthanorequalto",
@@ -638,7 +645,7 @@ namespace JUST
                     {
                         object[] oParams = new object[1];
                         oParams[0] = parameters;
-                        output = ReflectionHelper.caller(null, "JUST.Transformer", functionName, oParams, true, localContext ?? GlobalContext);
+                        output = ReflectionHelper.caller<T>(null, "JUST.Transformer`1", functionName, oParams, true, localContext ?? GlobalContext);
                     }
                     else if (functionName == "applyover")
                     {
@@ -655,7 +662,7 @@ namespace JUST
                         {
                             ((JUSTContext)parameters.Last()).Input = currentArrayElement;
                         }
-                        output = ReflectionHelper.caller(null, "JUST.Transformer", functionName, parameters, true, localContext ?? GlobalContext);
+                        output = ReflectionHelper.caller<T>(null, "JUST.Transformer`1", functionName, parameters, true, localContext ?? GlobalContext);
                         ((JUSTContext)parameters.Last()).Input = input;
                     }
                 }
@@ -683,7 +690,7 @@ namespace JUST
                 return trimmedArgument;
         }
 
-        private static object CallCustomFunction(object[] parameters, JUSTContext localContext)
+        private static object CallCustomFunction<T>(object[] parameters, JUSTContext localContext) where T: ISelectableToken
         {
             object[] customParameters = new object[parameters.Length - 3];
             string functionString = string.Empty;
@@ -709,17 +716,17 @@ namespace JUST
 
             className = className + "," + dllName;
 
-            return ReflectionHelper.caller(null, className, functionName, customParameters, true, localContext ?? GlobalContext);
+            return ReflectionHelper.caller<T>(null, className, functionName, customParameters, true, localContext ?? GlobalContext);
 
         }
         #endregion
 
         #region Split
-        public static IEnumerable<string> SplitJson(string input, string arrayPath)
+        public static IEnumerable<string> SplitJson(string input, string arrayPath, JUSTContext localContext)
         {
             JObject inputJObject = JsonConvert.DeserializeObject<JObject>(input);
 
-            List<JObject> jObjects = SplitJson(inputJObject, arrayPath).ToList<JObject>();
+            List<JObject> jObjects = SplitJson(inputJObject, arrayPath, localContext).ToList();
 
             List<string> output = null;
 
@@ -734,11 +741,11 @@ namespace JUST
             return output;
         }
 
-        public static IEnumerable<JObject> SplitJson(JObject input, string arrayPath)
+        public static IEnumerable<JObject> SplitJson(JObject input, string arrayPath, JUSTContext localContext)
         {
             List<JObject> jsonObjects = null;
 
-            JToken tokenArr = input.SelectToken(arrayPath);
+            JToken tokenArr = GetSelectableToken(input, localContext).Select(arrayPath);
 
             string pathToReplace = tokenArr.Path;
 
@@ -753,10 +760,11 @@ namespace JUST
 
                     JToken clonedToken = input.DeepClone();
 
-                    JToken foundToken = clonedToken.SelectToken("$." + path);
-                    JToken tokenToReplcae = clonedToken.SelectToken("$." + pathToReplace);
+                    var selectable = GetSelectableToken(clonedToken, localContext);
+                    JToken foundToken = selectable.Select(selectable.RootReference + path);
+                    JToken tokenToReplce = selectable.Select(selectable.RootReference + pathToReplace);
 
-                    tokenToReplcae.Replace(foundToken);
+                    tokenToReplce.Replace(foundToken);
 
                     if (jsonObjects == null)
                         jsonObjects = new List<JObject>();
@@ -817,6 +825,11 @@ namespace JUST
         private static bool IsFallbackToDefault(JUSTContext localContext)
         {
             return GetEvaluationMode(localContext) == EvaluationMode.FallbackToDefault;
+        }
+
+        private static T GetSelectableToken(JToken token, JUSTContext localContext)
+        {
+            return (localContext ?? GlobalContext).Resolve<T>(token);
         }
     }
 }
