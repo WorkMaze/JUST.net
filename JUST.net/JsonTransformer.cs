@@ -263,16 +263,13 @@ namespace JUST
                         try
                         {
                             arrayToken = token.SelectToken(strArrayToken);
-                            if (arrayToken is JObject)
+                            if (arrayToken is IDictionary<string, JToken> dict) //JObject is a dictionary
                             {
                                 isDictionary = true;
                                 JArray arr = new JArray();
-                                var dict = arrayToken.ToDictionary(t => (t as JProperty).Name, t => (t as JProperty).Value);
                                 foreach (var item in dict)
                                 {
-                                    var obj = new JObject();
-                                    obj.Add(item.Key, item.Value);
-                                    arr.Add(obj);
+                                    arr.Add(new JObject { { item.Key, item.Value } });
                                 }
 
                                 arrayToken = arr;
@@ -281,7 +278,6 @@ namespace JUST
                         catch
                         {
                             var multipleTokens = token.SelectTokens(strArrayToken);
-
                             arrayToken = new JArray(multipleTokens);
                         }
 
