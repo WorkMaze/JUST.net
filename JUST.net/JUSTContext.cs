@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json.Linq;
+﻿using JUST.net.Selectables;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Concurrent;
 using System.Reflection;
@@ -73,6 +74,13 @@ namespace JUST
         internal bool IsRegisteredCustomFunction(string name)
         {
             return _customFunctions.ContainsKey(name);
+        }
+
+        internal T Resolve<T>(JToken token) where T: ISelectableToken
+        {
+            T instance = Activator.CreateInstance<T>();
+            instance.Token = token;
+            return instance;
         }
     }
 }

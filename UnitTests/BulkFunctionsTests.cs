@@ -73,7 +73,7 @@ namespace JUST.UnitTests
 
             var result = Assert.Throws<ArgumentException>(() => JsonTransformer.Transform(transformer, ExampleInputs.Menu));
 
-            Assert.AreEqual("Invalid jsonPath for #copy!", result.Message);
+            Assert.AreEqual($"Invalid path for #copy: '#valueof($.boolean)' resolved to null", result.Message);
         }
 
         [Test]
