@@ -1,8 +1,8 @@
-﻿using Newtonsoft.Json.Linq;
+﻿using JUST.net.Selectables;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Concurrent;
 using System.Reflection;
-using DevLab.JmesPath;
 
 namespace JUST
 {
@@ -10,38 +10,6 @@ namespace JUST
     {
         FallbackToDefault,
         Strict
-    }
-
-    public interface ISelectableToken
-    {
-        string RootReference { get; }
-        JToken Token { get; set; }
-
-        JToken Select(string path);
-    }
-
-    public class JsonPathSelectable : ISelectableToken
-    {
-        public string RootReference => "$.";
-        public JToken Token { get; set; }
-
-        public JToken Select(string path)
-        {
-            return Token.SelectToken(path);
-        }
-    }
-
-    public class JmesPathSelectable : ISelectableToken
-    {
-        private readonly JmesPath _instance = new JmesPath();
-
-        public string RootReference => string.Empty;
-        public JToken Token { get; set; }
-
-        public JToken Select(string path)
-        {
-            return _instance.Transform(Token, path);
-        }
     }
 
     public class JUSTContext

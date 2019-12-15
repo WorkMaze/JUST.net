@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
+using JUST.net.Selectables;
 
 namespace JUST
 {
@@ -266,9 +267,10 @@ namespace JUST
 
                         bool isDictionary = false;
                         JToken arrayToken;
+                        var selectable = GetSelectableToken(token, localContext);
                         try
                         {
-                            arrayToken = GetSelectableToken(token, localContext).Select(strArrayToken);
+                            arrayToken = selectable.Select(strArrayToken);
                             if (arrayToken is IDictionary<string, JToken> dict) //JObject is a dictionary
                             {
                                 isDictionary = true;
@@ -283,7 +285,7 @@ namespace JUST
                         }
                         catch
                         {
-                            var multipleTokens = token.SelectTokens(strArrayToken);
+                            var multipleTokens = selectable.SelectMultiple(strArrayToken);
                             arrayToken = new JArray(multipleTokens);
                         }
 
