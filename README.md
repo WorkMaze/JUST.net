@@ -12,10 +12,13 @@ The library is available as a NUGET package.
 
 This C# project has working examples of the transformations.
 
-**Types are now supported**. [New functions](#typeconvertions) were added to provide type convertions.
+**Types are now supported**. [New functions](#typeconversions) were added to provide type conversions.
 Also a new enum field called `EvaluationMode` was added to `JUSTContext`, which lets you select how type mismatches are handled:
 - option `Strict` mode will throw an exception on error;
 - option `FallbackToDefault` will return the default value for the return type of the function/expression being evaluated
+
+**New query languages accepted** besides [JsonPath](https://goessner.net/articles/JsonPath/). All you have to do is create a class that implements `ISelectableToken` and call generic `Transform` method with your type.
+[JmesPath](http://jmespath.org/) is included as an alternative ([example here](#jmesexample)).
 
 # JUST.NET Library
 
@@ -48,6 +51,17 @@ string transformer = File.ReadAllText("Examples/Transformer.json");
 
 // do the actual transformation
 string transformedString = JsonTransformer.Transform(transformer, input);
+
+// with context
+JUSTContext context = new JUSTContext 
+{ 
+  EvaluationMode = EvaluationMode.Strict,
+  DefaultDecimalPlaces = 4
+};
+string transformedString = JsonTransformer.Transform(transformer, input, context);
+
+// with generic method
+string transformedString = JsonTransformer<JmesPathSelectable>.Transform(transformer, input);
 ```
 
 # Using JUST to transform JSON
@@ -102,6 +116,38 @@ Output:
 }
 ```
 
+#### <a name="jmesexample"></a> ...with JmesPath 
+
+Input:
+
+```JSON
+{
+  "locations": [
+    { "name": "Seattle", "state": "WA" },
+    { "name": "New York", "state": "NY" },
+    { "name": "Bellevue", "state": "WA" },
+    { "name": "Olympia", "state": "WA" }
+  ]
+}
+```
+
+Transformer:
+
+```JSON
+{
+  "result": "#valueof(locations[?state == 'WA'].name | sort(@) | {WashingtonCities: join(', ', @)})" 
+}
+```
+
+Output:
+
+```JSON
+{
+  "result": {
+    "WashingtonCities": "Bellevue, Olympia, Seattle"
+  }
+}
+```
 
 ## ifcondition
 
@@ -367,7 +413,7 @@ Output:
 ```
 
 
-## <a name="typeconvertions"></a> Type convertions
+## <a name="typeconversions"></a> Type conversions
 
 As type handling was introduced, functions to make type convertions are handy. 
 The following functions are available:
