@@ -282,7 +282,7 @@ namespace JUST
         private static object caller(string myclass, string mymethod, object[] parameters)
         {
             Assembly assembly = null;
-            return ReflectionHelper.caller<T>(assembly, myclass, mymethod, parameters, true, new JUSTContext());
+            return ReflectionHelper.Caller<T>(assembly, myclass, mymethod, parameters, true, new JUSTContext());
         }        
     }
 }

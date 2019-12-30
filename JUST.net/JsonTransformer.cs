@@ -605,9 +605,9 @@ namespace JUST
                     var parameters = listParameters.ToArray();
 
                     if (new[] { "currentvalue", "currentindex", "lastindex", "lastvalue" }.Contains(functionName))
-                        output = ReflectionHelper.caller<T>(null, "JUST.Transformer`1", functionName, new object[] { array, currentArrayElement }, true, localContext ?? GlobalContext);
+                        output = ReflectionHelper.Caller<T>(null, "JUST.Transformer`1", functionName, new object[] { array, currentArrayElement }, true, localContext ?? GlobalContext);
                     else if (new[] { "currentvalueatpath", "lastvalueatpath" }.Contains(functionName))
-                        output = ReflectionHelper.caller<T>(
+                        output = ReflectionHelper.Caller<T>(
                             null, 
                             "JUST.Transformer`1", 
                             functionName, 
@@ -615,7 +615,7 @@ namespace JUST
                             true, 
                             localContext ?? GlobalContext);
                     else if (functionName == "currentproperty")
-                        output = ReflectionHelper.caller<T>(null, "JUST.Transformer`1", functionName, 
+                        output = ReflectionHelper.Caller<T>(null, "JUST.Transformer`1", functionName, 
                             new object[] { array, currentArrayElement, localContext ?? GlobalContext }, 
                             false, localContext ?? GlobalContext);
                     else if (functionName == "customfunction")
@@ -640,7 +640,7 @@ namespace JUST
                     {
                         object[] oParams = new object[1];
                         oParams[0] = parameters;
-                        output = ReflectionHelper.caller<T>(null, "JUST.Transformer`1", functionName, oParams, true, localContext ?? GlobalContext);
+                        output = ReflectionHelper.Caller<T>(null, "JUST.Transformer`1", functionName, oParams, true, localContext ?? GlobalContext);
                     }
                     else if (functionName == "applyover")
                     {
@@ -657,7 +657,7 @@ namespace JUST
                         {
                             ((JUSTContext)parameters.Last()).Input = currentArrayElement;
                         }
-                        output = ReflectionHelper.caller<T>(null, "JUST.Transformer`1", functionName, parameters, true, localContext ?? GlobalContext);
+                        output = ReflectionHelper.Caller<T>(null, "JUST.Transformer`1", functionName, parameters, true, localContext ?? GlobalContext);
                         ((JUSTContext)parameters.Last()).Input = input;
                     }
                 }
@@ -711,7 +711,7 @@ namespace JUST
 
             className = className + "," + dllName;
 
-            return ReflectionHelper.caller<T>(null, className, functionName, customParameters, true, localContext ?? GlobalContext);
+            return ReflectionHelper.Caller<T>(null, className, functionName, customParameters, true, localContext ?? GlobalContext);
 
         }
         #endregion
