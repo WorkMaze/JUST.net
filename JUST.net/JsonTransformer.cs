@@ -130,14 +130,13 @@ namespace JUST
                     }
                 }
 
-                if (childToken.Type == JTokenType.Property)
+                else if (childToken.Type == JTokenType.Property && childToken is JProperty property && property.Name != null)
                 {
-                    JProperty property = childToken as JProperty;
+                    /* For looping*/
+                    isLoop = false;
 
-                    if (property.Name != null && property.Name == "#" && property.Value.Type == JTokenType.Array)
+                    if (property.Name == "#" && property.Value.Type == JTokenType.Array && property.Value is JArray values)
                     {
-                        JArray values = property.Value as JArray;
-
                         JEnumerable<JToken> arrayValues = values.Children();
 
                         foreach (JToken arrayValue in arrayValues)
@@ -172,21 +171,18 @@ namespace JUST
                         }
                     }
 
-                    if (property.Name != null && property.Value.ToString().Trim().StartsWith("#")
-                        && !property.Name.Contains("#eval")  && !property.Name.Contains("#ifgroup")
+                    else if (property.Value.ToString().Trim().StartsWith("#")
+                        && !property.Name.Contains("#eval") && !property.Name.Contains("#ifgroup")
                         && !property.Name.Contains("#loop"))
                     {
                         object newValue = ParseFunction(property.Value.ToString(), parentArray, currentArrayToken, localContext);
                         property.Value = GetToken(newValue, localContext);
                     }
 
-                    /* For looping*/
-                    isLoop = false;
-
-                    if (property.Name != null && property.Name.Contains("#eval"))
+                    else if (property.Name.Contains("#eval"))
                     {
-                        ExpressionHelper.TryParseFunctionNameAndArguments(property.Name, out string functionName, out string functionString);
-                        object functionResult = ParseFunction(functionString, parentArray, currentArrayToken, localContext);
+                        ExpressionHelper.TryParseFunctionNameAndArguments(property.Name, out string functionName, out string arguments);
+                        object functionResult = ParseFunction(arguments, parentArray, currentArrayToken, localContext);
 
                         JProperty clonedProperty = new JProperty(functionResult.ToString(),
                             property.Value.Type != JTokenType.Null ? 
@@ -212,10 +208,10 @@ namespace JUST
                         tokensToAdd.Add(clonedProperty);
                     }
 
-                    if (property.Name != null && property.Name.Contains("#ifgroup"))
+                    else if (property.Name.Contains("#ifgroup"))
                     {
-                        ExpressionHelper.TryParseFunctionNameAndArguments(property.Name, out string functionName, out string functionString);
-                        object functionResult = ParseFunction(functionString, parentArray, currentArrayToken, localContext);
+                        ExpressionHelper.TryParseFunctionNameAndArguments(property.Name, out string functionName, out string arguments);
+                        object functionResult = ParseFunction(arguments, parentArray, currentArrayToken, localContext);
                         bool result = false;
 
                         try
@@ -258,7 +254,7 @@ namespace JUST
                         isLoop = true;
                     }
 
-                    if (property.Name != null && property.Name.Contains("#loop"))
+                    else if (property.Name.Contains("#loop"))
                     {
                         ExpressionHelper.TryParseFunctionNameAndArguments(property.Name, out string functionName, out string arguments);
                         var token = currentArrayToken != null && functionName == "loopwithincontext" ? currentArrayToken : GetInputToken(localContext);
@@ -341,7 +337,7 @@ namespace JUST
                     /*End looping */
                 }
 
-                if (childToken.Type == JTokenType.String && childToken.Value<string>().Trim().StartsWith("#") 
+                else if (childToken.Type == JTokenType.String && childToken.Value<string>().Trim().StartsWith("#") 
                     && parentArray != null && currentArrayToken != null)
                 {
                     object newValue = ParseFunction(childToken.Value<string>(), parentArray, currentArrayToken, localContext);
@@ -477,7 +473,6 @@ namespace JUST
                 {
                     try
                     {
-                        //JToken newToken = JToken.FromObject(newValue);
                         if (newValue is IEnumerable<object> newArray)
                         {
                             result = new JArray(newArray);
@@ -532,8 +527,7 @@ namespace JUST
         #region Copy
         private static JToken Copy(string argument, JUSTContext localContext)
         {
-            var path = ParseArgument(null, null, argument, localContext) as string;
-            if (path == null)
+            if (!(ParseArgument(null, null, argument, localContext) is string path))
             {
                 throw new ArgumentException($"Invalid path for #copy: '{argument}' resolved to null");
             }
@@ -551,8 +545,7 @@ namespace JUST
             {
                 throw new Exception("Function #replace needs two arguments - 1. jsonPath to be replaced, 2. token to replace with.");
             }
-            var key = ParseArgument(null, null, argumentArr[0], localContext) as string;
-            if (key == null)
+            if (!(ParseArgument(null, null, argumentArr[0], localContext) is string key))
             {
                 throw new ArgumentException("Invalid jsonPath for #replace!");
             }
@@ -626,7 +619,7 @@ namespace JUST
                             new object[] { array, currentArrayElement, localContext ?? GlobalContext }, 
                             false, localContext ?? GlobalContext);
                     else if (functionName == "customfunction")
-                        output = CallCustomFunction<T>(parameters, localContext);
+                        output = CallCustomFunction(parameters, localContext);
                     else if (localContext?.IsRegisteredCustomFunction(functionName) ?? false)
                     {
                         var methodInfo = localContext.GetCustomMethod(functionName);
@@ -692,7 +685,7 @@ namespace JUST
                 return trimmedArgument;
         }
 
-        private static object CallCustomFunction<T>(object[] parameters, JUSTContext localContext) where T: ISelectableToken
+        private static object CallCustomFunction(object[] parameters, JUSTContext localContext)
         {
             object[] customParameters = new object[parameters.Length - 3];
             string functionString = string.Empty;
