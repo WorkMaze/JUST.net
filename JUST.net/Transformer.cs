@@ -40,7 +40,7 @@ namespace JUST
                         break;
                     case JTokenType.Date:
                         DateTime value = selectedToken.Value<DateTime>();
-                        output = value.ToString("yyyy-MM-ddTHH:mm:ssZ");
+                        output = value.ToString("yyyy-MM-ddTHH:mm:ss.fffK");
                         break;
                     case JTokenType.Raw:
                         break;
