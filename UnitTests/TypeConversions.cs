@@ -16,7 +16,7 @@ namespace JUST.UnitTests
             var input = $"{{ \"value\": {typedValue} }}";
             const string transformer = "{ \"result\": \"#toboolean(#valueof($.value))\" }";
 
-            var result = JsonTransformer.Transform(transformer, input);
+            var result = new JsonTransformer().Transform(transformer, input);
 
             Assert.AreEqual($"{{\"result\":{expectedResult.ToString().ToLower()}}}", result);
         }
@@ -33,7 +33,7 @@ namespace JUST.UnitTests
             var input = $"{{ \"value\": {typedValue} }}";
             const string transformer = "{ \"result\": \"#tostring(#valueof($.value))\" }";
 
-            var result = JsonTransformer.Transform(transformer, input);
+            var result = new JsonTransformer().Transform(transformer, input);
 
             var decimalSeparator = CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator;
             expectedResult = expectedResult.Replace("<decimalSeparator>", decimalSeparator);
@@ -53,7 +53,7 @@ namespace JUST.UnitTests
             var input = $"{{ \"value\": {typedValue} }}";
             const string transformer = "{ \"result\": \"#tointeger(#valueof($.value))\" }";
 
-            var result = JsonTransformer.Transform(transformer, input);
+            var result = new JsonTransformer().Transform(transformer, input);
 
             Assert.AreEqual($"{{\"result\":{expectedResult}}}", result);
         }
@@ -67,7 +67,7 @@ namespace JUST.UnitTests
             var input = $"{{ \"value\": {typedValue} }}";
             const string transformer = "{ \"result\": \"#todecimal(#valueof($.value))\" }";
 
-            var result = JsonTransformer.Transform(transformer, input);
+            var result = new JsonTransformer().Transform(transformer, input);
 
             Assert.AreEqual($"{{\"result\":{expectedResult}}}", result);
         }

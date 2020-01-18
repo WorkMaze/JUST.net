@@ -10,7 +10,7 @@ namespace JUST.UnitTests
         {
             const string transformer = "{ \"FullName\": \"#xconcat(#valueof($.Name),#constant_comma(),#valueof($.MiddleName),#constant_comma(),#valueof($.Surname))\" }";
 
-            var result = JsonTransformer.Transform(transformer, ExampleInputs.MultipleArgs);
+            var result = new JsonTransformer().Transform(transformer, ExampleInputs.MultipleArgs);
 
             Assert.AreEqual("{\"FullName\":\"Kari,Inger,Nordmann\"}", result);
         }
@@ -20,7 +20,7 @@ namespace JUST.UnitTests
         {
             const string transformer = "{ \"AgeOfParents\": \"#xadd(#valueof($.AgeOfMother),#valueof($.AgeOfFather))\" }";
 
-            var result = JsonTransformer.Transform(transformer, ExampleInputs.MultipleArgs);
+            var result = new JsonTransformer().Transform(transformer, ExampleInputs.MultipleArgs);
 
             Assert.AreEqual("{\"AgeOfParents\":137}", result);
         }

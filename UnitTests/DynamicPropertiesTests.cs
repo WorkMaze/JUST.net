@@ -16,7 +16,7 @@ namespace JUST.UnitTests
             const string input = "{ \"tree\": { \"branch\": \"leaf\", \"flower\": \"rose\" } }";
             string transformer = "{ \"result\": { \"#eval(#valueof($.tree.flower))\": " + (val?.ToString().ToLower().Replace(",", ".") ?? "null") + " } }";
 
-            var actual = JsonTransformer.Transform(transformer, input);
+            var actual = new JsonTransformer().Transform(transformer, input);
 
             Assert.AreEqual("{\"result\":{\"rose\":" + result.ToString() + "}}", actual);
         }
@@ -26,7 +26,7 @@ namespace JUST.UnitTests
         {
             const string transformer = "{ \"iteration\": { \"#loop($.arrayobjects)\": { \"#eval(#currentvalueatpath($.country.name))\": \"#currentvalueatpath($.country.language)\" } } }";
 
-            var result = JsonTransformer.Transform(transformer, ExampleInputs.ObjectArray);
+            var result = new JsonTransformer().Transform(transformer, ExampleInputs.ObjectArray);
 
             Assert.AreEqual("{\"iteration\":[{\"Norway\":\"norsk\"},{\"UK\":\"english\"},{\"Sweden\":\"swedish\"}]}", result);
         }
@@ -39,7 +39,7 @@ namespace JUST.UnitTests
 
             var context = new JUSTContext();
             context.EvaluationMode = EvaluationMode.Strict;
-            var result = JsonTransformer.Transform(transformer, input, context);
+            var result = new JsonTransformer(context).Transform(transformer, input);
 
             Assert.AreEqual("{\"root\":[{\"name1\":\"Jim\",\"number1\":\"0123-4567-8888\"},{\"name2\":\"John\",\"number2\":\"0134523-4567-8910\"}]}", result);
         }

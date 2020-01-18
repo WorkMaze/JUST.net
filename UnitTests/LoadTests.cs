@@ -15,7 +15,7 @@ namespace JUST.UnitTests
             const string transformer = "{ \"result\": { \"#loop($.list)\": { \"id\": \"#currentindex()\", \"name\": \"#concat(#currentvalueatpath($.title), #currentvalueatpath($.name))\", \"contact\": \"#currentvalueatpath($.contacts[?(@.is_default==true)])\", \"address\": \"#currentvalueatpath($.addresses[0])\" } }";
 
             var w = Stopwatch.StartNew();
-            JsonTransformer.Transform(transformer, input);
+            new JsonTransformer().Transform(transformer, input);
             w.Stop();
             var timeConsumed = w.Elapsed;
             Assert.LessOrEqual(timeConsumed, TimeSpan.FromSeconds(4));
@@ -28,7 +28,7 @@ namespace JUST.UnitTests
             var transformer = File.ReadAllText("Inputs/large_transformer.json");
 
             var w = Stopwatch.StartNew();
-            JsonTransformer.Transform(transformer, input);
+            new JsonTransformer().Transform(transformer, input);
             w.Stop();
             var timeConsumed = w.Elapsed;
             Assert.LessOrEqual(timeConsumed, TimeSpan.FromSeconds(3));
