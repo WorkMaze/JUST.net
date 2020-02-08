@@ -58,7 +58,7 @@ JUSTContext context = new JUSTContext
   EvaluationMode = EvaluationMode.Strict,
   DefaultDecimalPlaces = 4
 };
-string transformedString = JsonTransformer.Transform(transformer, input, context);
+string transformedString = new JsonTransformer(context).Transform(transformer, input);
 
 // with generic method
 string transformedString = JsonTransformer<JmesPathSelectable>.Transform(transformer, input);
@@ -1067,26 +1067,20 @@ Output:
 
 ## Register User Defined methods for seamless use
 
-To reduce the fuzz of calling custom methods, there's this class `JUSTContext`, where you can register your custom functions.
-`JsonTransformer` has a readonly field called `GlobalContext` where one can register functions that will be available for all subsequent calls
-of `Transform` methods. To only use some functions in one transformation, you can create a `JUSTContext` instance and pass it to `Transform` method.
+To reduce the fuzz of calling custom methods, there's this class `JUSTContext`, where you can register your custom functions, and then pass it as a parameter to `JsonTransformer` constructor. All calls of `Transform` methods will use the supplied `JUSTContext`.
 
 Examples:
 ```C#
 new JUSTContext().RegisterCustomFunction(assemblyName, namespace, methodName, methodAlias);
-```
-```C#
-JsonTransformer.GlobalContext.RegisterCustomFunction(assemblyName, namespace, methodName, methodAlias);
 ```
 
 Parameter 'namespace' must include the class name as well, 'assemblyName' is optional, so as 'methodAlias', which can be 
 used to register methods with the same name under diferent namespaces.
 After registration you can call it like any other built-in function.
 
-Global context registrations are handled in a static property, so they will live as long as your application lives.
 You have the possibility to unregister a custom function or remove all registrations with the following methods:
-`JsonTransformer.GlobalContext.UnregisterCustomFunction(name)`
-`JsonTransformer.GlobalContext.ClearCustomFunctionRegistrations()`
+`new JUSTContext().UnregisterCustomFunction(name)`
+`new JUSTContext().ClearCustomFunctionRegistrations()`
 
 
 Consider the following input:
@@ -1105,13 +1099,9 @@ Consider the following input:
 
 Registration:
 ```C#
-JsonTransformer.GlobalContext.RegisterCustomFunction("SomeAssemblyName", "NameSpace.Plus.ClassName", "IsSummer");
-```
-or
-```C#
-var localContext = new JUSTContext();
-localContext.RegisterCustomFunction("SomeAssemblyName", "NameSpace.Plus.ClassName", "IsSummer");
-JsonTransformer.Transform(<transformer>, <input>, localContext);
+var context = new JUSTContext();
+context.RegisterCustomFunction("SomeAssemblyName", "NameSpace.Plus.ClassName", "IsSummer");
+new JsonTransformer(context).Transform(<transformer>, <input>);
 ```
 
 

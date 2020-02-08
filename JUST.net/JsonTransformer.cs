@@ -17,11 +17,11 @@ namespace JUST
 
     public class JsonTransformer<T> where T: ISelectableToken
     {
-        private readonly JUSTContext GlobalContext;
+        private readonly JUSTContext Context;
 
         public JsonTransformer(JUSTContext context = null)
         {
-            GlobalContext = context ?? new JUSTContext();
+            Context = context ?? new JUSTContext();
 
             if (JsonConvert.DefaultSettings == null)
             {
@@ -85,7 +85,7 @@ namespace JUST
 
         public JObject Transform(JObject transformer, JToken input)
         {
-            GlobalContext.Input = input;
+            Context.Input = input;
             RecursiveEvaluate(transformer, null, null);
             return transformer;
         }
@@ -188,7 +188,7 @@ namespace JUST
             {
                 foreach (KeyValuePair<string, JToken> tokenToReplace in tokensToReplace)
                 {
-                    JToken selectedToken = GetSelectableToken(parentToken as JObject, GlobalContext).Select(tokenToReplace.Key);
+                    JToken selectedToken = GetSelectableToken(parentToken as JObject, Context).Select(tokenToReplace.Key);
 
                     if (selectedToken != null && selectedToken is JObject)
                     {
@@ -215,7 +215,7 @@ namespace JUST
             {
                 foreach (string selectedToken in tokensToDelete)
                 {
-                    JToken tokenToRemove = GetSelectableToken(parentToken, GlobalContext).Select(selectedToken);
+                    JToken tokenToRemove = GetSelectableToken(parentToken, Context).Select(selectedToken);
 
                     if (tokenToRemove != null)
                         tokenToRemove.Ancestors().First().Remove();
@@ -280,13 +280,13 @@ namespace JUST
         private void LoopOperation(JProperty property, JArray parentArray, JToken currentArrayToken, ref List<string> loopProperties, ref JArray arrayToForm, ref JObject dictToForm, JToken childToken)
         {
             ExpressionHelper.TryParseFunctionNameAndArguments(property.Name, out string functionName, out string arguments);
-            var token = currentArrayToken != null && functionName == "loopwithincontext" ? currentArrayToken : GlobalContext.Input;
+            var token = currentArrayToken != null && functionName == "loopwithincontext" ? currentArrayToken : Context.Input;
 
             var strArrayToken = ParseArgument(parentArray, currentArrayToken, arguments) as string;
 
             bool isDictionary = false;
             JToken arrayToken;
-            var selectable = GetSelectableToken(token, GlobalContext);
+            var selectable = GetSelectableToken(token, Context);
             try
             {
                 arrayToken = selectable.Select(strArrayToken);
@@ -365,11 +365,11 @@ namespace JUST
 
             try
             {
-                result = (bool)ReflectionHelper.GetTypedValue(typeof(bool), functionResult, GlobalContext.EvaluationMode);
+                result = (bool)ReflectionHelper.GetTypedValue(typeof(bool), functionResult, Context.EvaluationMode);
             }
             catch
             {
-                if (IsStrictMode(GlobalContext)) { throw; }
+                if (IsStrictMode(Context)) { throw; }
                 result = false;
             }
 
@@ -414,7 +414,7 @@ namespace JUST
                             property.Value.Value<string>(),
                             parentArray,
                             currentArrayToken),
-                        GlobalContext.EvaluationMode) :
+                        Context.EvaluationMode) :
                     null);
 
             if (loopProperties == null)
@@ -507,12 +507,12 @@ namespace JUST
                     }
                     catch
                     {
-                        if (IsStrictMode(GlobalContext))
+                        if (IsStrictMode(Context))
                         {
                             throw;
                         }
 
-                        if (IsFallbackToDefault(GlobalContext))
+                        if (IsFallbackToDefault(Context))
                         {
                             result = JValue.CreateNull();
                         }
@@ -554,7 +554,7 @@ namespace JUST
             {
                 throw new ArgumentException($"Invalid path for #copy: '{argument}' resolved to null");
             }
-            JToken selectedToken = GetSelectableToken(GlobalContext.Input,GlobalContext).Select(path);
+            JToken selectedToken = GetSelectableToken(Context.Input,Context).Select(path);
             return selectedToken;
         }
 
@@ -624,11 +624,11 @@ namespace JUST
                         listParameters.Add(ParseArgument(array, currentArrayElement, arguments[i]));
                     }
 
-                    listParameters.Add(GlobalContext);
+                    listParameters.Add(Context);
                     var parameters = listParameters.ToArray();
 
                     if (new[] { "currentvalue", "currentindex", "lastindex", "lastvalue" }.Contains(functionName))
-                        output = ReflectionHelper.Caller<T>(null, "JUST.Transformer`1", functionName, new object[] { array, currentArrayElement }, true, GlobalContext);
+                        output = ReflectionHelper.Caller<T>(null, "JUST.Transformer`1", functionName, new object[] { array, currentArrayElement }, true, Context);
                     else if (new[] { "currentvalueatpath", "lastvalueatpath" }.Contains(functionName))
                         output = ReflectionHelper.Caller<T>(
                             null, 
@@ -636,26 +636,26 @@ namespace JUST
                             functionName, 
                             new [] { array, currentArrayElement }.Concat(parameters).ToArray(), 
                             true, 
-                            GlobalContext);
+                            Context);
                     else if (functionName == "currentproperty")
                         output = ReflectionHelper.Caller<T>(null, "JUST.Transformer`1", functionName, 
-                            new object[] { array, currentArrayElement, GlobalContext }, 
-                            false, GlobalContext);
+                            new object[] { array, currentArrayElement, Context }, 
+                            false, Context);
                     else if (functionName == "customfunction")
                         output = CallCustomFunction(parameters);
-                    else if (GlobalContext?.IsRegisteredCustomFunction(functionName) ?? false)
+                    else if (Context?.IsRegisteredCustomFunction(functionName) ?? false)
                     {
-                        var methodInfo = GlobalContext.GetCustomMethod(functionName);
-                        output = ReflectionHelper.InvokeCustomMethod<T>(methodInfo, parameters, true, GlobalContext);
+                        var methodInfo = Context.GetCustomMethod(functionName);
+                        output = ReflectionHelper.InvokeCustomMethod<T>(methodInfo, parameters, true, Context);
                     }
-                    else if (GlobalContext.IsRegisteredCustomFunction(functionName))
+                    else if (Context.IsRegisteredCustomFunction(functionName))
                     {
-                        var methodInfo = GlobalContext.GetCustomMethod(functionName);
-                        output = ReflectionHelper.InvokeCustomMethod<T>(methodInfo, parameters, true, GlobalContext);
+                        var methodInfo = Context.GetCustomMethod(functionName);
+                        output = ReflectionHelper.InvokeCustomMethod<T>(methodInfo, parameters, true, Context);
                     }
                     else if (Regex.IsMatch(functionName, ReflectionHelper.EXTERNAL_ASSEMBLY_REGEX))
                     {
-                        output = ReflectionHelper.CallExternalAssembly<T>(functionName, parameters, GlobalContext);
+                        output = ReflectionHelper.CallExternalAssembly<T>(functionName, parameters, Context);
                     }
                     else if (new[] { "xconcat", "xadd",
                         "mathequals", "mathgreaterthan", "mathlessthan", "mathgreaterthanorequalto", "mathlessthanorequalto",
@@ -663,15 +663,15 @@ namespace JUST
                     {
                         object[] oParams = new object[1];
                         oParams[0] = parameters;
-                        output = ReflectionHelper.Caller<T>(null, "JUST.Transformer`1", functionName, oParams, true, GlobalContext);
+                        output = ReflectionHelper.Caller<T>(null, "JUST.Transformer`1", functionName, oParams, true, Context);
                     }
                     else if (functionName == "applyover")
                     {
-                        var contextInput = GlobalContext.Input;
+                        var contextInput = Context.Input;
                         var input = JToken.Parse(Transform(parameters[0].ToString(), contextInput.ToString()));
-                        GlobalContext.Input = input;
+                        Context.Input = input;
                         output = ParseFunction(parameters[1].ToString().Trim('\''), array, currentArrayElement);
-                        GlobalContext.Input = contextInput;
+                        Context.Input = contextInput;
                     }
                     else
                     {
@@ -680,7 +680,7 @@ namespace JUST
                         {
                             ((JUSTContext)parameters.Last()).Input = currentArrayElement;
                         }
-                        output = ReflectionHelper.Caller<T>(null, "JUST.Transformer`1", functionName, parameters, true, GlobalContext);
+                        output = ReflectionHelper.Caller<T>(null, "JUST.Transformer`1", functionName, parameters, true, Context);
                         ((JUSTContext)parameters.Last()).Input = input;
                     }
                 }
@@ -734,7 +734,7 @@ namespace JUST
 
             className = className + "," + dllName;
 
-            return ReflectionHelper.Caller<T>(null, className, functionName, customParameters, true, GlobalContext);
+            return ReflectionHelper.Caller<T>(null, className, functionName, customParameters, true, Context);
 
         }
         #endregion
