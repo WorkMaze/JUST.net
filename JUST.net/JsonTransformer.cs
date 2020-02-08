@@ -56,8 +56,8 @@ namespace JUST
         public static JArray Transform(JArray transformerArray, JToken input, JUSTContext localContext = null)
         {
             var result = new JArray();
-            foreach (var transformer in transformerArray)
-            {
+            for (int i = 0; i < transformerArray.Count; i++) {
+                var transformer = transformerArray[i];
                 if (transformer.Type != JTokenType.Object)
                 {
                     throw new NotSupportedException($"Transformer of type '{transformer.Type}' not supported!");
@@ -96,6 +96,7 @@ namespace JUST
 
             List<string> loopProperties = null;
             JArray arrayToForm = null;
+            JObject dictToForm = null;
             List<JToken> tokenToForm = null;
             List<JToken> tokensToAdd = null;
 
@@ -196,9 +197,9 @@ namespace JUST
                     if (property.Name != null && property.Name.Contains("#eval"))
                     {
                         ExpressionHelper.TryParseFunctionNameAndArguments(property.Name, out string functionName, out string functionString);
-                        object functionResult = ParseFunction(functionString, inputJson, null, null, localContext);
+                        object functionResult = ParseFunction(functionString, inputJson, parentArray, currentArrayToken, localContext);
 
-                        JProperty clonedProperty = new JProperty(functionResult.ToString(), property.Value);
+                        JProperty clonedProperty = new JProperty(functionResult.ToString(), ParseFunction(property.Value.ToString(), inputJson, parentArray, currentArrayToken, localContext));
 
                         if (loopProperties == null)
                             loopProperties = new List<string>();
@@ -265,19 +266,26 @@ namespace JUST
 
                         var strArrayToken = ParseArgument(inputJson, parentArray, currentArrayToken, arguments, localContext) as string;
 
+                        bool isDictionary = false;
                         JToken arrayToken;
                         try
                         {
                             arrayToken = token.SelectToken(strArrayToken);
-                            if (arrayToken is JObject)
+                            if (arrayToken is IDictionary<string, JToken> dict) //JObject is a dictionary
                             {
-                                arrayToken = new JArray(arrayToken);
+                                isDictionary = true;
+                                JArray arr = new JArray();
+                                foreach (var item in dict)
+                                {
+                                    arr.Add(new JObject { { item.Key, item.Value } });
+                                }
+
+                                arrayToken = arr;
                             }
                         }
                         catch
                         {
                             var multipleTokens = token.SelectTokens(strArrayToken);
-
                             arrayToken = new JArray(multipleTokens);
                         }
 
@@ -291,18 +299,36 @@ namespace JUST
 
                             IEnumerator<JToken> elements = array.GetEnumerator();
 
-                            while (elements.MoveNext())
+                            if (!isDictionary)
                             {
-                                if (arrayToForm == null)
-                                    arrayToForm = new JArray();
-
-                                JToken clonedToken = childToken.DeepClone();
-
-                                RecursiveEvaluate(clonedToken, inputJson, array, elements.Current, localContext);
-
-                                foreach (JToken replacedProperty in clonedToken.Children())
+                                while (elements.MoveNext())
                                 {
-                                    arrayToForm.Add(replacedProperty);
+                                    if (arrayToForm == null)
+                                        arrayToForm = new JArray();
+
+                                    JToken clonedToken = childToken.DeepClone();
+
+                                    RecursiveEvaluate(clonedToken, inputJson, array, elements.Current, localContext);
+
+                                    foreach (JToken replacedProperty in clonedToken.Children())
+                                    {
+                                        arrayToForm.Add(replacedProperty);
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                while (elements.MoveNext())
+                                {
+                                    if (dictToForm == null)
+                                        dictToForm = new JObject();
+
+                                    JToken clonedToken = childToken.DeepClone();
+                                    RecursiveEvaluate(clonedToken, inputJson, array, elements.Current, localContext);
+                                    foreach (JToken replacedProperty in clonedToken.Children().Select(t => t.First))
+                                    {
+                                        dictToForm.Add(replacedProperty);
+                                    }
                                 }
                             }
                         }
@@ -399,21 +425,42 @@ namespace JUST
                         (parentToken as JObject).Add(childToken.Name, childToken.Value);
                 }
             }
-            if (parentToken is JObject)
+            if (parentToken is JObject jObject)
             {
-                (parentToken as JObject).Remove("#");
+                jObject.Remove("#");
             }
 
             if (loopProperties != null)
             {
                 foreach (string propertyToDelete in loopProperties)
+                {
                     (parentToken as JObject).Remove(propertyToDelete);
+                }
             }
             if (arrayToForm != null)
             {
-                parentToken.Replace(arrayToForm);
+                if (parentToken.Parent != null && parentToken.Parent is JArray arr)
+                {
+                    foreach (var item in arrayToForm)
+                    {
+                        arr.Add(item);
+                    }
+                    if (!parentToken.HasValues)
+                    {
+                        var tmp = parentToken;
+                        parentToken = arr;
+                        tmp.Remove();
+                    }
+                }
+                else
+                {
+                    parentToken.Replace(arrayToForm);
+                }
             }
-
+            if (dictToForm != null)
+            {
+                parentToken.Replace(dictToForm);
+            }
         }
         #endregion
 
@@ -544,11 +591,14 @@ namespace JUST
                     listParameters.Add(localContext ?? GlobalContext);
                     var parameters = listParameters.ToArray();
 
-                    if (functionName == "currentvalue" || functionName == "currentindex" || functionName == "lastindex"
-                        || functionName == "lastvalue")
+                    if (new[] { "currentvalue", "currentindex", "lastindex", "lastvalue" }.Contains(functionName))
                         output = ReflectionHelper.caller(null, "JUST.Transformer", functionName, new object[] { array, currentArrayElement }, true, localContext ?? GlobalContext);
-                    else if (functionName == "currentvalueatpath" || functionName == "lastvalueatpath")
-                        output = ReflectionHelper.caller(null, "JUST.Transformer", functionName, new object[] { array, currentArrayElement, arguments[0] }, true, localContext ?? GlobalContext);
+                    else if (new[] { "currentvalueatpath", "lastvalueatpath" }.Contains(functionName))
+                        output = ReflectionHelper.caller(null, "JUST.Transformer", functionName, new object[] { array, currentArrayElement, parameters[0] }, true, localContext ?? GlobalContext);
+                    else if (functionName == "currentproperty")
+                        output = ReflectionHelper.caller(null, "JUST.Transformer", functionName, 
+                            new object[] { array, currentArrayElement, localContext ?? GlobalContext }, 
+                            false, localContext ?? GlobalContext);
                     else if (functionName == "customfunction")
                         output = CallCustomFunction(parameters, localContext);
                     else if (localContext?.IsRegisteredCustomFunction(functionName) ?? false)
@@ -565,11 +615,9 @@ namespace JUST
                     {
                         output = ReflectionHelper.CallExternalAssembly(functionName, parameters, localContext ?? GlobalContext);
                     }
-                    else if (functionName == "xconcat" || functionName == "xadd"
-                        || functionName == "mathequals" || functionName == "mathgreaterthan" || functionName == "mathlessthan"
-                        || functionName == "mathgreaterthanorequalto"
-                        || functionName == "mathlessthanorequalto" || functionName == "stringcontains" ||
-                        functionName == "stringequals")
+                    else if (new[] { "xconcat", "xadd",
+                        "mathequals", "mathgreaterthan", "mathlessthan", "mathgreaterthanorequalto", "mathlessthanorequalto",
+                        "stringcontains", "stringequals"}.Contains(functionName))
                     {
                         object[] oParams = new object[1];
                         oParams[0] = parameters;
