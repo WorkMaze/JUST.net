@@ -1,7 +1,7 @@
 ﻿using JUST.net.Selectables;
 using Newtonsoft.Json.Linq;
 using System;
-using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Reflection;
 
 namespace JUST
@@ -14,7 +14,7 @@ namespace JUST
 
     public class JUSTContext
     {
-        private ConcurrentDictionary<string, MethodInfo> _customFunctions = new ConcurrentDictionary<string, MethodInfo>();
+        private Dictionary<string, MethodInfo> _customFunctions = new Dictionary<string, MethodInfo>();
         private int _defaultDecimalPlaces = 28;
 
         internal JToken Input;
@@ -46,15 +46,12 @@ namespace JUST
                 throw new Exception("Unable to find specified method!");
             }
 
-            if (!_customFunctions.TryAdd(methodAlias ?? methodName, methodInfo))
-            {
-                throw new Exception("Error while registering custom method!");
-            }
+            _customFunctions.Add(methodAlias ?? methodName, methodInfo);
         }
 
-        public bool UnregisterCustomFunction(string name)
+        public void UnregisterCustomFunction(string name)
         {
-            return _customFunctions.TryRemove(name, out var removed);
+            _customFunctions.Remove(name);
         }
 
         public void ClearCustomFunctionRegistrations()
