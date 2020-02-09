@@ -1068,10 +1068,13 @@ Output:
 ## Register User Defined methods for seamless use
 
 To reduce the fuzz of calling custom methods, there's this class `JUSTContext`, where you can register your custom functions, and then pass it as a parameter to `JsonTransformer` constructor. All calls of `Transform` methods will use the supplied `JUSTContext`.
+There's also this class `CustomFunction` that as all the necessary properties to register a custom function. One can create a list of there classes and pass it to `JUSTContext` constructor.
 
 Examples:
 ```C#
 new JUSTContext().RegisterCustomFunction(assemblyName, namespace, methodName, methodAlias);
+new JUSTContext().RegisterCustomFunction(new CustomFunction{ AssemblyName = "someAssembly", Namespace = "someNamespace", MethodName = "someMethod", MethodAlias = "someAlias" });
+new JUSTContext(new[] { new CustomFunction{ AssemblyName = "someAssembly", Namespace = "someNamespace", MethodName = "someMethod", MethodAlias = "someAlias" } });
 ```
 
 Parameter 'namespace' must include the class name as well, 'assemblyName' is optional, so as 'methodAlias', which can be 
@@ -1079,9 +1082,8 @@ used to register methods with the same name under diferent namespaces.
 After registration you can call it like any other built-in function.
 
 You have the possibility to unregister a custom function or remove all registrations with the following methods:
-`new JUSTContext().UnregisterCustomFunction(name)`
+`new JUSTContext().UnregisterCustomFunction(aliasOrName)`
 `new JUSTContext().ClearCustomFunctionRegistrations()`
-
 
 Consider the following input:
 

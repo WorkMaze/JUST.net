@@ -6,6 +6,26 @@ using System.Reflection;
 
 namespace JUST
 {
+    public class CustomFunction
+    {
+        public string AssemblyName { get; set; }
+        public string Namespace { get; set; }
+        public string MethodName { get; set; }
+        public string MethodAlias { get; set; }
+
+        public CustomFunction()
+        {
+        }
+
+        public CustomFunction(string assemblyName, string namespc, string methodName, string methodAlias = null)
+        {
+            AssemblyName = assemblyName;
+            Namespace = namespc;
+            MethodName = methodName;
+            MethodAlias = methodAlias;
+        }
+    }
+
     public enum EvaluationMode
     {
         FallbackToDefault,
@@ -33,9 +53,22 @@ namespace JUST
 
         public JUSTContext() { }
 
+        public JUSTContext(IEnumerable<CustomFunction> customFunctions)
+        {
+            foreach (var function in customFunctions)
+            {
+                RegisterCustomFunction(function);
+            }
+        }
+
         internal JUSTContext(string inputJson)
         {
             Input = JToken.Parse(inputJson);
+        }
+
+        public void RegisterCustomFunction(CustomFunction customFunction)
+        {
+            RegisterCustomFunction(customFunction.AssemblyName, customFunction.Namespace, customFunction.MethodName, customFunction.MethodAlias);
         }
 
         public void RegisterCustomFunction(string assemblyName, string namespc, string methodName, string methodAlias = null)
@@ -49,9 +82,9 @@ namespace JUST
             _customFunctions.Add(methodAlias ?? methodName, methodInfo);
         }
 
-        public void UnregisterCustomFunction(string name)
+        public void UnregisterCustomFunction(string aliasOrName)
         {
-            _customFunctions.Remove(name);
+            _customFunctions.Remove(aliasOrName);
         }
 
         public void ClearCustomFunctionRegistrations()
@@ -68,9 +101,9 @@ namespace JUST
             return result;
         }
 
-        internal bool IsRegisteredCustomFunction(string name)
+        internal bool IsRegisteredCustomFunction(string aliasOrName)
         {
-            return _customFunctions.ContainsKey(name);
+            return _customFunctions.ContainsKey(aliasOrName);
         }
 
         internal T Resolve<T>(JToken token) where T: ISelectableToken

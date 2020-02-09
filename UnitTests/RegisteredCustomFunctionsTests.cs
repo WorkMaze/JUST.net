@@ -102,5 +102,70 @@ namespace JUST.UnitTests
 
             Assert.AreEqual("Invalid function: #SomeInvalid", result.InnerException.Message);
         }
+
+        [Test]
+        public void RegisterInContextConstructor()
+        {
+            const string input = "{ \"lvl1\": { \"some-bool\": true } }";
+            const string transformer = "{ \"result\": \"#NavigateTypedNullParameters(#valueof($.non-existent))\" }";
+
+            var context = new JUSTContext(new[] {
+                new CustomFunction {
+                    AssemblyName = "ExternalMethods",
+                    Namespace = "ExternalMethods.ExternalClass",
+                    MethodName = "NavigateTypedNullParameters"
+                }
+            });
+            var result = new JsonTransformer(context).Transform(transformer, input);
+
+            Assert.AreEqual("{\"result\":null}", result);
+        }
+
+        [Test]
+        public void UnregisterCustomFunction()
+        {
+            const string unregisteredFunction = "NavigateTypedNullParameters";
+            const string input = "{ \"lvl1\": { \"some-bool\": true } }";
+            const string transformer = "{ \"instance\": \"#InstanceMethod()\", \"navigated\": \"#NavigateTypedNullParameters(#valueof($.non-existent))\" }";
+
+            var context = new JUSTContext(new[] {
+                new CustomFunction {
+                    AssemblyName = "ExternalMethods",
+                    Namespace = "ExternalMethods.ExternalClass",
+                    MethodName = "InstanceMethod"
+                },
+                new CustomFunction {
+                    AssemblyName = "ExternalMethods",
+                    Namespace = "ExternalMethods.ExternalClass",
+                    MethodName = unregisteredFunction
+                }
+            });
+
+            context.UnregisterCustomFunction(unregisteredFunction);
+            
+            var result = Assert.Throws<Exception>(() => new JsonTransformer(context).Transform(transformer, input));
+            Assert.AreEqual($"Error while calling function : #{unregisteredFunction}(#valueof($.non-existent)) - Invalid function: #{unregisteredFunction}", result.Message);
+        }
+
+        [Test]
+        public void ClearCustomFunctions()
+        {
+            const string unregisteredFunction = "NavigateTypedNullParameters";
+            const string input = "{ \"lvl1\": { \"some-bool\": true } }";
+            const string transformer = "{ \"navigated\": \"#NavigateTypedNullParameters(#valueof($.non-existent))\" }";
+
+            var context = new JUSTContext(new[] {
+                new CustomFunction {
+                    AssemblyName = "ExternalMethods",
+                    Namespace = "ExternalMethods.ExternalClass",
+                    MethodName = unregisteredFunction
+                }
+            });
+
+            context.ClearCustomFunctionRegistrations();
+
+            var result = Assert.Throws<Exception>(() => new JsonTransformer(context).Transform(transformer, input));
+            Assert.AreEqual($"Error while calling function : #{unregisteredFunction}(#valueof($.non-existent)) - Invalid function: #{unregisteredFunction}", result.Message);
+        }
     }
 }
