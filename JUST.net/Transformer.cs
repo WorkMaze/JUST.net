@@ -296,6 +296,16 @@ namespace JUST
             return GetValue(selectedToken);
         }
 
+        public static object currentproperty(JArray array, JToken currentElement, JUSTContext context)
+        {
+            var prop = (currentElement.First as JProperty);
+            if (prop == null && context.EvaluationMode == EvaluationMode.Strict)
+            {
+                throw new InvalidOperationException("Element is not a property: " + prop.ToString());
+            }
+            return prop.Name;
+        }
+
         public static object lastvalueatpath(JArray array, JToken currentElement, string jsonPath)
         {
             JToken selectedToken = array.Last.SelectToken(jsonPath);
@@ -354,16 +364,16 @@ namespace JUST
                 switch (selectedToken.Type)
                 {
                     case JTokenType.Object:
-                        output = selectedToken; // JsonConvert.SerializeObject(selectedToken);
+                        output = selectedToken;
                         break;
                     case JTokenType.Array:
-                        output = selectedToken.Values<object>().ToArray(); //selectedToken.ToString();
+                        output = selectedToken.Values<object>().ToArray();
                         break;
                     case JTokenType.Integer:
-                        output = selectedToken.ToObject<Int64>();
+                        output = selectedToken.ToObject<long>();
                         break;
                     case JTokenType.Float:
-                        output = selectedToken.ToObject<float>();
+                        output = selectedToken.ToObject<double>();
                         break;
                     case JTokenType.String:
                         output = selectedToken.ToString();

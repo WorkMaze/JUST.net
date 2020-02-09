@@ -11,9 +11,11 @@ This will repace the JUST and JUST.NETCore packages.</Description>
     <RepositoryUrl>https://github.com/WorkMaze/JUST.net</RepositoryUrl>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
-    <PackageReleaseNotes>Fixed the following issues:-
-https://github.com/WorkMaze/JUST.net/issues/26
-https://github.com/WorkMaze/JUST.net/issues/25</PackageReleaseNotes>
+    <PackageReleaseNotes>Fix functions inside loop.
+https://github.com/WorkMaze/JUST.net/pull/84</PackageReleaseNotes>
+    <Version>3.0.2</Version>
+    <AssemblyVersion>3.0.2.0</AssemblyVersion>
+    <FileVersion>3.0.2.0</FileVersion>
   </PropertyGroup>
 
   <ItemGroup>

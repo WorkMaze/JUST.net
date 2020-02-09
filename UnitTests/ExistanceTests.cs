@@ -48,5 +48,16 @@ namespace JUST.UnitTests
 
             Assert.AreEqual("{\"IsBought\":true,\"HasExpireDate\":false,\"HasDefects\":false,\"HasNotes\":false}", result);
         }
+
+        [Test]
+        public void ExistsInsideLoop()
+        {
+            const string input = "[{ \"id\": \"id1\", \"category\": \"cat1\" }, { \"id\": \"id2\" } ]";
+            const string transformer = "{ \"items\": { \"#loop($)\": { \"id\": \"#currentvalueatpath($.id)\", \"existance\": \"#exists($.category)\" } } }";
+
+            var result = JsonTransformer.Transform(transformer, input, new JUSTContext { EvaluationMode = EvaluationMode.Strict });
+
+            Assert.AreEqual("{\"items\":[{\"id\":\"id1\",\"existance\":true},{\"id\":\"id2\",\"existance\":false}]}", result);
+        }
     }
 }
