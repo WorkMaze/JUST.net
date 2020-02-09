@@ -55,7 +55,7 @@ namespace JUST.UnitTests
             const string input = "[{ \"id\": \"id1\", \"category\": \"cat1\" }, { \"id\": \"id2\" } ]";
             const string transformer = "{ \"items\": { \"#loop($)\": { \"id\": \"#currentvalueatpath($.id)\", \"existance\": \"#exists($.category)\" } } }";
 
-            var result = JsonTransformer.Transform(transformer, input, new JUSTContext { EvaluationMode = EvaluationMode.Strict });
+            var result = new JsonTransformer(new JUSTContext { EvaluationMode = EvaluationMode.Strict }).Transform(transformer, input);
 
             Assert.AreEqual("{\"items\":[{\"id\":\"id1\",\"existance\":true},{\"id\":\"id2\",\"existance\":false}]}", result);
         }
