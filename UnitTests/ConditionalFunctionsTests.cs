@@ -157,5 +157,16 @@ namespace JUST.UnitTests
 
             Assert.AreEqual("{\"Result\":{\"Header\":\"JsonTransform\"}}", result);
         }
+
+        [Test]
+        public void ConditionalGroupInsideLoop()
+        {
+            const string input = "[{ \"id\": \"id1\", \"category\": \"cat1\" }, { \"id\": \"id2\" } ]";
+            const string transformer = "{ \"items\": { \"#loop($)\": { \"id\": \"#currentvalueatpath($.id)\", \"existance\": \"#exists($.category)\", \"#ifgroup(#exists($.category))\": {\"category\":\"#currentvalueatpath($.category)\"} } } }";
+
+            var result = JsonTransformer.Transform(transformer, input, new JUSTContext { EvaluationMode = EvaluationMode.Strict });
+
+            Assert.AreEqual("{\"items\":[{\"id\":\"id1\",\"existance\":true,\"category\":\"cat1\"},{\"id\":\"id2\",\"existance\":false}]}", result);
+        }
     }
 }
