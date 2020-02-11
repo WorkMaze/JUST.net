@@ -218,7 +218,7 @@ namespace JUST
                     if (property.Name != null && property.Name.Contains("#ifgroup"))
                     {
                         ExpressionHelper.TryParseFunctionNameAndArguments(property.Name, out string functionName, out string functionString);
-                        object functionResult = ParseFunction(functionString, inputJson, null, null, localContext);
+                        object functionResult = ParseFunction(functionString, inputJson, parentArray, currentArrayToken, localContext);
                         bool result = false;
 
                         try
