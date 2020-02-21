@@ -150,5 +150,15 @@ namespace JUST.UnitTests.Arrays
 
             Assert.AreEqual("{\"sounds\":{\"cat\":\"meow\",\"dog\":\"woof\"},\"number_index\":{\"0\":\"three\",\"1\":\"two\",\"2\":\"one\"}}", result);
         }
+
+        [Test]
+        public void LoopingAlias()
+        {
+            const string transformer = "{ \"hello\": { \"#loop($.NestedLoop.Organization.Employee, employee)\": { \"Details\": { \"#loop($.Details, details)\": { \"CurrentCountry\": \"#currentvalueatpath($.Country)\", \"OuterName\": \"#currentvalueatpath(employee:$.Name)\" } } } } }";
+
+            var result = new JsonTransformer().Transform(transformer, ExampleInputs.NestedArrays);
+
+            Assert.AreEqual("{\"hello\":[{\"Details\":[{\"CurrentCountry\":\"Iceland\"}]},{\"Details\":[{\"CurrentCountry\":\"Denmark\",\"OuterName\":\"E2\"}]}]}", result);
+        }
     }
 }

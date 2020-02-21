@@ -17,6 +17,8 @@ namespace JUST
 
     public class JsonTransformer<T> where T: ISelectableToken
     {
+        private int _loopCounter = 0;
+
         private readonly JUSTContext Context;
 
         public JsonTransformer(JUSTContext context = null)
@@ -93,7 +95,7 @@ namespace JUST
         #region RecursiveEvaluate
 
 
-        private void RecursiveEvaluate(JToken parentToken, JArray parentArray, JToken currentArrayToken)
+        private void RecursiveEvaluate(JToken parentToken, IDictionary<string, JArray> parentArray, IDictionary<string, JToken> currentArrayToken)
         {
             if (parentToken == null)
                 return;
@@ -277,16 +279,20 @@ namespace JUST
             return parentToken;
         }
 
-        private void LoopOperation(JProperty property, JArray parentArray, JToken currentArrayToken, ref List<string> loopProperties, ref JArray arrayToForm, ref JObject dictToForm, JToken childToken)
+        private void LoopOperation(JProperty property, IDictionary<string, JArray> parentArray, IDictionary<string, JToken> currentArrayToken, ref List<string> loopProperties, ref JArray arrayToForm, ref JObject dictToForm, JToken childToken)
         {
             ExpressionHelper.TryParseFunctionNameAndArguments(property.Name, out string functionName, out string arguments);
-            var token = currentArrayToken != null && functionName == "loopwithincontext" ? currentArrayToken : Context.Input;
+            var args = ExpressionHelper.GetArguments(arguments);
+            var alias = args?.Length > 1 ? args[1] : $"loop{++_loopCounter}";
 
-            var strArrayToken = ParseArgument(parentArray, currentArrayToken, arguments) as string;
+            var token = currentArrayToken?.Any() ?? false ? currentArrayToken : 
+                new Dictionary<string, JToken> { { alias, Context.Input } };
+
+            var strArrayToken = ParseArgument(parentArray, currentArrayToken, args[0]) as string;
 
             bool isDictionary = false;
             JToken arrayToken;
-            var selectable = GetSelectableToken(token, Context);
+            var selectable = GetSelectableToken(token[alias], Context);
             try
             {
                 arrayToken = selectable.Select(strArrayToken);
@@ -327,7 +333,7 @@ namespace JUST
 
                         JToken clonedToken = childToken.DeepClone();
 
-                        RecursiveEvaluate(clonedToken, array, elements.Current);
+                        RecursiveEvaluate(clonedToken, new Dictionary<string, JArray> { { alias, array } }, new Dictionary<string, JToken> { { alias, elements.Current } });
 
                         foreach (JToken replacedProperty in clonedToken.Children())
                         {
@@ -343,7 +349,7 @@ namespace JUST
                             dictToForm = new JObject();
 
                         JToken clonedToken = childToken.DeepClone();
-                        RecursiveEvaluate(clonedToken, array, elements.Current);
+                        RecursiveEvaluate(clonedToken, new Dictionary<string, JArray> { { alias, array } }, new Dictionary<string, JToken> { { alias, elements.Current } });
                         foreach (JToken replacedProperty in clonedToken.Children().Select(t => t.First))
                         {
                             dictToForm.Add(replacedProperty);
@@ -357,7 +363,7 @@ namespace JUST
             loopProperties.Add(property.Name);
         }
 
-        private void ConditionalGroupOperation(JProperty property, JArray parentArray, JToken currentArrayToken, ref List<string> loopProperties, ref List<JToken> tokenToForm, JToken childToken)
+        private void ConditionalGroupOperation(JProperty property, IDictionary<string, JArray> parentArray, IDictionary<string, JToken> currentArrayToken, ref List<string> loopProperties, ref List<JToken> tokenToForm, JToken childToken)
         {
             ExpressionHelper.TryParseFunctionNameAndArguments(property.Name, out string functionName, out string arguments);
             object functionResult = ParseFunction(arguments, parentArray, currentArrayToken);
@@ -401,7 +407,7 @@ namespace JUST
             }
         }
 
-        private void EvalOperation(JProperty property, JArray parentArray, JToken currentArrayToken, ref List<string> loopProperties, ref List<JToken> tokensToAdd)
+        private void EvalOperation(JProperty property, IDictionary<string, JArray> parentArray, IDictionary<string, JToken> currentArrayToken, ref List<string> loopProperties, ref List<JToken> tokensToAdd)
         {
             ExpressionHelper.TryParseFunctionNameAndArguments(property.Name, out string functionName, out string arguments);
             object functionResult = ParseFunction(arguments, parentArray, currentArrayToken);
@@ -527,7 +533,7 @@ namespace JUST
             return result;
         }
 
-        private IEnumerable<object> TransformArray(JEnumerable<JToken> children, JArray parentArray, JToken currentArrayToken)
+        private IEnumerable<object> TransformArray(JEnumerable<JToken> children, IDictionary<string, JArray> parentArray, IDictionary<string, JToken> currentArrayToken)
         {
             var result = new List<object>();
 
@@ -594,7 +600,7 @@ namespace JUST
 
         #region ParseFunction
 
-        private object ParseFunction(string functionString, JArray array, JToken currentArrayElement)
+        private object ParseFunction(string functionString, IDictionary<string, JArray> array, IDictionary<string, JToken> currentArrayElement)
         {
             try
             {
@@ -628,19 +634,28 @@ namespace JUST
                     var parameters = listParameters.ToArray();
 
                     if (new[] { "currentvalue", "currentindex", "lastindex", "lastvalue" }.Contains(functionName))
-                        output = ReflectionHelper.Caller<T>(null, "JUST.Transformer`1", functionName, new object[] { array, currentArrayElement }, true, Context);
+                    {
+                        var alias = listParameters.Count > 0 ? listParameters[0] as string : $"loop{_loopCounter}";
+                        output = ReflectionHelper.Caller<T>(null, "JUST.Transformer`1", functionName, new object[] { array[alias], currentArrayElement[alias] }, true, Context);
+                    }
                     else if (new[] { "currentvalueatpath", "lastvalueatpath" }.Contains(functionName))
+                    {
+                        var alias = listParameters.Count > 0 ? listParameters[0] as string : $"loop{_loopCounter}";
                         output = ReflectionHelper.Caller<T>(
-                            null, 
-                            "JUST.Transformer`1", 
-                            functionName, 
-                            new [] { array, currentArrayElement }.Concat(parameters).ToArray(), 
-                            true, 
+                            null,
+                            "JUST.Transformer`1",
+                            functionName,
+                            new[] { array[alias], currentArrayElement[alias] }.Concat(parameters).ToArray(),
+                            true,
                             Context);
+                    }
                     else if (functionName == "currentproperty")
-                        output = ReflectionHelper.Caller<T>(null, "JUST.Transformer`1", functionName, 
-                            new object[] { array, currentArrayElement, Context }, 
+                    {
+                        var alias = listParameters.Count > 0 ? listParameters[0] as string : $"loop{_loopCounter}";
+                        output = ReflectionHelper.Caller<T>(null, "JUST.Transformer`1", functionName,
+                            new object[] { array[alias], currentArrayElement[alias], Context },
                             false, Context);
+                    }
                     else if (functionName == "customfunction")
                         output = CallCustomFunction(parameters);
                     else if (Context?.IsRegisteredCustomFunction(functionName) ?? false)
@@ -678,7 +693,7 @@ namespace JUST
                         var input = ((JUSTContext)parameters.Last()).Input;
                         if (currentArrayElement != null && functionName != "valueof")
                         {
-                            ((JUSTContext)parameters.Last()).Input = currentArrayElement;
+                            ((JUSTContext)parameters.Last()).Input = currentArrayElement.First().Value;
                         }
                         output = ReflectionHelper.Caller<T>(null, "JUST.Transformer`1", functionName, parameters, true, Context);
                         ((JUSTContext)parameters.Last()).Input = input;
@@ -693,7 +708,7 @@ namespace JUST
             }
         }
 
-        private object ParseArgument(JArray array, JToken currentArrayElement, string argument)
+        private object ParseArgument(IDictionary<string, JArray> array, IDictionary<string, JToken> currentArrayElement, string argument)
         {
             string trimmedArgument = argument;
 
