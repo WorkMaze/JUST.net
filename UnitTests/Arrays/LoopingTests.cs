@@ -120,5 +120,19 @@ namespace JUST.UnitTests.Arrays
 
             Assert.AreEqual("{\"sounds\":{\"cat\":\"meow\",\"dog\":\"woof\"},\"number_index\":{\"0\":\"three\",\"1\":\"two\",\"2\":\"one\"}}", result);
         }
+
+        [Test]
+        public void EmptyArrayLooping()
+        {
+            const string input = "{ \"Sex\": \"Female\", \"Colors\": [ ]}";
+            const string transformer = "{ \"Colors\": { \"#loop($.Colors)\": \"#currentvalue()\" } }";
+            var context = new JUSTContext
+            {
+                EvaluationMode = EvaluationMode.Strict
+            };
+            var result = JsonTransformer.Transform(transformer, input, context);
+
+            Assert.AreEqual("{\"Colors\":[]}", result);
+        }
     }
 }

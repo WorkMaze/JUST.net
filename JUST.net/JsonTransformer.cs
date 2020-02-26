@@ -289,16 +289,12 @@ namespace JUST
                             arrayToken = new JArray(multipleTokens);
                         }
 
-                        if (arrayToken == null)
-                        {
-                            arrayToForm = new JArray();
-                        }
-                        else
-                        {
-                            JArray array = (JArray)arrayToken;
+                        arrayToForm = new JArray();
+                        
+                        JArray array = (JArray)arrayToken;
 
-                            IEnumerator<JToken> elements = array.GetEnumerator();
-
+                        using (IEnumerator<JToken> elements = array.GetEnumerator())
+                        {
                             if (!isDictionary)
                             {
                                 while (elements.MoveNext())
@@ -332,6 +328,7 @@ namespace JUST
                                 }
                             }
                         }
+
                         if (loopProperties == null)
                             loopProperties = new List<string>();
 
@@ -437,7 +434,12 @@ namespace JUST
                     (parentToken as JObject).Remove(propertyToDelete);
                 }
             }
-            if (arrayToForm != null)
+
+            if (dictToForm != null)
+            {
+                parentToken.Replace(dictToForm);
+            }
+            else if (arrayToForm != null)
             {
                 if (parentToken.Parent != null && parentToken.Parent is JArray arr)
                 {
@@ -452,14 +454,10 @@ namespace JUST
                         tmp.Remove();
                     }
                 }
-                else
+                else if (parentToken.Parent != null)
                 {
                     parentToken.Replace(arrayToForm);
                 }
-            }
-            if (dictToForm != null)
-            {
-                parentToken.Replace(dictToForm);
             }
         }
         #endregion
