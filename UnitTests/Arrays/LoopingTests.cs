@@ -108,7 +108,7 @@ namespace JUST.UnitTests.Arrays
         [Test]
         public void FunctionAsLoopArgument()
         {
-            const string transformer = "{ \"hello\": { \"#loop(#xconcat($.NestedLoop.,Organization,.Employee))\": { \"Details\": { \"#loopwithincontext(#concat($.,Details))\": { \"CurrentCountry\": \"#currentvalueatpath($.Country)\" } } } } }";
+            const string transformer = "{ \"hello\": { \"#loop(#xconcat($.NestedLoop.,Organization,.Employee))\": [{ \"Details\": { \"#loop(#concat($.,Details))\": [{ \"CurrentCountry\": \"#currentvalueatpath($.Country)\" }] } } ]} }";
 
             var result = new JsonTransformer().Transform(transformer, ExampleInputs.NestedArrays);
 

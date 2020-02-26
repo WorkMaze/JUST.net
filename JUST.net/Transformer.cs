@@ -385,12 +385,12 @@ namespace JUST
 
         #region Constants
 
-        public static string constant_comma(string none, JUSTContext context)
+        public static string constant_comma(JUSTContext context)
         {
             return ",";
         }
 
-        public static string constant_hash(string none, JUSTContext context)
+        public static string constant_hash(JUSTContext context)
         {
             return "#";
         }

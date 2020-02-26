@@ -244,26 +244,33 @@ namespace JUST
                 jObject.Remove("#");
             }
 
-            if (loopProperties != null)
-            {
-                foreach (string propertyToDelete in loopProperties)
-                {
-                    (parentToken as JObject).Remove(propertyToDelete);
-                }
-            }
+            //if (loopProperties != null)
+            //{
+            //    foreach (string propertyToDelete in loopProperties)
+            //    {
+            //        (parentToken as JObject).Remove(propertyToDelete);
+            //    }
+            //}
             if (arrayToForm != null)
             {
-                if (parentToken.Parent != null && parentToken.Parent is JArray arr)
+                if (parentToken.Parent != null)
                 {
-                    foreach (var item in arrayToForm)
+                    if (parentToken.Parent is JArray arr)
                     {
-                        arr.Add(item);
+                        foreach (var item in arrayToForm)
+                        {
+                            arr.Add(item);
+                        }
+                        if (!parentToken.HasValues)
+                        {
+                            var tmp = parentToken;
+                            parentToken = arr;
+                            tmp.Remove();
+                        }
                     }
-                    if (!parentToken.HasValues)
+                    else
                     {
-                        var tmp = parentToken;
-                        parentToken = arr;
-                        tmp.Remove();
+                        parentToken.Parent.AddAfterSelf(arrayToForm);
                     }
                 }
                 else
@@ -283,16 +290,23 @@ namespace JUST
         {
             ExpressionHelper.TryParseFunctionNameAndArguments(property.Name, out string functionName, out string arguments);
             var args = ExpressionHelper.GetArguments(arguments);
+            var previousAlias = "root";
             var alias = args?.Length > 1 ? args[1] : $"loop{++_loopCounter}";
 
-            var token = currentArrayToken?.Any() ?? false ? currentArrayToken : 
-                new Dictionary<string, JToken> { { alias, Context.Input } };
+            if (currentArrayToken?.Any() ?? false)
+            {
+                previousAlias = currentArrayToken.Last().Key;
+            }
+            else
+            {
+                currentArrayToken = new Dictionary<string, JToken> { { previousAlias, Context.Input } };
+            }    
 
             var strArrayToken = ParseArgument(parentArray, currentArrayToken, args[0]) as string;
 
             bool isDictionary = false;
             JToken arrayToken;
-            var selectable = GetSelectableToken(token[alias], Context);
+            var selectable = GetSelectableToken(currentArrayToken[previousAlias], Context);
             try
             {
                 arrayToken = selectable.Select(strArrayToken);
@@ -326,6 +340,15 @@ namespace JUST
 
                 if (!isDictionary)
                 {
+                    if (parentArray?.Any() ?? false)
+                    {
+                        parentArray.Add(alias, array);
+                    }
+                    else
+                    {
+                        parentArray = new Dictionary<string, JArray> { { alias, array } };
+                    }
+
                     while (elements.MoveNext())
                     {
                         if (arrayToForm == null)
@@ -333,7 +356,15 @@ namespace JUST
 
                         JToken clonedToken = childToken.DeepClone();
 
-                        RecursiveEvaluate(clonedToken, new Dictionary<string, JArray> { { alias, array } }, new Dictionary<string, JToken> { { alias, elements.Current } });
+                        if (currentArrayToken.ContainsKey(alias))
+                        {
+                            currentArrayToken[alias] = elements.Current;
+                        }
+                        else
+                        {
+                            currentArrayToken.Add(alias, elements.Current);
+                        }
+                        RecursiveEvaluate(clonedToken, parentArray, currentArrayToken);
 
                         foreach (JToken replacedProperty in clonedToken.Children())
                         {
@@ -635,12 +666,12 @@ namespace JUST
 
                     if (new[] { "currentvalue", "currentindex", "lastindex", "lastvalue" }.Contains(functionName))
                     {
-                        var alias = listParameters.Count > 0 ? listParameters[0] as string : $"loop{_loopCounter}";
+                        var alias = listParameters.Count > 1 ? listParameters[0] as string : $"loop{_loopCounter}";
                         output = ReflectionHelper.Caller<T>(null, "JUST.Transformer`1", functionName, new object[] { array[alias], currentArrayElement[alias] }, true, Context);
                     }
                     else if (new[] { "currentvalueatpath", "lastvalueatpath" }.Contains(functionName))
                     {
-                        var alias = listParameters.Count > 0 ? listParameters[0] as string : $"loop{_loopCounter}";
+                        var alias = listParameters.Count > 2 ? listParameters[1] as string : $"loop{_loopCounter}";
                         output = ReflectionHelper.Caller<T>(
                             null,
                             "JUST.Transformer`1",
@@ -651,7 +682,7 @@ namespace JUST
                     }
                     else if (functionName == "currentproperty")
                     {
-                        var alias = listParameters.Count > 0 ? listParameters[0] as string : $"loop{_loopCounter}";
+                        var alias = listParameters.Count > 1 ? listParameters[0] as string : $"loop{_loopCounter}";
                         output = ReflectionHelper.Caller<T>(null, "JUST.Transformer`1", functionName,
                             new object[] { array[alias], currentArrayElement[alias], Context },
                             false, Context);
@@ -693,7 +724,7 @@ namespace JUST
                         var input = ((JUSTContext)parameters.Last()).Input;
                         if (currentArrayElement != null && functionName != "valueof")
                         {
-                            ((JUSTContext)parameters.Last()).Input = currentArrayElement.First().Value;
+                            ((JUSTContext)parameters.Last()).Input = currentArrayElement.Last().Value;
                         }
                         output = ReflectionHelper.Caller<T>(null, "JUST.Transformer`1", functionName, parameters, true, Context);
                         ((JUSTContext)parameters.Last()).Input = input;

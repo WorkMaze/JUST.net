@@ -17,6 +17,11 @@ namespace JUST
 
         internal static string[] GetArguments(string functionString)
         {
+            if (string.IsNullOrEmpty(functionString))
+            {
+                return new string[0]; 
+            }
+
             bool brackettOpen = false;
 
             List<string> arguments = null;
@@ -35,23 +40,18 @@ namespace JUST
                 if (currentChar == ')')
                     closebrackettCount++;
 
-                if (openBrackettCount == closebrackettCount)
-                    brackettOpen = false;
-                else
-                    brackettOpen = true;
+                brackettOpen = openBrackettCount != closebrackettCount;
 
                 if ((currentChar == ',') && (!brackettOpen))
                 {
                     if (arguments == null)
                         arguments = new List<string>();
-
-                    if (index != 0)
-                        arguments.Add(functionString.Substring(index + 1, i - index - 1));
-                    else
-                        arguments.Add(functionString.Substring(index, i));
+                    
+                    arguments.Add(index != 0 ?
+                        functionString.Substring(index + 1, i - index - 1) :
+                        functionString.Substring(index, i));
                     index = i;
                 }
-
             }
 
             if (index > 0)
