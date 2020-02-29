@@ -108,7 +108,7 @@ namespace JUST.UnitTests.Arrays
         [Test]
         public void FunctionAsLoopArgument()
         {
-            const string transformer = "{ \"hello\": { \"#loop(#xconcat($.NestedLoop.,Organization,.Employee))\": [{ \"Details\": { \"#loop(#concat($.,Details))\": [{ \"CurrentCountry\": \"#currentvalueatpath($.Country)\" }] } } ]} }";
+            const string transformer = "{ \"hello\": { \"#loop(#xconcat($.NestedLoop.,Organization,.Employee))\": { \"Details\": { \"#loop(#concat($.,Details))\": { \"CurrentCountry\": \"#currentvalueatpath($.Country)\" } } } } }";
 
             var result = new JsonTransformer().Transform(transformer, ExampleInputs.NestedArrays);
 
@@ -152,13 +152,51 @@ namespace JUST.UnitTests.Arrays
         }
 
         [Test]
+        public void EmptyPropertiesLooping()
+        {
+            var input = "{ \"animals\": { } }";
+            var transformer = "{ \"sounds\": { \"#loop($.animals)\": { \"#eval(#currentproperty())\": \"#currentvalueatpath($..sound)\" } } }";
+            var context = new JUSTContext
+            {
+                EvaluationMode = EvaluationMode.Strict
+            };
+            var result = new JsonTransformer(context).Transform(transformer, input);
+
+            Assert.AreEqual("{\"sounds\":{}}", result);
+        }
+
+        [Test]
+        public void NullLooping()
+        {
+            var input = "{ \"spell_numbers\": null }";
+            var transformer = "{ \"number_index\": { \"#loop($.spell_numbers)\": { \"#eval(#currentindex())\": \"#currentvalueatpath(#concat($.,#currentproperty()))\" } } }";
+            var context = new JUSTContext
+            {
+                EvaluationMode = EvaluationMode.Strict
+            };
+            var result = new JsonTransformer(context).Transform(transformer, input);
+
+            Assert.AreEqual("{\"number_index\":null}", result);
+        }
+
+        [Test]
         public void LoopingAlias()
         {
-            const string transformer = "{ \"hello\": { \"#loop($.NestedLoop.Organization.Employee, employee)\": { \"Details\": { \"#loop($.Details, details)\": { \"CurrentCountry\": \"#currentvalueatpath($.Country)\", \"OuterName\": \"#currentvalueatpath(employee:$.Name)\" } } } } }";
+            const string transformer = "{ \"hello\": { \"#loop($.NestedLoop.Organization.Employee, employee)\": { \"Details\": { \"#loop($.Details, details)\": { \"CurrentCountry\": \"#currentvalueatpath($.Country, details)\", \"OuterName\": \"#currentvalueatpath($.Name, employee)\" } } } } }";
 
             var result = new JsonTransformer().Transform(transformer, ExampleInputs.NestedArrays);
 
-            Assert.AreEqual("{\"hello\":[{\"Details\":[{\"CurrentCountry\":\"Iceland\"}]},{\"Details\":[{\"CurrentCountry\":\"Denmark\",\"OuterName\":\"E2\"}]}]}", result);
+            Assert.AreEqual("{\"hello\":[{\"Details\":[{\"CurrentCountry\":\"Iceland\",\"OuterName\":\"E2\"}]},{\"Details\":[{\"CurrentCountry\":\"Denmark\",\"OuterName\":\"E1\"}]}]}", result);
+        }
+
+        [Test]
+        public void LoopingMixedAlias()
+        {
+            const string transformer = "{ \"hello\": { \"#loop($.NestedLoop.Organization.Employee, employee)\": { \"Details\": { \"#loop($.Details)\": { \"CurrentCountry\": \"#currentvalueatpath($.Country)\", \"OuterName\": \"#currentvalueatpath($.Name, employee)\" } } } } }";
+
+            var result = new JsonTransformer().Transform(transformer, ExampleInputs.NestedArrays);
+
+            Assert.AreEqual("{\"hello\":[{\"Details\":[{\"CurrentCountry\":\"Iceland\",\"OuterName\":\"E2\"}]},{\"Details\":[{\"CurrentCountry\":\"Denmark\",\"OuterName\":\"E1\"}]}]}", result);
         }
     }
 }
