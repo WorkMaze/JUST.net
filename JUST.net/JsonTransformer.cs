@@ -246,10 +246,22 @@ namespace JUST
             {
                 foreach (string propertyToDelete in loopProperties)
                 {
-                    (parentToken as JObject).Remove(propertyToDelete);
+                    if (dictToForm == null && arrayToForm == null && parentToken.Count() <= 1)
+                    {
+                        parentToken.Replace(JValue.CreateNull());
+                    }
+                    else
+                    {
+                        (parentToken as JObject).Remove(propertyToDelete);
+                    }
                 }
             }
-            if (arrayToForm != null)
+
+            if (dictToForm != null)
+            {
+                parentToken.Replace(dictToForm);
+            }
+            else if (arrayToForm != null)
             {
                 if (parentToken.Parent != null && parentToken.Parent is JArray arr)
                 {
@@ -264,14 +276,10 @@ namespace JUST
                         tmp.Remove();
                     }
                 }
-                else
+                else if (parentToken.Parent != null)
                 {
                     parentToken.Replace(arrayToForm);
                 }
-            }
-            if (dictToForm != null)
-            {
-                parentToken.Replace(dictToForm);
             }
 
             return parentToken;
@@ -308,49 +316,42 @@ namespace JUST
                 arrayToken = new JArray(multipleTokens);
             }
 
-            if (arrayToken == null)
-            {
-                arrayToForm = new JArray();
-            }
-            else
-            {
-                JArray array = (JArray)arrayToken;
+            JArray array = arrayToken as JArray;
 
-                IEnumerator<JToken> elements = array.GetEnumerator();
-
-                if (!isDictionary)
+            if (array != null)
+            {
+                using (IEnumerator<JToken> elements = array.GetEnumerator())
                 {
-                    while (elements.MoveNext())
+                    arrayToForm = new JArray();
+                    if (!isDictionary)
                     {
-                        if (arrayToForm == null)
-                            arrayToForm = new JArray();
-
-                        JToken clonedToken = childToken.DeepClone();
-
-                        RecursiveEvaluate(clonedToken, array, elements.Current);
-
-                        foreach (JToken replacedProperty in clonedToken.Children())
+                        while (elements.MoveNext())
                         {
-                            arrayToForm.Add(replacedProperty);
+                            JToken clonedToken = childToken.DeepClone();
+                            RecursiveEvaluate(clonedToken, array, elements.Current);
+
+                            foreach (JToken replacedProperty in clonedToken.Children())
+                            {
+                                arrayToForm.Add(replacedProperty.Type != JTokenType.Null ? replacedProperty : new JObject());
+                            }
                         }
                     }
-                }
-                else
-                {
-                    while (elements.MoveNext())
+                    else
                     {
-                        if (dictToForm == null)
-                            dictToForm = new JObject();
-
-                        JToken clonedToken = childToken.DeepClone();
-                        RecursiveEvaluate(clonedToken, array, elements.Current);
-                        foreach (JToken replacedProperty in clonedToken.Children().Select(t => t.First))
+                        dictToForm = new JObject();
+                        while (elements.MoveNext())
                         {
-                            dictToForm.Add(replacedProperty);
+                            JToken clonedToken = childToken.DeepClone();
+                            RecursiveEvaluate(clonedToken, array, elements.Current);
+                            foreach (JToken replacedProperty in clonedToken.Children().Select(t => t.First))
+                            {
+                                dictToForm.Add(replacedProperty);
+                            }
                         }
                     }
                 }
             }
+
             if (loopProperties == null)
                 loopProperties = new List<string>();
 
