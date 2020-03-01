@@ -6,13 +6,23 @@ namespace JUST.UnitTests.Arrays
     public class LoopingTests
     {
         [Test]
-        public void CurrentValue()
+        public void CurrentValuePrimitive()
         {
             const string transformer = "{ \"iteration\": { \"#loop($.numbers)\": { \"current_value\": \"#currentvalue()\" } } }";
 
             var result = new JsonTransformer().Transform(transformer, ExampleInputs.NumbersArray);
 
             Assert.AreEqual("{\"iteration\":[{\"current_value\":1},{\"current_value\":2},{\"current_value\":3},{\"current_value\":4},{\"current_value\":5}]}", result);
+        }
+
+        [Test]
+        public void CurrentValueObject()
+        {
+            const string transformer = "{ \"iteration\": { \"#loop($.arrayobjects)\": { \"current_value\": \"#currentvalue()\" } } }";
+
+            var result = new JsonTransformer().Transform(transformer, ExampleInputs.ObjectArray);
+
+            Assert.AreEqual("{\"iteration\":[{\"current_value\":{\"country\":{\"name\":\"Norway\",\"language\":\"norsk\"}}},{\"current_value\":{\"country\":{\"name\":\"UK\",\"language\":\"english\"}}},{\"current_value\":{\"country\":{\"name\":\"Sweden\",\"language\":\"swedish\"}}}]}", result);
         }
 
         [Test]
@@ -36,7 +46,7 @@ namespace JUST.UnitTests.Arrays
         }
 
         [Test]
-        public void LastValue()
+        public void LastValuePrimitive()
         {
             const string transformer = "{ \"iteration\": { \"#loop($.numbers)\": { \"last_value\": \"#lastvalue()\" } } }";
 
@@ -46,7 +56,17 @@ namespace JUST.UnitTests.Arrays
         }
 
         [Test]
-        public void CurrentValueAtPath()
+        public void LastValueObject()
+        {
+            const string transformer = "{ \"iteration\": { \"#loop($.arrayobjects)\": { \"last_value\": \"#lastvalue()\" } } }";
+
+            var result = new JsonTransformer().Transform(transformer, ExampleInputs.ObjectArray);
+
+            Assert.AreEqual("{\"iteration\":[{\"last_value\":{\"country\":{\"name\":\"Sweden\",\"language\":\"swedish\"}}},{\"last_value\":{\"country\":{\"name\":\"Sweden\",\"language\":\"swedish\"}}},{\"last_value\":{\"country\":{\"name\":\"Sweden\",\"language\":\"swedish\"}}}]}", result);
+        }
+
+        [Test]
+        public void CurrentValueAtPathPrimitive()
         {
             const string transformer = "{ \"iteration\": { \"#loop($.arrayobjects)\": { \"current_value_at_path\": \"#currentvalueatpath($.country.name)\" } } }";
 
@@ -56,13 +76,33 @@ namespace JUST.UnitTests.Arrays
         }
 
         [Test]
-        public void LastValueAtPath()
+        public void CurrentValueAtPathObject()
+        {
+            const string transformer = "{ \"iteration\": { \"#loop($.arrayobjects)\": { \"current_value_at_path\": \"#currentvalueatpath($.country)\" } } }";
+
+            var result = new JsonTransformer().Transform(transformer, ExampleInputs.ObjectArray);
+
+            Assert.AreEqual("{\"iteration\":[{\"current_value_at_path\":{\"name\":\"Norway\",\"language\":\"norsk\"}},{\"current_value_at_path\":{\"name\":\"UK\",\"language\":\"english\"}},{\"current_value_at_path\":{\"name\":\"Sweden\",\"language\":\"swedish\"}}]}", result);
+        }
+
+        [Test]
+        public void LastValueAtPathPrimitive()
         {
             const string transformer = "{ \"iteration\": { \"#loop($.arrayobjects)\": { \"last_value_at_path\": \"#lastvalueatpath($.country.language)\" } } }";
 
             var result = new JsonTransformer().Transform(transformer, ExampleInputs.ObjectArray);
 
             Assert.AreEqual("{\"iteration\":[{\"last_value_at_path\":\"swedish\"},{\"last_value_at_path\":\"swedish\"},{\"last_value_at_path\":\"swedish\"}]}", result);
+        }
+
+        [Test]
+        public void LastValueAtPathObject()
+        {
+            const string transformer = "{ \"iteration\": { \"#loop($.arrayobjects)\": { \"last_value_at_path\": \"#lastvalueatpath($.country)\" } } }";
+
+            var result = new JsonTransformer().Transform(transformer, ExampleInputs.ObjectArray);
+
+            Assert.AreEqual("{\"iteration\":[{\"last_value_at_path\":{\"name\":\"Sweden\",\"language\":\"swedish\"}},{\"last_value_at_path\":{\"name\":\"Sweden\",\"language\":\"swedish\"}},{\"last_value_at_path\":{\"name\":\"Sweden\",\"language\":\"swedish\"}}]}", result);
         }
 
         [Test]
