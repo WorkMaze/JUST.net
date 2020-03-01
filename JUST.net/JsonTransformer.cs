@@ -747,8 +747,8 @@ namespace JUST
             string alias;
             if (listParameters.Count > index)
             {
-                alias = (listParameters[1] as string).Trim();
-                listParameters.RemoveAt(1);
+                alias = (listParameters[index - 1] as string).Trim();
+                listParameters.RemoveAt(index - 1);
             }
             else
             {

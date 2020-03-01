@@ -182,15 +182,15 @@ namespace JUST.UnitTests.Arrays
         [Test]
         public void LoopingAlias()
         {
-            const string transformer = "{ \"hello\": { \"#loop($.NestedLoop.Organization.Employee, employee)\": { \"Details\": { \"#loop($.Details, details)\": { \"CurrentCountry\": \"#currentvalueatpath($.Country, details)\", \"OuterName\": \"#currentvalueatpath($.Name, employee)\" } } } } }";
+            const string transformer = "{ \"hello\": { \"#loop($.NestedLoop.Organization.Employee, employee)\": { \"Details\": { \"#loop($.Details, details)\": { \"CurrentCountry\": \"#currentvalueatpath($.Country, details)\", \"OuterName\": \"#currentvalueatpath($.Name, employee)\", \"FirstLevel\": { \"#loop($.Roles, roles)\": { \"Employee\": \"#currentvalue(employee)\", \"Job\": \"#currentvalueatpath($.Job, roles)\" } } } } } } }";
 
             var result = new JsonTransformer().Transform(transformer, ExampleInputs.NestedArrays);
 
-            Assert.AreEqual("{\"hello\":[{\"Details\":[{\"CurrentCountry\":\"Iceland\",\"OuterName\":\"E2\"}]},{\"Details\":[{\"CurrentCountry\":\"Denmark\",\"OuterName\":\"E1\"}]}]}", result);
+            Assert.AreEqual("{\"hello\":[{\"Details\":[{\"CurrentCountry\":\"Iceland\",\"OuterName\":\"E2\",\"FirstLevel\":[{\"Employee\":{\"Name\":\"E2\",\"Details\":[{\"Country\":\"Iceland\",\"Age\":\"30\",\"Name\":\"Sven\",\"Language\":\"Icelandic\",\"Roles\":[{\"Job\":\"Janitor\",\"Salary\":100},{\"Job\":\"Security\",\"Salary\":200}]}]},\"Job\":\"Janitor\"},{\"Employee\":{\"Name\":\"E2\",\"Details\":[{\"Country\":\"Iceland\",\"Age\":\"30\",\"Name\":\"Sven\",\"Language\":\"Icelandic\",\"Roles\":[{\"Job\":\"Janitor\",\"Salary\":100},{\"Job\":\"Security\",\"Salary\":200}]}]},\"Job\":\"Security\"}]}]},{\"Details\":[{\"CurrentCountry\":\"Denmark\",\"OuterName\":\"E1\",\"FirstLevel\":[{\"Employee\":{\"Name\":\"E1\",\"Details\":[{\"Country\":\"Denmark\",\"Age\":\"30\",\"Name\":\"Svein\",\"Language\":\"Danish\",\"Roles\":[{\"Job\":\"Manager\",\"Salary\":300},{\"Job\":\"Developer\",\"Salary\":400}]}]},\"Job\":\"Manager\"},{\"Employee\":{\"Name\":\"E1\",\"Details\":[{\"Country\":\"Denmark\",\"Age\":\"30\",\"Name\":\"Svein\",\"Language\":\"Danish\",\"Roles\":[{\"Job\":\"Manager\",\"Salary\":300},{\"Job\":\"Developer\",\"Salary\":400}]}]},\"Job\":\"Developer\"}]}]}]}", result);
         }
 
         [Test]
-        public void LoopingMixedAlias()
+        public void MixedLoopingAlias()
         {
             const string transformer = "{ \"hello\": { \"#loop($.NestedLoop.Organization.Employee, employee)\": { \"Details\": { \"#loop($.Details)\": { \"CurrentCountry\": \"#currentvalueatpath($.Country)\", \"OuterName\": \"#currentvalueatpath($.Name, employee)\" } } } } }";
 
