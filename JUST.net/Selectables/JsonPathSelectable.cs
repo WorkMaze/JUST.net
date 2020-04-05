@@ -1,5 +1,5 @@
-﻿using System.Collections.Generic;
-using Newtonsoft.Json.Linq;
+﻿using Newtonsoft.Json.Linq;
+using System.Linq;
 
 namespace JUST.net.Selectables
 {
@@ -10,12 +10,15 @@ namespace JUST.net.Selectables
 
         public JToken Select(string path)
         {
-            return Token.SelectToken(path);
-        }
-
-        public IEnumerable<JToken> SelectMultiple(string path)
-        {
-            return Token.SelectTokens(path);
+            try
+            {
+                return Token.SelectToken(path);
+            }
+            catch
+            {
+                var result = Token.SelectTokens(path);
+                return new JArray(result.ToArray());
+            }
         }
     }
 }

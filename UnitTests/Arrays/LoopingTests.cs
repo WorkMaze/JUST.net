@@ -220,6 +220,34 @@ namespace JUST.UnitTests.Arrays
         }
 
         [Test]
+        public void SingleResultFilter()
+        {
+            var input = "{\"array\":[{\"resource\":\"Location\",\"number\":\"3\" },{\"resource\":\"Organization\",\"number\":\"10\"}] }";
+            var transformer = "{\"result\":{\"#loop($.array[?(@resource=='Location')])\":{\"existsLocation\":true}}}";
+            var context = new JUSTContext
+            {
+                EvaluationMode = EvaluationMode.Strict
+            };
+            var result = new JsonTransformer(context).Transform(transformer, input);
+
+            Assert.AreEqual("{\"result\":[{\"existsLocation\":true}]}", result);
+        }
+
+        [Test]
+        public void SingleIndexReference()
+        {
+            var input = "{\"array\":[{\"resource\":\"Location\",\"number\":\"3\" },{\"resource\":\"Organization\",\"number\":\"10\"}] }";
+            var transformer = "{\"result\": {\"#loop($.array[1])\": {\"number\":\"#currentvalueatpath($.number)\"} }}";
+            var context = new JUSTContext
+            {
+                EvaluationMode = EvaluationMode.Strict
+            };
+            var result = new JsonTransformer(context).Transform(transformer, input);
+
+            Assert.AreEqual("{\"result\":[{\"number\":\"10\"}]}", result);
+        }
+
+        [Test]
         public void LoopingAlias()
         {
             const string transformer = "{ \"hello\": { \"#loop($.NestedLoop.Organization.Employee, employee)\": { \"Details\": { \"#loop($.Details, details)\": { \"CurrentCountry\": \"#currentvalueatpath($.Country, details)\", \"OuterName\": \"#currentvalueatpath($.Name, employee)\", \"FirstLevel\": { \"#loop($.Roles, roles)\": { \"Employee\": \"#currentvalue(employee)\", \"Job\": \"#currentvalueatpath($.Job, roles)\" } } } } } } }";
