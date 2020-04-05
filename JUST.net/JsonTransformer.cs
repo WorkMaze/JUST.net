@@ -271,6 +271,11 @@ namespace JUST
                         try
                         {
                             arrayToken = token.SelectToken(strArrayToken);
+                            if (Regex.IsMatch(strArrayToken ?? string.Empty, "\\[.+\\]$") && arrayToken.Type != JTokenType.Array)
+                            {
+                                arrayToken = new JArray(arrayToken);
+                            }
+
                             if (arrayToken is IDictionary<string, JToken> dict) //JObject is a dictionary
                             {
                                 isDictionary = true;
@@ -560,7 +565,7 @@ namespace JUST
         {
             try
             {
-                object output = null;
+                object output;
 
                 string functionName, argumentString;
                 if (!ExpressionHelper.TryParseFunctionNameAndArguments(functionString, out functionName, out argumentString))
