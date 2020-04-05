@@ -294,41 +294,37 @@ namespace JUST
                             arrayToken = new JArray(multipleTokens);
                         }
 
-                        arrayToForm = new JArray();
-                        
-                        JArray array = (JArray)arrayToken;
-
-                        using (IEnumerator<JToken> elements = array.GetEnumerator())
+                        JArray array = arrayToken as JArray;
+                        if (array != null)
                         {
-                            if (!isDictionary)
+                            using (IEnumerator<JToken> elements = array.GetEnumerator())
                             {
-                                while (elements.MoveNext())
+                                arrayToForm = new JArray();
+                                if (!isDictionary)
                                 {
-                                    if (arrayToForm == null)
-                                        arrayToForm = new JArray();
-
-                                    JToken clonedToken = childToken.DeepClone();
-
-                                    RecursiveEvaluate(clonedToken, inputJson, array, elements.Current, localContext);
-
-                                    foreach (JToken replacedProperty in clonedToken.Children())
+                                    while (elements.MoveNext())
                                     {
-                                        arrayToForm.Add(replacedProperty);
+                                        JToken clonedToken = childToken.DeepClone();
+
+                                        RecursiveEvaluate(clonedToken, inputJson, array, elements.Current, localContext);
+
+                                        foreach (JToken replacedProperty in clonedToken.Children())
+                                        {
+                                            arrayToForm.Add(replacedProperty);
+                                        }
                                     }
                                 }
-                            }
-                            else
-                            {
-                                while (elements.MoveNext())
+                                else
                                 {
-                                    if (dictToForm == null)
-                                        dictToForm = new JObject();
-
-                                    JToken clonedToken = childToken.DeepClone();
-                                    RecursiveEvaluate(clonedToken, inputJson, array, elements.Current, localContext);
-                                    foreach (JToken replacedProperty in clonedToken.Children().Select(t => t.First))
+                                    dictToForm = new JObject();
+                                    while (elements.MoveNext())
                                     {
-                                        dictToForm.Add(replacedProperty);
+                                        JToken clonedToken = childToken.DeepClone();
+                                        RecursiveEvaluate(clonedToken, inputJson, array, elements.Current, localContext);
+                                        foreach (JToken replacedProperty in clonedToken.Children().Select(t => t.First))
+                                        {
+                                            dictToForm.Add(replacedProperty);
+                                        }
                                     }
                                 }
                             }
@@ -436,7 +432,14 @@ namespace JUST
             {
                 foreach (string propertyToDelete in loopProperties)
                 {
-                    (parentToken as JObject).Remove(propertyToDelete);
+                    if (dictToForm == null && arrayToForm == null && parentToken.Count() <= 1)
+                    {
+                        parentToken.Replace(JValue.CreateNull());
+                    }
+                    else
+                    {
+                        (parentToken as JObject).Remove(propertyToDelete);
+                    }
                 }
             }
 
@@ -480,15 +483,7 @@ namespace JUST
                 {
                     try
                     {
-                        //JToken newToken = JToken.FromObject(newValue);
-                        if (newValue is IEnumerable<object> newArray)
-                        {
-                            result = new JArray(newArray);
-                        }
-                        else
-                        {
-                            result = new JValue(newValue);
-                        }
+                        result = newValue is IEnumerable<object> newArray ? (JToken)new JArray(newArray) : new JValue(newValue);
                     }
                     catch
                     {
@@ -496,7 +491,6 @@ namespace JUST
                         {
                             throw;
                         }
-
                         if (IsFallbackToDefault(localContext))
                         {
                             result = JValue.CreateNull();

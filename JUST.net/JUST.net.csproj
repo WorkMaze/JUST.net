@@ -11,11 +11,11 @@ This will repace the JUST and JUST.NETCore packages.</Description>
     <RepositoryUrl>https://github.com/WorkMaze/JUST.net</RepositoryUrl>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
-    <PackageReleaseNotes>Empty array loop returns empty array https://github.com/WorkMaze/JUST.net/pull/90
+    <PackageReleaseNotes>Looping over empty object or null value https://github.com/WorkMaze/JUST.net/pull/91
     </PackageReleaseNotes>
-    <Version>3.0.4</Version>
-    <AssemblyVersion>3.0.4.0</AssemblyVersion>
-    <FileVersion>3.0.4.0</FileVersion>
+    <Version>3.0.5</Version>
+    <AssemblyVersion>3.0.5.0</AssemblyVersion>
+    <FileVersion>3.0.5.0</FileVersion>
   </PropertyGroup>
 
   <ItemGroup>

@@ -136,6 +136,32 @@ namespace JUST.UnitTests.Arrays
         }
 
         [Test]
+        public void NullLooping()
+        {
+            var input = "{ \"spell_numbers\": null }";
+            var transformer = "{ \"number_index\": { \"#loop($.spell_numbers)\": { \"#eval(#currentindex())\": \"#currentvalueatpath(#concat($.,#currentproperty()))\" } } }";
+            var context = new JUSTContext
+            {
+                EvaluationMode = EvaluationMode.Strict
+            };
+            var result = JsonTransformer.Transform(transformer, input, context);
+            Assert.AreEqual("{\"number_index\":null}", result);
+        }
+
+        [Test]
+        public void EmptyPropertiesLooping()
+        {
+            var input = "{ \"animals\": { } }";
+            var transformer = "{ \"sounds\": { \"#loop($.animals)\": { \"#eval(#currentproperty())\": \"#currentvalueatpath($..sound)\" } } }";
+            var context = new JUSTContext
+            {
+                EvaluationMode = EvaluationMode.Strict
+            };
+            var result = JsonTransformer.Transform(transformer, input, context);
+            Assert.AreEqual("{\"sounds\":{}}", result);
+        }
+        
+        [Test]
         public void SingleResultFilter()
         {
             var input = "{\"array\":[{\"resource\":\"Location\",\"number\":\"3\" },{\"resource\":\"Organization\",\"number\":\"10\"}] }";
@@ -145,7 +171,6 @@ namespace JUST.UnitTests.Arrays
                 EvaluationMode = EvaluationMode.Strict
             };
             var result = JsonTransformer.Transform(transformer, input, context);
-
             Assert.AreEqual("{\"result\":[{\"existsLocation\":true}]}", result);
         }
 
@@ -159,7 +184,6 @@ namespace JUST.UnitTests.Arrays
                 EvaluationMode = EvaluationMode.Strict
             };
             var result = JsonTransformer.Transform(transformer, input, context);
-
             Assert.AreEqual("{\"result\":[{\"number\":\"10\"}]}", result);
         }
     }
