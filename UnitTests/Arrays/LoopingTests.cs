@@ -218,5 +218,33 @@ namespace JUST.UnitTests.Arrays
 
             Assert.AreEqual("{\"number_index\":null}", result);
         }
+
+        [Test]
+        public void SingleResultFilter()
+        {
+            var input = "{\"array\":[{\"resource\":\"Location\",\"number\":\"3\" },{\"resource\":\"Organization\",\"number\":\"10\"}] }";
+            var transformer = "{\"result\":{\"#loop($.array[?(@resource=='Location')])\":{\"existsLocation\":true}}}";
+            var context = new JUSTContext
+            {
+                EvaluationMode = EvaluationMode.Strict
+            };
+            var result = new JsonTransformer(context).Transform(transformer, input);
+
+            Assert.AreEqual("{\"result\":[{\"existsLocation\":true}]}", result);
+        }
+
+        [Test]
+        public void SingleIndexReference()
+        {
+            var input = "{\"array\":[{\"resource\":\"Location\",\"number\":\"3\" },{\"resource\":\"Organization\",\"number\":\"10\"}] }";
+            var transformer = "{\"result\": {\"#loop($.array[1])\": {\"number\":\"#currentvalueatpath($.number)\"} }}";
+            var context = new JUSTContext
+            {
+                EvaluationMode = EvaluationMode.Strict
+            };
+            var result = new JsonTransformer(context).Transform(transformer, input);
+
+            Assert.AreEqual("{\"result\":[{\"number\":\"10\"}]}", result);
+        }
     }
 }

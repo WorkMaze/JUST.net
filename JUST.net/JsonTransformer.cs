@@ -295,25 +295,24 @@ namespace JUST
             bool isDictionary = false;
             JToken arrayToken;
             var selectable = GetSelectableToken(token, Context);
-            try
+            arrayToken = selectable.Select(strArrayToken);
+            
+            //workaround: result should be an array if path ends up with array filter
+            if (typeof(T) == typeof(JsonPathSelectable) && Regex.IsMatch(strArrayToken ?? string.Empty, "\\[.+\\]$") && arrayToken.Type != JTokenType.Array)
             {
-                arrayToken = selectable.Select(strArrayToken);
-                if (arrayToken is IDictionary<string, JToken> dict) //JObject is a dictionary
-                {
-                    isDictionary = true;
-                    JArray arr = new JArray();
-                    foreach (var item in dict)
-                    {
-                        arr.Add(new JObject { { item.Key, item.Value } });
-                    }
-
-                    arrayToken = arr;
-                }
+                arrayToken = new JArray(arrayToken);
             }
-            catch
+
+            if (arrayToken is IDictionary<string, JToken> dict) //JObject is a dictionary
             {
-                var multipleTokens = selectable.SelectMultiple(strArrayToken);
-                arrayToken = new JArray(multipleTokens);
+                isDictionary = true;
+                JArray arr = new JArray();
+                foreach (var item in dict)
+                {
+                    arr.Add(new JObject { { item.Key, item.Value } });
+                }
+
+                arrayToken = arr;
             }
 
             JArray array = arrayToken as JArray;

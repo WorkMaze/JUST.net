@@ -9,6 +9,5 @@ namespace JUST.net.Selectables
         JToken Token { get; set; }
 
         JToken Select(string path);
-        IEnumerable<JToken> SelectMultiple(string path);
     }
 }
