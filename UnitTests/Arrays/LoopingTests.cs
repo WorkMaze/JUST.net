@@ -162,6 +162,16 @@ namespace JUST.UnitTests.Arrays
 
             Assert.AreEqual("{\"number_index\":null}", result);
         }
-        
+
+        [Test]
+        public void BulkFunctions()
+        {
+            const string input = "{\"score_PCS\": [{\"data\": \"2020-04-08T10:20:21.335+00:00\",\"score\": [{\"score_type\": \"pcs_tot\",\"score_value\": 0.5},{\"score_type\": \"pcs_help\",\"score_value\": 0.46},{\"score_type\": \"pcs_rum\",\"score_value\": 0.5},{\"score_type\": \"pcs_mag\",\"score_value\": 0.63}]},{\"data\": \"2020-04-09T10:22:03.267+00:00\",\"score\": [{\"score_type\": \"pcs_tot\",\"score_value\": 0.38},{\"score_type\": \"pcs_help\",\"score_value\": 0.42},{\"score_type\": \"pcs_rum\",\"score_value\": 0.35},{\"score_type\": \"pcs_mag\",\"score_value\": 0.38}]},{\"data\": \"2020-04-09T10:23:05.748+00:00\",\"score\": [{\"score_type\": \"pcs_tot\",\"score_value\": 0.44},{\"score_type\": \"pcs_help\",\"score_value\": 0.38},{\"score_type\": \"pcs_rum\",\"score_value\": 0.5},{\"score_type\": \"pcs_mag\",\"score_value\": 0.5}]}]}";
+            const string transformer = "{ \"score_pcs_tot\": { \"#loop($.score_PCS)\": { \"#\": [ \"#copy($.score[?(@.score_type=='pcs_tot')])\" ], \"score_data\": \"#currentvalueatpath($.data)\" } }, \"score_pcs_help\": { \"#loop($.score_PCS)\": { \"#\": [ \"#copy($.score[?(@.score_type=='pcs_help')])\", \"#replace($.score_type, #currentvalueatpath($.score[?(@.score_type=='pcs_rum')]))\" ], \"score_data\": \"#currentvalueatpath($.data)\" } }, \"score_pcs_rum\": { \"#loop($.score_PCS)\": { \"#\": [ \"#copy($.score[?(@.score_type=='pcs_rum')])\", \"#replace($.score_type, #currentvalueatpath($.score[?(@.score_type=='pcs_help')].score_type))\" ], \"score_data\": \"#currentvalueatpath($.data)\" } }, \"score_pcs_mag\": { \"#loop($.score_PCS)\": { \"#\": [ \"#copy($.score[?(@.score_type=='pcs_mag')])\", \"#delete($.score_type)\" ], \"score_data\": \"#currentvalueatpath($.data)\" } } }";
+
+            var result = JsonTransformer.Transform(transformer, input);
+
+            Assert.AreEqual("{\"score_pcs_tot\":[{\"score_data\":\"2020-04-08T10:20:21.335+00:00\",\"score_type\":\"pcs_tot\",\"score_value\":0.5},{\"score_data\":\"2020-04-09T10:22:03.267+00:00\",\"score_type\":\"pcs_tot\",\"score_value\":0.38},{\"score_data\":\"2020-04-09T10:23:05.748+00:00\",\"score_type\":\"pcs_tot\",\"score_value\":0.44}],\"score_pcs_help\":[{\"score_data\":\"2020-04-08T10:20:21.335+00:00\",\"score_type\":{\"score_type\":\"pcs_rum\",\"score_value\":0.5},\"score_value\":0.46},{\"score_data\":\"2020-04-09T10:22:03.267+00:00\",\"score_type\":{\"score_type\":\"pcs_rum\",\"score_value\":0.35},\"score_value\":0.42},{\"score_data\":\"2020-04-09T10:23:05.748+00:00\",\"score_type\":{\"score_type\":\"pcs_rum\",\"score_value\":0.5},\"score_value\":0.38}],\"score_pcs_rum\":[{\"score_data\":\"2020-04-08T10:20:21.335+00:00\",\"score_type\":\"pcs_help\",\"score_value\":0.5},{\"score_data\":\"2020-04-09T10:22:03.267+00:00\",\"score_type\":\"pcs_help\",\"score_value\":0.35},{\"score_data\":\"2020-04-09T10:23:05.748+00:00\",\"score_type\":\"pcs_help\",\"score_value\":0.5}],\"score_pcs_mag\":[{\"score_data\":\"2020-04-08T10:20:21.335+00:00\",\"score_value\":0.63},{\"score_data\":\"2020-04-09T10:22:03.267+00:00\",\"score_value\":0.38},{\"score_data\":\"2020-04-09T10:23:05.748+00:00\",\"score_value\":0.5}]}", result);
+        }
     }
 }
