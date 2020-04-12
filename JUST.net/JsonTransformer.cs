@@ -113,6 +113,7 @@ namespace JUST
             List<JToken> tokensToAdd = null;
 
             bool isLoop = false;
+            bool isBulk = false;
 
             foreach (JToken childToken in tokens)
             {
@@ -129,7 +130,8 @@ namespace JUST
 
                     if (property.Name == "#" && property.Value.Type == JTokenType.Array && property.Value is JArray values)
                     {
-                        BulkOperations(values.Children(), ref selectedTokens, ref tokensToReplace, ref tokensToDelete);
+                        BulkOperations(values.Children(), parentArray, currentArrayToken, ref selectedTokens, ref tokensToReplace, ref tokensToDelete);
+                        isBulk = true;
                     }
                     else if (property.Name.Contains("#eval"))
                     {
@@ -159,8 +161,10 @@ namespace JUST
                     childToken.Replace(GetToken(newValue));
                 }
 
-                if (!isLoop)
+                if (!isLoop && !isBulk)
+                {
                     RecursiveEvaluate(childToken, parentArray, currentArrayToken);
+                }
             }
 
             parentToken = PostOperationsBuildUp(parentToken, selectedTokens, tokensToReplace, tokensToDelete, loopProperties, arrayToForm, dictToForm, tokenToForm, tokensToAdd);
@@ -190,26 +194,8 @@ namespace JUST
             {
                 foreach (KeyValuePair<string, JToken> tokenToReplace in tokensToReplace)
                 {
-                    JToken selectedToken = GetSelectableToken(parentToken as JObject, Context).Select(tokenToReplace.Key);
-
-                    if (selectedToken != null && selectedToken is JObject)
-                    {
-                        JObject selectedObject = selectedToken as JObject;
-                        selectedObject.RemoveAll();
-
-                        JEnumerable<JToken> copyChildren = tokenToReplace.Value.Children();
-
-                        foreach (JToken copyChild in copyChildren)
-                        {
-                            JProperty property = copyChild as JProperty;
-                            selectedObject.Add(property.Name, property.Value);
-                        }
-                    }
-                    if (selectedToken != null && selectedToken is JValue)
-                    {
-                        JValue selectedObject = selectedToken as JValue;
-                        selectedObject.Value = tokenToReplace.Value.ToString();
-                    }
+                    JToken selectedToken = (parentToken as JObject).SelectToken(tokenToReplace.Key);
+                    selectedToken.Replace(tokenToReplace.Value);
                 }
             }
 
@@ -469,7 +455,7 @@ namespace JUST
             tokensToAdd.Add(clonedProperty);
         }
 
-        private void BulkOperations(JEnumerable<JToken> arrayValues, ref List<JToken> selectedTokens, ref Dictionary<string, JToken> tokensToReplace, ref List<JToken> tokensToDelete)
+        private void BulkOperations(JEnumerable<JToken> arrayValues, IDictionary<string, JArray> parentArray, IDictionary<string, JToken> currentArrayToken, ref List<JToken> selectedTokens, ref Dictionary<string, JToken> tokensToReplace, ref List<JToken> tokensToDelete)
         {
             foreach (JToken arrayValue in arrayValues)
             {
@@ -481,15 +467,14 @@ namespace JUST
                     {
                         if (selectedTokens == null)
                             selectedTokens = new List<JToken>();
-
-                        selectedTokens.Add(Copy(arguments));
+                        selectedTokens.Add(Copy(arguments, parentArray, currentArrayToken));
                     }
                     else if (functionName == "replace")
                     {
                         if (tokensToReplace == null)
                             tokensToReplace = new Dictionary<string, JToken>();
 
-                        var replaceResult = Replace(arguments);
+                        var replaceResult = Replace(arguments, parentArray, currentArrayToken);
                         tokensToReplace.Add(replaceResult.Key, replaceResult.Value);
                     }
                     else if (functionName == "delete")
@@ -497,7 +482,7 @@ namespace JUST
                         if (tokensToDelete == null)
                             tokensToDelete = new List<JToken>();
 
-                        tokensToDelete.Add(Delete(arguments));
+                        tokensToDelete.Add(Delete(arguments, parentArray, currentArrayToken));
                     }
                 }
             }
@@ -588,45 +573,56 @@ namespace JUST
         }
 
         #region Copy
-        private JToken Copy(string argument)
+        private JToken Copy(string arguments, IDictionary<string, JArray> parentArray, IDictionary<string, JToken> currentArrayElement)
         {
-            if (!(ParseArgument(null, null, argument) is string path))
+            string[] argumentArr = ExpressionHelper.GetArguments(arguments);
+            string path = argumentArr[0];
+            if (!(ParseArgument(parentArray, currentArrayElement, path) is string jsonPath))
             {
-                throw new ArgumentException($"Invalid path for #copy: '{argument}' resolved to null");
+                throw new ArgumentException($"Invalid path for #copy: '{argumentArr[0]}' resolved to null!");
             }
-            JToken selectedToken = GetSelectableToken(Context.Input,Context).Select(path);
+
+            string alias = null;
+            if (argumentArr.Length > 1)
+            {
+                alias = ParseArgument(parentArray, currentArrayElement, argumentArr[1]) as string;
+                if (!(currentArrayElement?.ContainsKey(alias) ?? false))
+                {
+                    throw new ArgumentException($"Unknown loop alias: '{argumentArr[1]}'");
+                }
+            }
+            JToken input = alias != null ? currentArrayElement[alias] : currentArrayElement?.Last().Value ?? Context.Input;
+            JToken selectedToken = GetSelectableToken(input, Context).Select(jsonPath);
             return selectedToken;
         }
 
         #endregion
 
         #region Replace
-        private KeyValuePair<string, JToken> Replace(string arguments)
+        private KeyValuePair<string, JToken> Replace(string arguments, IDictionary<string, JArray> parentArray, IDictionary<string, JToken> currentArrayElement)
         {
             string[] argumentArr = ExpressionHelper.GetArguments(arguments);
             if (argumentArr.Length < 2)
             {
-                throw new Exception("Function #replace needs two arguments - 1. jsonPath to be replaced, 2. token to replace with.");
+                throw new Exception("Function #replace needs at least two arguments - 1. path to be replaced, 2. token to replace with.");
             }
-            if (!(ParseArgument(null, null, argumentArr[0]) is string key))
+            if (!(ParseArgument(parentArray, currentArrayElement, argumentArr[0]) is string key))
             {
-                throw new ArgumentException("Invalid jsonPath for #replace!");
+                throw new ArgumentException($"Invalid path for #replace: '{argumentArr[0]}' resolved to null!");
             }
-            object str = ParseArgument(null, null, argumentArr[1]);
-
-            JToken newToken = GetToken(str); 
+            object str = ParseArgument(parentArray, currentArrayElement, argumentArr[1]);
+            JToken newToken = GetToken(str);
             return new KeyValuePair<string, JToken>(key, newToken);
         }
 
         #endregion
 
         #region Delete
-        private string Delete(string argument)
+        private string Delete(string argument, IDictionary<string, JArray> parentArray, IDictionary<string, JToken> currentArrayElement)
         {
-            var result = ParseArgument(null, null, argument) as string;
-            if (result == null)
+            if (!(ParseArgument(parentArray, currentArrayElement, argument) is string result))
             {
-                throw new ArgumentException("Invalid jsonPath for #delete!");
+                throw new ArgumentException($"Invalid path for #delete: '{argument}' resolved to null!");
             }
             return result;
         }

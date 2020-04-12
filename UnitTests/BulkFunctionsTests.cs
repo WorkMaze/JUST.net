@@ -17,7 +17,17 @@ namespace JUST.UnitTests
         }
 
         [Test]
-        public void Replace()
+        public void ReplaceWithPrimitiveValue()
+        {
+            const string transformer = "{ \"#\": [ \"#copy($)\", \"#replace($.menu.id,#valueof($.menu.value.Window))\"] }";
+
+            var result = new JsonTransformer().Transform(transformer, ExampleInputs.Menu);
+
+            Assert.AreEqual("{\"menu\":{\"id\":\"popup\",\"value\":{\"Window\":\"popup\"},\"popup\":{\"menuitem\":[{\"value\":\"New\",\"onclick\":{\"action\":\"CreateNewDoc()\"}},{\"value\":\"Open\",\"onclick\":\"OpenDoc()\"},{\"value\":\"Close\",\"onclick\":\"CloseDoc()\"}]}}}", result);
+        }
+
+        [Test]
+        public void ReplaceWithObject()
         {
             const string transformer = "{ \"#\": [ \"#copy($)\", \"#replace($.menu.id,#valueof($.menu.value))\"] }";
 
@@ -73,7 +83,7 @@ namespace JUST.UnitTests
 
             var result = Assert.Throws<ArgumentException>(() => new JsonTransformer().Transform(transformer, ExampleInputs.Menu));
 
-            Assert.AreEqual($"Invalid path for #copy: '#valueof($.boolean)' resolved to null", result.Message);
+            Assert.AreEqual($"Invalid path for #copy: '#valueof($.boolean)' resolved to null!", result.Message);
         }
 
         [Test]
@@ -83,7 +93,7 @@ namespace JUST.UnitTests
 
             var result = Assert.Throws<Exception>(() => new JsonTransformer().Transform(transformer, ExampleInputs.Menu));
 
-            Assert.AreEqual("Function #replace needs two arguments - 1. jsonPath to be replaced, 2. token to replace with.", result.Message);
+            Assert.AreEqual("Function #replace needs at least two arguments - 1. path to be replaced, 2. token to replace with.", result.Message);
         }
 
         [Test]
@@ -93,7 +103,7 @@ namespace JUST.UnitTests
 
             var result = Assert.Throws<ArgumentException>(() => new JsonTransformer().Transform(transformer, ExampleInputs.Menu));
 
-            Assert.AreEqual("Invalid jsonPath for #replace!", result.Message);
+            Assert.AreEqual("Invalid path for #replace: '#valueof($.boolean)' resolved to null!", result.Message);
         }
 
         [Test]
@@ -103,7 +113,7 @@ namespace JUST.UnitTests
 
             var result = Assert.Throws<ArgumentException>(() => new JsonTransformer().Transform(transformer, ExampleInputs.Menu));
 
-            Assert.AreEqual("Invalid jsonPath for #delete!", result.Message);
+            Assert.AreEqual("Invalid path for #delete: '#valueof($.boolean)' resolved to null!", result.Message);
         }
     }
 }
