@@ -1,10 +1,12 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Linq;
 using System.Text.RegularExpressions;
 
 namespace JUST
 {
     internal class ExpressionHelper
     {
+        private const string EscapeChar = "/"; //do not use backslash, it is already the escape char in JSON
         private const string FunctionAndArgumentsRegex = "^#(.+?)[(](.*)[)]$";
 
         internal static bool TryParseFunctionNameAndArguments(string input, out string functionName, out string arguments)
@@ -15,57 +17,81 @@ namespace JUST
             return match.Success;
         }
 
-        internal static string[] GetArguments(string functionString)
+        internal static string[] SplitArguments(string args)
         {
-            bool brackettOpen = false;
-
-            List<string> arguments = null;
-            int index = 0;
-
-            int openBrackettCount = 0;
-            int closebrackettCount = 0;
-
-            for (int i = 0; i < functionString.Length; i++)
+            var commaSplit = Regex.Split(args, $"(?<![\\{EscapeChar}]),").ToList();
+            for (int i = 0; i < commaSplit.Count;)
             {
-                char currentChar = functionString[i];
-
-                if (currentChar == '(')
-                    openBrackettCount++;
-
-                if (currentChar == ')')
-                    closebrackettCount++;
-
-                if (openBrackettCount == closebrackettCount)
-                    brackettOpen = false;
-                else
-                    brackettOpen = true;
-
-                if ((currentChar == ',') && (!brackettOpen))
+                var arg = commaSplit[i];
+                var openBrackets = Regex.Matches(arg, $"(?<![\\{EscapeChar}])\\(");
+                var closeBrackets = Regex.Matches(arg, $"(?<![\\{EscapeChar}])\\)");
+                var openQuotes = arg.StartsWith("'");
+                var closeQuotes = arg.EndsWith("'");
+                if (openBrackets.Count == closeBrackets.Count && !(openQuotes && !closeQuotes))
                 {
-                    if (arguments == null)
-                        arguments = new List<string>();
-
-                    if (index != 0)
-                        arguments.Add(functionString.Substring(index + 1, i - index - 1));
+                    if (openQuotes)
+                    {
+                        commaSplit[i] = commaSplit[i].Trim('\'');
+                    }
                     else
-                        arguments.Add(functionString.Substring(index, i));
-                    index = i;
+                    {
+                        commaSplit[i] = !IsFunction(commaSplit[i]) ? 
+                            Unescape(commaSplit[i]) :
+                            commaSplit[i];
+                    }
+                    i++;
+                    continue;
+                }
+
+                if (commaSplit.Count > i + 1)
+                {
+                    commaSplit[i] += "," + commaSplit.ElementAt(i + 1);
+                    commaSplit.RemoveAt(i + 1);
+                }
+                else
+                {
+                    if (openBrackets.Count > 0)
+                    {
+                        throw new Exception("Expected closing round brackets.");
+                    }
+                    if (openQuotes)
+                    {
+                        throw new Exception("Expected closing single quote.");
+                    }
+
+                    commaSplit[i] = !IsFunction(commaSplit[i]) ?
+                            Unescape(commaSplit[i]) :
+                            commaSplit[i];
+                    i++;
                 }
 
             }
+            return commaSplit.ToArray();
+        }
 
-            if (index > 0)
-            {
-                arguments.Add(functionString.Substring(index + 1, functionString.Length - index - 1));
-            }
-            else
-            {
-                if (arguments == null)
-                    arguments = new List<string>();
-                arguments.Add(functionString);
-            }
+        private static string Unescape(string str)
+        {
+            /* TODO use Regex to unnescape to avoid sequencial replaces without back/forward lookups
+            * Example: '\\)' -> replace '\\' = '\)' -> replace '\)' = ')' 
+            */
+            //Regex.Replace(commaSplit[i], $"(?<![\\(])\\{EscapeChar}\\((?![\\)])", expr => "(")
+            //Regex.Replace(commaSplit[i], $"(?<![\\(])\\{EscapeChar}\\)(?![\\)])", expr => ")")
+            return str
+                .Replace($"{EscapeChar}{EscapeChar}", EscapeChar)
+                .Replace($"{EscapeChar}(", "(")
+                .Replace($"{EscapeChar})", ")")
+                .Replace($"{EscapeChar},", ",")
+                .Replace($"{EscapeChar}'", "'");
+        }
 
-            return arguments.ToArray();
+        internal static bool IsFunction(string val)
+        {
+            return Regex.IsMatch(val, "^\\s*#");
+        }
+
+        internal static string UnescapeSharp(string val)
+        {
+            return Regex.Replace(val, "^\\s*\\/#", "#");
         }
     }
 }

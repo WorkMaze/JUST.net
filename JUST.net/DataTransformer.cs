@@ -121,7 +121,7 @@ namespace JUST
 
                 string argumentString = functionString.Substring(indexOfStart + 1, functionString.Length - indexOfStart - 2);
 
-                string[] arguments = ExpressionHelper.GetArguments(argumentString);
+                string[] arguments = ExpressionHelper.SplitArguments(argumentString);
 
                 List<object> listParameters = new List<object>();
 
