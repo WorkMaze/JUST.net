@@ -17,7 +17,17 @@ namespace JUST.UnitTests
         }
 
         [Test]
-        public void Replace()
+        public void ReplaceWithPrimitiveValue()
+        {
+            const string transformer = "{ \"#\": [ \"#copy($)\", \"#replace($.menu.id,#valueof($.menu.value.Window))\"] }";
+
+            var result = JsonTransformer.Transform(transformer, ExampleInputs.Menu);
+
+            Assert.AreEqual("{\"menu\":{\"id\":\"popup\",\"value\":{\"Window\":\"popup\"},\"popup\":{\"menuitem\":[{\"value\":\"New\",\"onclick\":{\"action\":\"CreateNewDoc()\"}},{\"value\":\"Open\",\"onclick\":\"OpenDoc()\"},{\"value\":\"Close\",\"onclick\":\"CloseDoc()\"}]}}}", result);
+        }
+
+        [Test]
+        public void ReplaceWithObject()
         {
             const string transformer = "{ \"#\": [ \"#copy($)\", \"#replace($.menu.id,#valueof($.menu.value))\"] }";
 
