@@ -136,20 +136,6 @@ namespace JUST.UnitTests.Arrays
         }
 
         [Test]
-        public void EmptyPropertiesLooping()
-        {
-            var input = "{ \"animals\": { } }";
-            var transformer = "{ \"sounds\": { \"#loop($.animals)\": { \"#eval(#currentproperty())\": \"#currentvalueatpath($..sound)\" } } }";
-            var context = new JUSTContext
-            {
-                EvaluationMode = EvaluationMode.Strict
-            };
-            var result = JsonTransformer.Transform(transformer, input, context);
-
-            Assert.AreEqual("{\"sounds\":{}}", result);
-        }
-
-        [Test]
         public void NullLooping()
         {
             var input = "{ \"spell_numbers\": null }";
@@ -159,9 +145,46 @@ namespace JUST.UnitTests.Arrays
                 EvaluationMode = EvaluationMode.Strict
             };
             var result = JsonTransformer.Transform(transformer, input, context);
-
             Assert.AreEqual("{\"number_index\":null}", result);
         }
+
+        [Test]
+        public void EmptyPropertiesLooping()
+        {
+            var input = "{ \"animals\": { } }";
+            var transformer = "{ \"sounds\": { \"#loop($.animals)\": { \"#eval(#currentproperty())\": \"#currentvalueatpath($..sound)\" } } }";
+            var context = new JUSTContext
+            {
+                EvaluationMode = EvaluationMode.Strict
+            };
+            var result = JsonTransformer.Transform(transformer, input, context);
+            Assert.AreEqual("{\"sounds\":{}}", result);
+        }
         
+        [Test]
+        public void SingleResultFilter()
+        {
+            var input = "{\"array\":[{\"resource\":\"Location\",\"number\":\"3\" },{\"resource\":\"Organization\",\"number\":\"10\"}] }";
+            var transformer = "{\"result\":{\"#loop($.array[?(@resource=='Location')])\":{\"existsLocation\":true}}}";
+            var context = new JUSTContext
+            {
+                EvaluationMode = EvaluationMode.Strict
+            };
+            var result = JsonTransformer.Transform(transformer, input, context);
+            Assert.AreEqual("{\"result\":[{\"existsLocation\":true}]}", result);
+        }
+
+        [Test]
+        public void SingleIndexReference()
+        {
+            var input = "{\"array\":[{\"resource\":\"Location\",\"number\":\"3\" },{\"resource\":\"Organization\",\"number\":\"10\"}] }";
+            var transformer = "{\"result\": {\"#loop($.array[1])\": {\"number\":\"#currentvalueatpath($.number)\"} }}";
+            var context = new JUSTContext
+            {
+                EvaluationMode = EvaluationMode.Strict
+            };
+            var result = JsonTransformer.Transform(transformer, input, context);
+            Assert.AreEqual("{\"result\":[{\"number\":\"10\"}]}", result);
+        }
     }
 }
