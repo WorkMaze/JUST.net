@@ -1,12 +1,11 @@
-﻿using System;
-using System.Linq;
+﻿using System.Collections.Generic;
 using System.Text.RegularExpressions;
 
 namespace JUST
 {
     internal class ExpressionHelper
     {
-        private const string EscapeChar = "/"; //do not use backslash, it is already the escape char in JSON
+        private const char EscapeChar = '/'; //do not use backslash, it is already the escape char in JSON
         private const string FunctionAndArgumentsRegex = "^#(.+?)[(](.*)[)]$";
 
         internal static bool TryParseFunctionNameAndArguments(string input, out string functionName, out string arguments)
@@ -17,56 +16,56 @@ namespace JUST
             return match.Success;
         }
 
-        internal static string[] SplitArguments(string args)
+        internal static string[] SplitArguments(string functionString)
         {
-            var commaSplit = Regex.Split(args, $"(?<![\\{EscapeChar}]),").ToList();
-            for (int i = 0; i < commaSplit.Count;)
+            bool brackettOpen = false;
+
+            List<string> arguments = new List<string>();
+            int index = 0;
+
+            int openBrackettCount = 0;
+            int closebrackettCount = 0;
+            bool isEscapedChar = false;
+
+            for (int i = 0; i < functionString.Length; i++)
             {
-                var arg = commaSplit[i];
-                var openBrackets = Regex.Matches(arg, $"(?<![\\{EscapeChar}])\\(");
-                var closeBrackets = Regex.Matches(arg, $"(?<![\\{EscapeChar}])\\)");
-                var openQuotes = arg.StartsWith("'");
-                var closeQuotes = arg.EndsWith("'");
-                if (openBrackets.Count == closeBrackets.Count && !(openQuotes && !closeQuotes))
+                char currentChar = functionString[i];
+                if (currentChar == EscapeChar)
                 {
-                    if (openQuotes)
-                    {
-                        commaSplit[i] = commaSplit[i].Trim('\'');
-                    }
-                    else
-                    {
-                        commaSplit[i] = !IsFunction(commaSplit[i]) ? 
-                            Unescape(commaSplit[i]) :
-                            commaSplit[i];
-                    }
-                    i++;
+                    isEscapedChar = !isEscapedChar;
                     continue;
                 }
-
-                if (commaSplit.Count > i + 1)
+                if (currentChar == '(')
                 {
-                    commaSplit[i] += "," + commaSplit.ElementAt(i + 1);
-                    commaSplit.RemoveAt(i + 1);
+                    if (!isEscapedChar) { openBrackettCount++; }
+                    else { isEscapedChar = !isEscapedChar; }
                 }
-                else
+                else if (currentChar == ')')
                 {
-                    if (openBrackets.Count > 0)
-                    {
-                        throw new Exception("Expected closing round brackets.");
-                    }
-                    if (openQuotes)
-                    {
-                        throw new Exception("Expected closing single quote.");
-                    }
-
-                    commaSplit[i] = !IsFunction(commaSplit[i]) ?
-                            Unescape(commaSplit[i]) :
-                            commaSplit[i];
-                    i++;
+                    if (!isEscapedChar) { closebrackettCount++; }
+                    else { isEscapedChar = !isEscapedChar; }
                 }
 
+                brackettOpen = openBrackettCount != closebrackettCount;
+                if (currentChar == ',' && !brackettOpen)
+                {
+                    if (!isEscapedChar)
+                    {
+                        arguments.Add(Unescape(index != 0 ?
+                            functionString.Substring(index + 1, i - index - 1) :
+                            functionString.Substring(index, i)));
+                        index = i;
+                    }
+                    else { isEscapedChar = !isEscapedChar; }
+                }
+                else { isEscapedChar = false; }
             }
-            return commaSplit.ToArray();
+
+            arguments.Add(index > 0 ? 
+                Unescape(functionString.Substring(index + 1, functionString.Length - index - 1)) : 
+                functionString);
+
+            return arguments.ToArray();
         }
 
         private static string Unescape(string str)
@@ -76,12 +75,13 @@ namespace JUST
             */
             //Regex.Replace(commaSplit[i], $"(?<![\\(])\\{EscapeChar}\\((?![\\)])", expr => "(")
             //Regex.Replace(commaSplit[i], $"(?<![\\(])\\{EscapeChar}\\)(?![\\)])", expr => ")")
-            return str
-                .Replace($"{EscapeChar}{EscapeChar}", EscapeChar)
-                .Replace($"{EscapeChar}(", "(")
-                .Replace($"{EscapeChar})", ")")
-                .Replace($"{EscapeChar},", ",")
-                .Replace($"{EscapeChar}'", "'");
+            return !IsFunction(str) ?
+                str
+                    .Replace($"{EscapeChar}{EscapeChar}", $"{EscapeChar}")
+                    .Replace($"{EscapeChar}(", "(")
+                    .Replace($"{EscapeChar})", ")")
+                    .Replace($"{EscapeChar},", ",") : 
+                str;
         }
 
         internal static bool IsFunction(string val)

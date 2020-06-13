@@ -205,7 +205,7 @@ namespace JUST.UnitTests
         public void Issue98()
         {
             var input = "{\"procedures\": [{\"codice_prest\": \"PR-01\",\"id_paz\": \"p1\",\"id_med\": \"d2\"},{\"codice_prest\": \"PR-02\",\"id_paz\": \"p2\",\"id_med\": \"d1\"}],\"patients\": [{\"id\": \"p1\",\"name\": \"Ambrogio Rocher\"},{\"id\": \"p2\",\"name\": \"Mia Martini\"}],\"doctors\": [{\"id\": \"d1\",\"full_name\": \"Simone Rossi\"},{\"id\": \"d2\",\"full_name\": \"Davide Verdi\"}]}";
-            var transformer = "{ 	\"final\": { \"#loop($.procedures)\": { \"codice_prest\": \"#currentvalueatpath($.codice_prest)\", \"name_paz\": \"#valueof(#xconcat($.patients[?/(@.id==/',#currentvalueatpath($.id_paz),/'/)].name))\", \"id_med\": \"#valueof(#xconcat('$.doctors[?(@.id==/'',#currentvalueatpath($.id_med),/'/)].full_name))\" } }} ";
+            var transformer = "{ \"final\": { \"#loop($.procedures)\": { \"codice_prest\": \"#currentvalueatpath($.codice_prest)\", \"name_paz\": \"#valueof(#xconcat($.patients[?/(@.id==',#currentvalueatpath($.id_paz),'/)].name))\", \"id_med\": \"#valueof(#xconcat($.doctors[?/(@.id==',#currentvalueatpath($.id_med),'/)].full_name))\" } }} ";
             var context = new JUSTContext
             {
                 EvaluationMode = EvaluationMode.Strict
