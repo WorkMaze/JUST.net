@@ -80,5 +80,13 @@ namespace JUST.UnitTests
             var result = JsonTransformer.Transform(transformer, "{}");
             Assert.AreEqual("{\"result\":\"/)_end\"}",result);
         }
+
+        [Test]
+        public void EscapedEscapeCharacter()
+        {
+            const string transformer = "{ \"result\": \"#xconcat(//,_end)\" }";
+            var result = JsonTransformer.Transform(transformer, "{}");
+            Assert.AreEqual("{\"result\":\"/_end\"}", result);
+        }
     }
 }
