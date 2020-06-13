@@ -204,15 +204,15 @@ namespace JUST.UnitTests
         [Test]
         public void Escape()
         {
-            var input = "{ \"arg\": \"some_value\" }";
-            var transformer = "{ \"sharp\": \"/#not_a_function\", \"parentheses\": \"#xconcat(func/(',#valueof($.arg),'/))\", \"comma\": \"#xconcat(func/(',#valueof($.arg),'/,'other_value'/))\" }";
+            var input = "{ \"arg\": 1, \"arr\": [{ \"id\": 1, \"val\": 100 }, { \"id\": 2,	\"val\": 200 }] }";
+            var transformer = "{ \"sharp\": \"/#not_a_function\", \"sharp_arg\": \"#xconcat(/#not,_a_function_arg)\", \"parentheses\": \"#xconcat(func/(',#valueof($.arg),'/))\", \"comma\": \"#xconcat(func/(',#valueof($.arg),'/,'other_value'/))\", \"dynamic_expr\": \"#valueof(#xconcat($.arr[?/(@.id==,#valueof($.arg),/)].val))\" }";
             var context = new JUSTContext
             {
                 EvaluationMode = EvaluationMode.Strict
             };
             var result = JsonTransformer.Transform(transformer, input, context);
 
-            Assert.AreEqual("{\"sharp\":\"#not_a_function\",\"parentheses\":\"func('some_value')\",\"comma\":\"func('some_value','other_value')\"}", result);
+            Assert.AreEqual("{\"sharp\":\"#not_a_function\",\"sharp_arg\":\"#not_a_function_arg\",\"parentheses\":\"func('1')\",\"comma\":\"func('1','other_value')\",\"dynamic_expr\":100}", result);
         }
     }
 }
