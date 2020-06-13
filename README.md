@@ -1182,7 +1182,7 @@ Output:
 
 ## Escaping reserved characters
 
-Characters like '(' and ')' (curved brackets), and ',' (comma) are considered reserved characters when used within a function (not on a regular string). Also '#' (sharp) is a reserved character when used at the start of a statement (value of property or argument of a function). To avoid parsing these characters as reserved characters you may "escape" them, adding a '/' (slash) before the reserved character. For '#', it is only necessary to escape when it occurs at the start of a statement.
+Characters like '(' and ')' (round brackets), and ',' (comma) are considered reserved characters when used within a function (not on a regular string). Also '#' (sharp) is a reserved character when used at the start of a statement (value of property or argument of a function). To avoid parsing these characters as reserved characters you may "escape" them, adding a '/' (slash) before the reserved character. For '#', it is only necessary to escape when it occurs at the start of a statement.
 This is especially useful when creating dynamic expressions.
 
 Consider the following input:
