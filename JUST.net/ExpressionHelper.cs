@@ -70,17 +70,8 @@ namespace JUST
 
         private static string Unescape(string str)
         {
-            /* TODO use Regex to unnescape to avoid sequencial replaces without back/forward lookups
-            * Example: '\\)' -> replace '\\' = '\)' -> replace '\)' = ')' 
-            */
-            //Regex.Replace(commaSplit[i], $"(?<![\\(])\\{EscapeChar}\\((?![\\)])", expr => "(")
-            //Regex.Replace(commaSplit[i], $"(?<![\\(])\\{EscapeChar}\\)(?![\\)])", expr => ")")
             return !IsFunction(str) ?
-                str
-                    .Replace($"{EscapeChar}{EscapeChar}", $"{EscapeChar}")
-                    .Replace($"{EscapeChar}(", "(")
-                    .Replace($"{EscapeChar})", ")")
-                    .Replace($"{EscapeChar},", ",") : 
+                Regex.Replace(str, "\\/([\\/(),])", "$1") :
                 str;
         }
 
