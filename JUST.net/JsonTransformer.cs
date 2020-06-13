@@ -331,6 +331,13 @@ namespace JUST
                         isLoop = true;
                     }
                     /*End looping */
+
+                    if (property.Name != null && property.Value.ToString().StartsWith($"{ExpressionHelper.EscapeChar}#"))
+                    {
+                        var clone = property.Value as JValue;
+                        clone.Value = clone.Value.ToString().Substring(1);
+                        property.Value.Replace(clone);
+                    }
                 }
 
                 if (childToken.Type == JTokenType.String && childToken.Value<string>().Trim().StartsWith("#") 

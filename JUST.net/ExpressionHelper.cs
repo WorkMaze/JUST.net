@@ -5,7 +5,7 @@ namespace JUST
 {
     internal class ExpressionHelper
     {
-        private const char EscapeChar = '/'; //do not use backslash, it is already the escape char in JSON
+        internal const char EscapeChar = '/'; //do not use backslash, it is already the escape char in JSON
         private const string FunctionAndArgumentsRegex = "^#(.+?)[(](.*)[)]$";
 
         internal static bool TryParseFunctionNameAndArguments(string input, out string functionName, out string arguments)

@@ -202,17 +202,17 @@ namespace JUST.UnitTests
         }
 
         [Test]
-        public void Issue98()
+        public void Escape()
         {
-            var input = "{\"procedures\": [{\"codice_prest\": \"PR-01\",\"id_paz\": \"p1\",\"id_med\": \"d2\"},{\"codice_prest\": \"PR-02\",\"id_paz\": \"p2\",\"id_med\": \"d1\"}],\"patients\": [{\"id\": \"p1\",\"name\": \"Ambrogio Rocher\"},{\"id\": \"p2\",\"name\": \"Mia Martini\"}],\"doctors\": [{\"id\": \"d1\",\"full_name\": \"Simone Rossi\"},{\"id\": \"d2\",\"full_name\": \"Davide Verdi\"}]}";
-            var transformer = "{ \"final\": { \"#loop($.procedures)\": { \"codice_prest\": \"#currentvalueatpath($.codice_prest)\", \"name_paz\": \"#valueof(#xconcat($.patients[?/(@.id==',#currentvalueatpath($.id_paz),'/)].name))\", \"id_med\": \"#valueof(#xconcat($.doctors[?/(@.id==',#currentvalueatpath($.id_med),'/)].full_name))\" } }} ";
+            var input = "{ \"arg\": \"some_value\" }";
+            var transformer = "{ \"sharp\": \"/#not_a_function\", \"parentheses\": \"#xconcat(func/(',#valueof($.arg),'/))\", \"comma\": \"#xconcat(func/(',#valueof($.arg),'/,'other_value'/))\" }";
             var context = new JUSTContext
             {
                 EvaluationMode = EvaluationMode.Strict
             };
             var result = JsonTransformer.Transform(transformer, input, context);
 
-            Assert.AreEqual("{\"final\":[{\"codice_prest\":\"PR-01\",\"name_paz\":\"Ambrogio Rocher\",\"id_med\":\"Davide Verdi\"},{\"codice_prest\":\"PR-02\",\"name_paz\":\"Mia Martini\",\"id_med\":\"Simone Rossi\"}]}", result);
+            Assert.AreEqual("{\"sharp\":\"#not_a_function\",\"parentheses\":\"func('some_value')\",\"comma\":\"func('some_value','other_value')\"}", result);
         }
     }
 }
