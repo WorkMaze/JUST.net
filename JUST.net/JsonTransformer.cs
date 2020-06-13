@@ -619,7 +619,7 @@ namespace JUST
                         var contextInput = GetInputToken(localContext);
                         var input = JToken.Parse(Transform(parameters[0].ToString(), contextInput.ToString(), localContext));
                         (localContext ?? GlobalContext).Input = input;
-                        output = ParseFunction(parameters[1].ToString().Trim('\''), inputJson, array, currentArrayElement, localContext ?? GlobalContext);
+                        output = ParseFunction(parameters[1].ToString().Trim(' ', '\''), inputJson, array, currentArrayElement, localContext ?? GlobalContext);
                         (localContext ?? GlobalContext).Input = contextInput;
                     }
                     else
