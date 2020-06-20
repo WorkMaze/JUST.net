@@ -1217,6 +1217,53 @@ Output:
 }
 ```
 
+
+## Escaping reserved characters
+
+Characters like '(' and ')' (round brackets), and ',' (comma) are considered reserved characters when used within a function (not on a regular string). Also '#' (sharp) is a reserved character when used at the start of a statement (value of property or argument of a function). To avoid parsing these characters as reserved characters you may "escape" them, adding a '/' (slash) before the reserved character. For '#', it is only necessary to escape when it occurs at the start of a statement.
+This is especially useful when creating dynamic expressions.
+
+Consider the following input:
+
+```JSON
+{
+  "arg": 1,
+  "arr": [{
+	"id": 1,
+	"val": 100
+  },{
+	"id": 2,
+	"val": 200
+  }]
+}
+```
+
+Transformer:
+
+```JSON
+{
+  "sharp": "/#not_a_function",
+  "sharp_arg": "#xconcat(/#not,_a_function_arg)",
+  "parentheses": "#xconcat(func/(',#valueof($.arg),'/))", 
+  "comma": "#xconcat(func/(',#valueof($.arg),'/,'other_value'/))",
+  "dynamic_expr": "#valueof(#xconcat($.arr[?/(@.id==,#valueof($.arg),/)].val))"
+}
+```
+
+
+Output:
+```JSON
+{
+  "sharp": "#not_a_function",
+  "sharp_arg": "#not_a_function_arg",
+  "parentheses": "func('1')", 
+  "comma": "func('1','other_value')",
+  "dynamic_expr": 100
+}
+```
+
+
+
 ## Check for existance 
 
 The following two functions have been added to check for existance:
