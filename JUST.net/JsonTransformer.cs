@@ -131,17 +131,17 @@ namespace JUST
                         BulkOperations(values.Children(), parentArray, currentArrayToken, ref selectedTokens, ref tokensToReplace, ref tokensToDelete);
                         isBulk = true;
                     }
-                    else if (property.Name.Contains("#eval"))
+                    else if (property.Name.TrimStart().StartsWith("#eval"))
                     {
                         EvalOperation(property, parentArray, currentArrayToken, ref loopProperties, ref tokensToAdd);
                     }
-                    else if (property.Name.Contains("#ifgroup"))
+                    else if (property.Name.TrimStart().Contains("#ifgroup"))
                     {
                         ConditionalGroupOperation(property, parentArray, currentArrayToken, ref loopProperties, ref tokenToForm, childToken);
 
                         isLoop = true;
                     }
-                    else if (property.Name.Contains("#loop"))
+                    else if (property.Name.TrimStart().Contains("#loop"))
                     {
                         LoopOperation(property, parentArray, currentArrayToken, ref loopProperties, ref arrayToForm, ref dictToForm, childToken);
                         isLoop = true;
@@ -149,6 +149,13 @@ namespace JUST
                     else if (property.Value.ToString().Trim().StartsWith("#"))
                     {
                         property.Value = GetToken(ParseFunction(property.Value.ToString(), parentArray, currentArrayToken));
+                    }
+
+                    if (property.Name != null && property.Value.ToString().StartsWith($"{ExpressionHelper.EscapeChar}#"))
+                    {
+                        var clone = property.Value as JValue;
+                        clone.Value = clone.Value.ToString().Substring(1);
+                        property.Value.Replace(clone);
                     }
                     /*End looping */
                 }
@@ -549,7 +556,7 @@ namespace JUST
         #region Replace
         private KeyValuePair<string, JToken> Replace(string arguments, JArray parentArray, JToken currentArrayElement)
         {
-            string[] argumentArr = ExpressionHelper.GetArguments(arguments);
+            string[] argumentArr = ExpressionHelper.SplitArguments(arguments);
             if (argumentArr.Length < 2)
             {
                 throw new Exception("Function #replace needs two arguments - 1. jsonPath to be replaced, 2. token to replace with.");
@@ -591,7 +598,7 @@ namespace JUST
                     return functionName;
                 }
 
-                string[] arguments = ExpressionHelper.GetArguments(argumentString);
+                string[] arguments = ExpressionHelper.SplitArguments(argumentString);
                 var listParameters = new List<object>();
 
                 if (functionName == "ifcondition")
@@ -655,7 +662,7 @@ namespace JUST
                         var contextInput = Context.Input;
                         var input = JToken.Parse(Transform(parameters[0].ToString(), contextInput.ToString()));
                         Context.Input = input;
-                        output = ParseFunction(parameters[1].ToString().Trim('\''), array, currentArrayElement);
+                        output = ParseFunction(parameters[1].ToString().Trim().Trim('\''), array, currentArrayElement);
                         Context.Input = contextInput;
                     }
                     else
@@ -680,17 +687,16 @@ namespace JUST
 
         private object ParseArgument(JArray array, JToken currentArrayElement, string argument)
         {
-            string trimmedArgument = argument;
-
-            if (argument.Contains("#"))
-                trimmedArgument = argument.Trim();
-
+            var trimmedArgument = argument.Trim();
             if (trimmedArgument.StartsWith("#"))
             {
                 return ParseFunction(trimmedArgument, array, currentArrayElement);
             }
-            else
-                return trimmedArgument;
+            if (trimmedArgument.StartsWith($"{ExpressionHelper.EscapeChar}#"))
+            {
+                return ExpressionHelper.UnescapeSharp(argument);
+            }
+            return argument;
         }
 
         private object CallCustomFunction(object[] parameters)

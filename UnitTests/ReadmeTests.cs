@@ -215,5 +215,19 @@ namespace JUST.UnitTests
 
             Assert.AreEqual("{\"result\":{\"WashingtonCities\":\"Bellevue, Olympia, Seattle\"}}", result);
         }
+
+        [Test]
+        public void Escape()
+        {
+            var input = "{ \"arg\": \"some_value\" }";
+            var transformer = "{ \"sharp\": \"/#not_a_function\", \"parentheses\": \"#xconcat(func/(',#valueof($.arg),'/))\", \"comma\": \"#xconcat(func/(',#valueof($.arg),'/,'other_value'/))\" }";
+            var context = new JUSTContext
+            {
+                EvaluationMode = EvaluationMode.Strict
+            };
+            var result = new JsonTransformer(context).Transform(transformer, input);
+
+            Assert.AreEqual("{\"sharp\":\"#not_a_function\",\"parentheses\":\"func('some_value')\",\"comma\":\"func('some_value','other_value')\"}", result);
+        }
     }
 }
