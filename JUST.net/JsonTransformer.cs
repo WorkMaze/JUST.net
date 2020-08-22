@@ -3,7 +3,6 @@ using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text.RegularExpressions;
 
 namespace JUST
 {
@@ -340,6 +339,13 @@ namespace JUST
                         isLoop = true;
                     }
                     /*End looping */
+
+                    if (property.Name != null && property.Value.ToString().StartsWith($"{ExpressionHelper.EscapeChar}#"))
+                    {
+                        var clone = property.Value as JValue;
+                        clone.Value = clone.Value.ToString().Substring(1);
+                        property.Value.Replace(clone);
+                    }
                 }
 
                 if (childToken.Type == JTokenType.String && childToken.Value<string>().Trim().StartsWith("#") 
@@ -507,7 +513,7 @@ namespace JUST
         #region Replace
         private static KeyValuePair<string, JToken> Replace(string arguments, string inputJson, JArray parentArray, JToken currentArrayElement, JUSTContext localContext)
         {
-            string[] argumentArr = ExpressionHelper.GetArguments(arguments);
+            string[] argumentArr = ExpressionHelper.SplitArguments(arguments);
             if (argumentArr.Length < 2)
             {
                 throw new Exception("Function #replace needs two arguments - 1. jsonPath to be replaced, 2. token to replace with.");
@@ -551,9 +557,8 @@ namespace JUST
                     return functionName;
                 }
 
-                string[] arguments = ExpressionHelper.GetArguments(argumentString);
-                var listParameters = new List<object>();
-
+                string[] arguments = ExpressionHelper.SplitArguments(argumentString);
+                
                 if (functionName == "ifcondition")
                 {
                     var condition = ParseArgument(inputJson, array, currentArrayElement, arguments[0], localContext);
@@ -563,6 +568,7 @@ namespace JUST
                 }
                 else
                 {
+                    var listParameters = new List<object>();
                     int i = 0;
                     for (; i < (arguments?.Length ?? 0); i++)
                     {
@@ -592,7 +598,7 @@ namespace JUST
                         var methodInfo = GlobalContext.GetCustomMethod(functionName);
                         output = ReflectionHelper.InvokeCustomMethod(methodInfo, parameters, true, localContext ?? GlobalContext);
                     }
-                    else if (Regex.IsMatch(functionName, ReflectionHelper.EXTERNAL_ASSEMBLY_REGEX))
+                    else if (ReflectionHelper.IsExternalFunction(functionName))
                     {
                         output = ReflectionHelper.CallExternalAssembly(functionName, parameters, localContext ?? GlobalContext);
                     }
@@ -609,7 +615,7 @@ namespace JUST
                         var contextInput = GetInputToken(localContext);
                         var input = JToken.Parse(Transform(parameters[0].ToString(), contextInput.ToString(), localContext));
                         (localContext ?? GlobalContext).Input = input;
-                        output = ParseFunction(parameters[1].ToString().Trim('\''), inputJson, array, currentArrayElement, localContext ?? GlobalContext);
+                        output = ParseFunction(parameters[1].ToString().Trim(' ', '\''), inputJson, array, currentArrayElement, localContext ?? GlobalContext);
                         (localContext ?? GlobalContext).Input = contextInput;
                     }
                     else
@@ -628,23 +634,16 @@ namespace JUST
             }
             catch (Exception ex)
             {
+                //TODO Exception with full function string and specific function string (first and last level of recursion)
                 throw new Exception("Error while calling function : " + functionString + " - " + ex.Message, ex);
             }
         }
 
         private static object ParseArgument(string inputJson, JArray array, JToken currentArrayElement, string argument, JUSTContext localContext)
         {
-            string trimmedArgument = argument;
-
-            if (argument.Contains("#"))
-                trimmedArgument = argument.Trim();
-
-            if (trimmedArgument.StartsWith("#"))
-            {
-                return ParseFunction(trimmedArgument, inputJson, array, currentArrayElement, localContext);
-            }
-            else
-                return trimmedArgument;
+            return ExpressionHelper.IsFunction(argument) ?
+                ParseFunction(argument.Trim(), inputJson, array, currentArrayElement, localContext)
+                : ExpressionHelper.UnescapeSharp(argument);
         }
 
         private static object CallCustomFunction(object[] parameters, JUSTContext localContext)
