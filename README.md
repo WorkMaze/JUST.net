@@ -1336,7 +1336,6 @@ Output:
 ```
 
 
-
 ## Check for existance 
 
 The following two functions have been added to check for existance:
