@@ -742,19 +742,71 @@ When a concatenation is needed, one can use #concat or #xconcat to join two arra
 
 ```JSON
 {
+  "drugs\": [{ 
+      "code": "001", "display": "Drug1" 
+    },{
+      "code": "002", "display": "Drug2" 
+  }],
+  "pa": [{ 
+      "code": "pa1", "display": "PA1" 
+	},{
+	  "code": "pa2", "display": "PA2" 
+  }],
+  "sa": [{ 
+      "code": "sa1", "display": "SA1" 
+	},{
+	  "code": "sa2", "display": "SA2" 
+  }]
 }
 ```
 
 ```Transformer
 {
+  "concat": "#concat(#valueof($.drugs), #valueof($.pa))", 
+  "multipleConcat\": "#concat(#concat(#valueof($.drugs), #valueof($.pa)), #valueof($.sa))\",
+  "xconcat": "#xconcat(#valueof($.drugs), #valueof($.pa), #valueof($.sa))" 
 }
 ```
 
 ```Output
 {
+  "concat\": [{
+      "code": "001", "display": "Drug1" 
+	},{
+	  "code": "002", "display": "Drug2" 
+    },{
+	  "code": "pa1", "display": "PA1" 
+	},{ 
+	  "code": "pa2", "display": "PA2" 
+	}],
+  "multipleConcat\": [{ 
+      "code": "001", "display": "Drug1" 
+    },{ 
+	  "code": "002", "display": "Drug2"
+	},{ 
+	  "code": "pa1", "display": "PA1" 
+	},{ 
+	  "code": "pa2", "display": "PA2" 
+	},{ 
+	  "code": "sa1", "display": "SA1"
+	},{ 
+	  "code": "sa2", "display": "SA2"
+	}],
+  "xconcat": [{ 
+      "code": "001", "display": "Drug1" 
+	},{
+	  "code": "002", "display": "Drug2"
+	},{ 
+	  "code": "pa1", "display": "PA1"
+	},{ 
+	  "code": "pa2", "display": "PA2" 
+	},{ 
+	  "code": "sa1", "display": "SA1"
+    },{
+      "code": "sa2", "display":"SA2" 
+    }]
 }
 ```
-
 
 ## Nested array looping (looping within context)
 A new function `loopwithincontext` has been introduced to be able to loop withing the context of an outer loop.
