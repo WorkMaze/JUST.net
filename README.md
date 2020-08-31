@@ -735,6 +735,27 @@ Output:
 }
 ```
 
+## Array concatenation
+When a concatenation is needed, one can use #concat or #xconcat to join two arrays
+1. concat(object1, object2)
+2. xconcat(object1,object2......objectx)
+
+```JSON
+{
+}
+```
+
+```Transformer
+{
+}
+```
+
+```Output
+{
+}
+```
+
+
 ## Nested array looping (looping within context)
 A new function `loopwithincontext` has been introduced to be able to loop withing the context of an outer loop.
 Cosider the input:

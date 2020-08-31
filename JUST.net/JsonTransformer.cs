@@ -619,31 +619,37 @@ namespace JUST
                     listParameters.Add(Context);
                     var parameters = listParameters.ToArray();
 
+                    var convertParameters = true;
+                    if(new[] { "concat", "xconcat", "currentproperty"}.Contains(functionName))
+                    {
+                        convertParameters = false;
+                    }
+
                     if (new[] { "currentvalue", "currentindex", "lastindex", "lastvalue" }.Contains(functionName))
-                        output = ReflectionHelper.Caller<T>(null, "JUST.Transformer`1", functionName, new object[] { array, currentArrayElement }, true, Context);
+                        output = ReflectionHelper.Caller<T>(null, "JUST.Transformer`1", functionName, new object[] { array, currentArrayElement }, convertParameters, Context);
                     else if (new[] { "currentvalueatpath", "lastvalueatpath" }.Contains(functionName))
                         output = ReflectionHelper.Caller<T>(
                             null, 
                             "JUST.Transformer`1", 
                             functionName, 
                             new [] { array, currentArrayElement }.Concat(parameters).ToArray(), 
-                            true, 
+                            convertParameters, 
                             Context);
                     else if (functionName == "currentproperty")
                         output = ReflectionHelper.Caller<T>(null, "JUST.Transformer`1", functionName, 
                             new object[] { array, currentArrayElement, Context }, 
-                            false, Context);
+                            convertParameters, Context);
                     else if (functionName == "customfunction")
                         output = CallCustomFunction(parameters);
                     else if (Context?.IsRegisteredCustomFunction(functionName) ?? false)
                     {
                         var methodInfo = Context.GetCustomMethod(functionName);
-                        output = ReflectionHelper.InvokeCustomMethod<T>(methodInfo, parameters, true, Context);
+                        output = ReflectionHelper.InvokeCustomMethod<T>(methodInfo, parameters, convertParameters, Context);
                     }
                     else if (Context.IsRegisteredCustomFunction(functionName))
                     {
                         var methodInfo = Context.GetCustomMethod(functionName);
-                        output = ReflectionHelper.InvokeCustomMethod<T>(methodInfo, parameters, true, Context);
+                        output = ReflectionHelper.InvokeCustomMethod<T>(methodInfo, parameters, convertParameters, Context);
                     }
                     else if (Regex.IsMatch(functionName, ReflectionHelper.EXTERNAL_ASSEMBLY_REGEX))
                     {
@@ -655,7 +661,7 @@ namespace JUST
                     {
                         object[] oParams = new object[1];
                         oParams[0] = parameters;
-                        output = ReflectionHelper.Caller<T>(null, "JUST.Transformer`1", functionName, oParams, true, Context);
+                        output = ReflectionHelper.Caller<T>(null, "JUST.Transformer`1", functionName, oParams, convertParameters, Context);
                     }
                     else if (functionName == "applyover")
                     {
@@ -672,7 +678,7 @@ namespace JUST
                         {
                             ((JUSTContext)parameters.Last()).Input = currentArrayElement;
                         }
-                        output = ReflectionHelper.Caller<T>(null, "JUST.Transformer`1", functionName, parameters, true, Context);
+                        output = ReflectionHelper.Caller<T>(null, "JUST.Transformer`1", functionName, parameters, convertParameters, Context);
                         ((JUSTContext)parameters.Last()).Input = input;
                     }
                 }

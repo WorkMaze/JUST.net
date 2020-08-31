@@ -69,7 +69,7 @@ namespace JUST
         }
     }
 
-    internal class Transformer<T> : Transformer where T: ISelectableToken
+    internal class Transformer<T> : Transformer where T : ISelectableToken
     {
         public static object valueof(string path, JUSTContext context)
         {
@@ -103,11 +103,59 @@ namespace JUST
         }
 
         #region string functions
-
-        public static string concat(string string1, string string2, JUSTContext context)
+        private static object ConcatArray(object obj1, object obj2)
         {
-            string string2Result = string2 ?? string.Empty;
-            return string1 != null ? string1 + string2Result : string.Empty + string2Result;
+            JArray item = new JArray();
+            JToken item1 = null, item2 = null;
+            for (int i = 0; i < ((object[])obj1).Length; i++)
+            {
+                if (((object[])obj1)[i] is JValue)
+                {
+                    item1 = (JValue)((object[])obj1)[i];
+                    item.Add(item1);
+                }
+                else
+                {
+                    item1 = (JObject)((object[])obj1)[i];
+                    item.Add(item1);
+                }
+            }
+            for (int j = 0; obj2 != null && j < ((object[])obj2).Length; j++)
+            {
+                if (((object[])obj2)[j] is JValue)
+                {
+                    item2 = (JValue)((object[])obj2)[j];
+                    item1.AddAfterSelf(item2);
+                }
+                else
+                {
+                    item2 = (JObject)((object[])obj2)[j];
+                    item.Add(item2);
+                }
+            }
+            return item.ToObject<object[]>();
+        }
+
+        public static object concat(object obj1, object obj2, JUSTContext context)
+        {
+            if (obj1 != null)
+            {
+                if (obj1 is string str1)
+                {
+                    return str1.Length > 0 ? str1 + obj2?.ToString() : string.Empty + obj2.ToString();
+                }
+                return ConcatArray(obj1, obj2);
+            }
+            else if (obj2 != null)
+            {
+                if (obj2 is string str2)
+                {
+                    return str2.Length > 0 ? obj1?.ToString() + str2 : obj1.ToString() + string.Empty;
+                }
+                return ConcatArray(obj2, obj1);
+            }
+
+            return null;
         }
 
         public static string substring(string stringRef, int startIndex, int length, JUSTContext context)
@@ -398,14 +446,16 @@ namespace JUST
         #endregion
 
         #region Variable parameter functions
-        public static string xconcat(object[] list)
+        public static object xconcat(object[] list)
         {
-            string result = string.Empty;
+            object result = null;
 
             for (int i = 0; i < list.Length - 1; i++)
             {
                 if (list[i] != null)
-                    result += list[i].ToString();
+                {
+                    result = concat(result, list[i], null);
+                }
             }
 
             return result;

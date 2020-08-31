@@ -36,7 +36,7 @@ namespace JUST.UnitTests
 
             var result = new JsonTransformer().Transform(transformer, input);
 
-            Assert.AreEqual("{\"stringresult\":{\"lastindexofand\":21,\"firstindexofand\":6,\"substring\":\"veryunuasua\",\"concat\":\"\",\"length_string\":34,\"length_array\":5},\"mathresult\":{\"add\":4,\"subtract\":4,\"multiply\":6,\"divide\":3,\"round\":10.01}}", result);
+            Assert.AreEqual("{\"stringresult\":{\"lastindexofand\":21,\"firstindexofand\":6,\"substring\":\"veryunuasua\",\"concat\":null,\"length_string\":34,\"length_array\":5},\"mathresult\":{\"add\":4,\"subtract\":4,\"multiply\":6,\"divide\":3,\"round\":10.01}}", result);
         }
 
         [Test]
@@ -228,6 +228,62 @@ namespace JUST.UnitTests
             var result = new JsonTransformer(context).Transform(transformer, input);
 
             Assert.AreEqual("{\"sharp\":\"#not_a_function\",\"parentheses\":\"func('some_value')\",\"comma\":\"func('some_value','other_value')\"}", result);
+        }
+
+        [Test]
+        public void Issue103()
+        {
+            var input = "{ \"line_items\": [{ \"color\": \"Red\", \"size\": \"Small\" },{ \"color\": \"Yellow\", \"size\": \"Large\" },{	\"color\": \"Green\", \"size\": \"Large\" }] }";
+            var transformer = "{ \"existsColorRed\": \"#exists($.line_items[?(@.color == 'Red')])\", \"existsColorBlue\": \"#exists($.line_items[?(@.color == 'Blue')])\",	\"existsColorGreen\": \"#exists($.line_items[?(@.color == 'Green')])\",	\"existsSizeSmall\": \"#exists($.line_items[?(@.size == 'Small')])\", \"existsSizeMedium\": \"#exists($.line_items[?(@.size == 'Medium')])\", \"existsSizeLarge\": \"#exists($.line_items[?(@.size == 'Large')])\" }";
+            var context = new JUSTContext
+            {
+                EvaluationMode = EvaluationMode.Strict
+            };
+            var result = new JsonTransformer(context).Transform(transformer, input);
+
+            Assert.AreEqual("{\"existsColorRed\":true,\"existsColorBlue\":false,\"existsColorGreen\":true,\"existsSizeSmall\":true,\"existsSizeMedium\":false,\"existsSizeLarge\":true}", result);
+        }
+
+        [Test]
+        public void Issue104()
+        {
+            var input = "{  }";
+            var transformer = "{ \"tags\": [{ \"#ifgroup(#exists($.tags.tag1))\": { \"Name\": \"tag1\", \"id\": \"96b7f975-3a4d-4020-abae-f7d17876ab39\" } }] }";
+            var context = new JUSTContext
+            {
+                EvaluationMode = EvaluationMode.Strict
+            };
+            var result = new JsonTransformer(context).Transform(transformer, input);
+
+            Assert.AreEqual("{\"tags\":[]}", result);
+        }
+
+        [Test]
+        public void Issue105()
+        {
+            var input = "{ \"drugs\": [{ \"code\": \"001\", \"display\": \"Drug1\" },{ \"code\": \"002\", \"display\": \"Drug2\" }, { \"code\": \"001\", \"display\": \"Drug3\" }],\"pa\": [{ \"code\": \"pa1\", \"display\": \"PA1\" },{ \"code\": \"pa2\", \"display\": \"PA2\" },{ \"code\": \"pa3\", \"display\": \"PA3\" }] }";
+            var transformer = "{ \"join\": \"#concat(#valueof($.drugs), #valueof($.pa))\" }";
+            var context = new JUSTContext
+            {
+                EvaluationMode = EvaluationMode.Strict
+            };
+            var result = new JsonTransformer(context).Transform(transformer, input);
+
+            Assert.AreEqual("{\"join\":[{\"code\":\"001\",\"display\":\"Drug1\"},{\"code\":\"002\",\"display\":\"Drug2\"},{\"code\":\"001\",\"display\":\"Drug3\"},{\"code\":\"pa1\",\"display\":\"PA1\"},{\"code\":\"pa2\",\"display\":\"PA2\"},{\"code\":\"pa3\",\"display\":\"PA3\"}]}", result);
+        }
+
+        [Test]
+        public void Issue107()
+        {
+            var input = "{ \"MessageId\": \"SLAExpiry\", \"ExecutionTime\": \"2020-08-18T11:28:44.6291692\", \"Summaries\": [{ \"Count\": 31, \"ContractType\": \"MSV\", \"StatusId\": \"Amended\" }, { \"Count\": 53, \"ContractType\": \"Spot\", \"StatusId\": \"Amended\" },{ \"Count\": 8, \"ContractType\": \"MSV\", \"StatusId\": \"AmendRequested\" },{ \"Count\": 6, \"ContractType\": \"Spot\", \"StatusId\": \"AmendRequested\" },{ \"Count\": 64, \"ContractType\": \"MSV\", \"StatusId\":\"Submitted\" },{ \"Count\": 163, \"ContractType\": \"Spot\", \"StatusId\": \"Submitted\" }] }";
+            var transformer = "{ \"sum\": null }";
+            var context = new JUSTContext
+            {
+                EvaluationMode = EvaluationMode.Strict
+            };
+            var result = new JsonTransformer(context).Transform(transformer, input);
+
+            Assert.AreEqual("{}", result);
         }
     }
 }
