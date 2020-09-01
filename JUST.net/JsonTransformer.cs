@@ -39,11 +39,6 @@ namespace JUST
 
         public string Transform(string transformerJson, JToken input)
         {
-            return Transform(transformerJson, JsonConvert.DeserializeObject<JToken>(inputJson), localContext);
-        }
-
-        public static string Transform(string transformerJson, JToken input, JUSTContext localContext = null)
-        {
             JToken result = null;
             JToken transformerToken = JsonConvert.DeserializeObject<JToken>(transformerJson);
             switch (transformerToken.Type)
@@ -69,11 +64,6 @@ namespace JUST
         }
 
         public JArray Transform(JArray transformerArray, JToken input)
-        {
-            return Transform(transformerArray, JsonConvert.DeserializeObject<JToken>(input), localContext);
-        }
-
-        public static JArray Transform(JArray transformerArray, JToken input, JUSTContext localContext = null)
         {
             var result = new JArray();
             for (int i = 0; i < transformerArray.Count; i++) {
@@ -148,6 +138,7 @@ namespace JUST
                     else if (property.Name.TrimStart().Contains("#ifgroup"))
                     {
                         ConditionalGroupOperation(property, parentArray, currentArrayToken, ref loopProperties, ref tokenToForm, childToken);
+
                         isLoop = true;
                     }
                     else if (property.Name.TrimStart().Contains("#loop"))
@@ -167,13 +158,6 @@ namespace JUST
                         property.Value.Replace(clone);
                     }
                     /*End looping */
-
-                    if (property.Name != null && property.Value.ToString().StartsWith($"{ExpressionHelper.EscapeChar}#"))
-                    {
-                        var clone = property.Value as JValue;
-                        clone.Value = clone.Value.ToString().Substring(1);
-                        property.Value.Replace(clone);
-                    }
                 }
                 else if (childToken.Type == JTokenType.String && childToken.Value<string>().Trim().StartsWith("#")
                     && parentArray != null && currentArrayToken != null)
@@ -290,6 +274,7 @@ namespace JUST
                     parentToken.Replace(arrayToForm);
                 }
             }
+
             return parentToken;
         }
 
@@ -519,6 +504,7 @@ namespace JUST
                         {
                             throw;
                         }
+
                         if (IsFallbackToDefault(Context))
                         {
                             result = JValue.CreateNull();
@@ -580,6 +566,7 @@ namespace JUST
                 throw new ArgumentException("Invalid jsonPath for #replace!");
             }
             object str = ParseArgument(parentArray, currentArrayElement, argumentArr[1]);
+
             JToken newToken = GetToken(str); 
             return new KeyValuePair<string, JToken>(key, newToken);
         }
@@ -603,7 +590,7 @@ namespace JUST
         {
             try
             {
-                object output;
+                object output = null;
 
                 string functionName, argumentString;
                 if (!ExpressionHelper.TryParseFunctionNameAndArguments(functionString, out functionName, out argumentString))
@@ -613,6 +600,7 @@ namespace JUST
 
                 string[] arguments = ExpressionHelper.SplitArguments(argumentString);
                 var listParameters = new List<object>();
+
                 if (functionName == "ifcondition")
                 {
                     var condition = ParseArgument(array, currentArrayElement, arguments[0]);
@@ -622,7 +610,6 @@ namespace JUST
                 }
                 else
                 {
-                    var listParameters = new List<object>();
                     int i = 0;
                     for (; i < (arguments?.Length ?? 0); i++)
                     {
@@ -664,7 +651,7 @@ namespace JUST
                         var methodInfo = Context.GetCustomMethod(functionName);
                         output = ReflectionHelper.InvokeCustomMethod<T>(methodInfo, parameters, convertParameters, Context);
                     }
-                    else if (ReflectionHelper.IsExternalFunction(functionName))
+                    else if (Regex.IsMatch(functionName, ReflectionHelper.EXTERNAL_ASSEMBLY_REGEX))
                     {
                         output = ReflectionHelper.CallExternalAssembly<T>(functionName, parameters, Context);
                     }
@@ -684,14 +671,6 @@ namespace JUST
                         output = ParseFunction(parameters[1].ToString().Trim().Trim('\''), array, currentArrayElement);
                         Context.Input = contextInput;
                     }
-                    else if (functionName == "applyover")
-                    {
-                        var contextInput = GetInputToken(localContext);
-                        var input = JToken.Parse(Transform(parameters[0].ToString(), contextInput.ToString(), localContext));
-                        (localContext ?? GlobalContext).Input = input;
-                        output = ParseFunction(parameters[1].ToString().Trim(' ', '\''), inputJson, array, currentArrayElement, localContext ?? GlobalContext);
-                        (localContext ?? GlobalContext).Input = contextInput;
-                    }
                     else
                     {
                         var input = ((JUSTContext)parameters.Last()).Input;
@@ -708,7 +687,6 @@ namespace JUST
             }
             catch (Exception ex)
             {
-                //TODO Exception with full function string and specific function string (first and last level of recursion)
                 throw new Exception("Error while calling function : " + functionString + " - " + ex.Message, ex);
             }
         }
