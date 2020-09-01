@@ -158,6 +158,17 @@ namespace JUST.UnitTests
             Assert.AreEqual("{\"Result\":{\"Header\":\"JsonTransform\"}}", result);
         }
 
+        [Test, Category("IfGroup"), Category("Strict")]
+        public void ConditionalGroupExceptionStrict()
+        {
+            const string input = "{ \"Tree\": { \"Branch\": \"leaf\", \"Flower\": \"Rose\" } }";
+            const string transformer = "{ \"Result\": { \"Header\": \"JsonTransform\", \"#ifgroup(wrong_val)\": { \"State\": { \"Value1\": \"#valueof($.Tree.Branch)\", \"Value2\": \"#valueof($.Tree.Flower)\" }} } }";
+
+            var result = new JsonTransformer(new JUSTContext { EvaluationMode = EvaluationMode.Strict }).Transform(transformer, input);
+
+            Assert.AreEqual("{\"Result\":{\"Header\":\"JsonTransform\"}}", result);
+        }
+
         [Test, Category("IfGroup"), Category("Loops")]
         public void ConditionalGroupInsideLoop()
         {
