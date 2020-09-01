@@ -105,6 +105,7 @@ namespace JUST
             List<JToken> tokensToDelete = null;
 
             List<string> loopProperties = null;
+            List<string> condProps = null;
             JArray arrayToForm = null;
             JObject dictToForm = null;
             List<JToken> tokenToForm = null;
@@ -139,9 +140,8 @@ namespace JUST
                     }
                     else if (property.Name.TrimStart().Contains("#ifgroup"))
                     {
-                        ConditionalGroupOperation(property, parentArray, currentArrayToken, ref loopProperties, ref tokenToForm, childToken);
-
-                        isLoop = true;
+                        ConditionalGroupOperation(property, parentArray, currentArrayToken, ref condProps, ref tokenToForm, childToken);
+                        isLoop = false;
                     }
                     else if (property.Name.TrimStart().Contains("#loop"))
                     {
@@ -174,10 +174,10 @@ namespace JUST
                 }
             }
 
-            parentToken = PostOperationsBuildUp(parentToken, selectedTokens, tokensToReplace, tokensToDelete, loopProperties, arrayToForm, dictToForm, tokenToForm, tokensToAdd);
+            parentToken = PostOperationsBuildUp(parentToken, selectedTokens, tokensToReplace, tokensToDelete, condProps,loopProperties, arrayToForm, dictToForm, tokenToForm, tokensToAdd);
         }
 
-        private JToken PostOperationsBuildUp(JToken parentToken, List<JToken> selectedTokens, Dictionary<string, JToken> tokensToReplace, List<JToken> tokensToDelete, List<string> loopProperties, JArray arrayToForm, JObject dictToForm, List<JToken> tokenToForm, List<JToken> tokensToAdd)
+        private JToken PostOperationsBuildUp(JToken parentToken, List<JToken> selectedTokens, Dictionary<string, JToken> tokensToReplace, List<JToken> tokensToDelete, List<string> condProps, List<string> loopProperties, JArray arrayToForm, JObject dictToForm, List<JToken> tokenToForm, List<JToken> tokensToAdd)
         {
             if (selectedTokens != null)
             {
@@ -249,6 +249,14 @@ namespace JUST
                     {
                         (parentToken as JObject).Remove(propertyToDelete);
                     }
+                }
+            }
+
+            if (condProps != null)
+            {
+                foreach (string propertyToDelete in condProps)
+                {
+                    (parentToken as JObject).Remove(propertyToDelete);
                 }
             }
 
@@ -352,7 +360,7 @@ namespace JUST
             loopProperties.Add(property.Name);
         }
 
-        private void ConditionalGroupOperation(JProperty property, JArray parentArray, JToken currentArrayToken, ref List<string> loopProperties, ref List<JToken> tokenToForm, JToken childToken)
+        private void ConditionalGroupOperation(JProperty property, JArray parentArray, JToken currentArrayToken, ref List<string> condProps, ref List<JToken> tokenToForm, JToken childToken)
         {
             ExpressionHelper.TryParseFunctionNameAndArguments(property.Name, out string functionName, out string arguments);
             object functionResult = ParseFunction(arguments, parentArray, currentArrayToken);
@@ -368,12 +376,12 @@ namespace JUST
                 result = false;
             }
 
-            if (result == true)
+            if (result)
             {
-                if (loopProperties == null)
-                    loopProperties = new List<string>();
+                if (condProps == null)
+                    condProps = new List<string>();
 
-                loopProperties.Add(property.Name);
+                condProps.Add(property.Name);
 
                 RecursiveEvaluate(childToken, parentArray, currentArrayToken);
 
@@ -383,16 +391,18 @@ namespace JUST
                 }
 
                 foreach (JToken grandChildToken in childToken.Children())
+                {
                     tokenToForm.Add(grandChildToken.DeepClone());
+                }
             }
             else
             {
-                if (loopProperties == null)
+                if (condProps == null)
                 {
-                    loopProperties = new List<string>();
+                    condProps = new List<string>();
                 }
 
-                loopProperties.Add(property.Name);
+                condProps.Add(property.Name);
             }
         }
 
