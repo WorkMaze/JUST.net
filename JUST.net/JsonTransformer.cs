@@ -114,10 +114,8 @@ namespace JUST
             bool isLoop = false;
             bool isBulk = false;
 
-            //foreach (JToken childToken in tokens)
-            for(int i = 0; i < tokens.Count(); i++)
+            foreach (JToken childToken in tokens)
             {
-                JToken childToken = tokens.ElementAt(i);
                 if (childToken.Type == JTokenType.Array && (parentToken as JProperty)?.Name.Trim() != "#")
                 {
                     IEnumerable<object> itemsToAdd = TransformArray(childToken.Children(), parentArray, currentArrayToken);

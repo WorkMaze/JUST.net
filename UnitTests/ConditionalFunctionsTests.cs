@@ -159,7 +159,7 @@ namespace JUST.UnitTests
         }
 
         [Test, Category("IfGroup"), Category("Strict")]
-        public void ConditionalGroupExceptionStrict()
+        public void ConditionalGroupOneMissingStrict()
         {
             const string input = "{ \"Tree\": { \"Branch\": \"leaf\", \"Flower\": \"Rose\" } }";
             const string transformer = "{ \"Result\": { \"#ifgroup(#exists($.non_existance))\": { \"State\": { \"Value1\": \"#valueof($.Tree.Branch)\", \"Value2\": \"#valueof($.Tree.Flower)\" }} } }";
