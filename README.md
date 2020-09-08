@@ -794,14 +794,14 @@ When a concatenation is needed, one can use #concat or #xconcat to join two arra
 	}],
   "xconcat": [{ 
       "code": "001", "display": "Drug1" 
-	},{
-	  "code": "002", "display": "Drug2"
-	},{ 
-	  "code": "pa1", "display": "PA1"
-	},{ 
-	  "code": "pa2", "display": "PA2" 
-	},{ 
-	  "code": "sa1", "display": "SA1"
+    },{
+      "code": "002", "display": "Drug2"
+    },{ 
+      "code": "pa1", "display": "PA1"
+    },{ 
+      "code": "pa2", "display": "PA2" 
+    },{ 
+      "code": "sa1", "display": "SA1"
     },{
       "code": "sa2", "display":"SA2" 
     }]
