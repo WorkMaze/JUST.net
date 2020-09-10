@@ -11,7 +11,7 @@ namespace JUST.UnitTests
         {
             const string transformer = "{ \"#\": [ \"#copy($.menu.id)\", \"#copy($.menu.value)\" ] }";
 
-            var result = JsonTransformer.Transform(transformer, ExampleInputs.Menu);
+            var result = new JsonTransformer().Transform(transformer, ExampleInputs.Menu);
 
             Assert.AreEqual("{\"file\":\"csv\",\"Window\":\"popup\"}", result);
         }
@@ -21,7 +21,7 @@ namespace JUST.UnitTests
         {
             const string transformer = "{ \"#\": [ \"#copy($)\", \"#replace($.menu.id,#valueof($.menu.value.Window))\"] }";
 
-            var result = JsonTransformer.Transform(transformer, ExampleInputs.Menu);
+            var result = new JsonTransformer().Transform(transformer, ExampleInputs.Menu);
 
             Assert.AreEqual("{\"menu\":{\"id\":\"popup\",\"value\":{\"Window\":\"popup\"},\"popup\":{\"menuitem\":[{\"value\":\"New\",\"onclick\":{\"action\":\"CreateNewDoc()\"}},{\"value\":\"Open\",\"onclick\":\"OpenDoc()\"},{\"value\":\"Close\",\"onclick\":\"CloseDoc()\"}]}}}", result);
         }
@@ -31,7 +31,7 @@ namespace JUST.UnitTests
         {
             const string transformer = "{ \"#\": [ \"#copy($)\", \"#replace($.menu.id,#valueof($.menu.value))\"] }";
 
-            var result = JsonTransformer.Transform(transformer, ExampleInputs.Menu);
+            var result = new JsonTransformer().Transform(transformer, ExampleInputs.Menu);
 
             Assert.AreEqual("{\"menu\":{\"id\":{\"Window\":\"popup\"},\"value\":{\"Window\":\"popup\"},\"popup\":{\"menuitem\":[{\"value\":\"New\",\"onclick\":{\"action\":\"CreateNewDoc()\"}},{\"value\":\"Open\",\"onclick\":\"OpenDoc()\"},{\"value\":\"Close\",\"onclick\":\"CloseDoc()\"}]}}}", result);
         }
@@ -41,7 +41,7 @@ namespace JUST.UnitTests
         {
             const string transformer = "{ \"#\": [ \"#copy($)\", \"#delete($.menu.popup)\" ] }";
 
-            var result = JsonTransformer.Transform(transformer, ExampleInputs.Menu);
+            var result = new JsonTransformer().Transform(transformer, ExampleInputs.Menu);
 
             Assert.AreEqual("{\"menu\":{\"id\":{\"file\":\"csv\"},\"value\":{\"Window\":\"popup\"}}}", result);
         }
@@ -51,7 +51,7 @@ namespace JUST.UnitTests
         {
             const string transformer = "{ \"#\": [ \"#copy(#xconcat($,.menu,.id))\" ] }";
 
-            var result = JsonTransformer.Transform(transformer, ExampleInputs.MenuNested);
+            var result = new JsonTransformer().Transform(transformer, ExampleInputs.MenuNested);
 
             Assert.AreEqual("{\"file\":\"csv\"}", result);
         }
@@ -61,7 +61,7 @@ namespace JUST.UnitTests
         {
             const string transformer = "{ \"#\": [ \"#copy($)\", \"#replace(#valueof(#concat($.,path)),#valueof($.menu.value))\"] }";
 
-            var result = JsonTransformer.Transform(transformer, ExampleInputs.MenuNested);
+            var result = new JsonTransformer().Transform(transformer, ExampleInputs.MenuNested);
 
             Assert.AreEqual("{\"path\":\"$.menu.id\",\"boolean\":true,\"menu\":{\"id\":{\"Window\":\"popup\"},\"value\":{\"Window\":\"popup\"},\"popup\":{\"menuitem\":[{\"value\":\"New\",\"onclick\":{\"action\":\"CreateNewDoc()\"}},{\"value\":\"Open\",\"onclick\":\"OpenDoc()\"},{\"value\":\"Close\",\"onclick\":\"CloseDoc()\"}]}}}", result);
         }
@@ -71,7 +71,7 @@ namespace JUST.UnitTests
         {
             const string transformer = "{ \"#\": [ \"#copy($)\", \"#delete(#valueof($.path))\" ] }";
 
-            var result = JsonTransformer.Transform(transformer, ExampleInputs.MenuNested);
+            var result = new JsonTransformer().Transform(transformer, ExampleInputs.MenuNested);
 
             Assert.AreEqual("{\"path\":\"$.menu.id\",\"boolean\":true,\"menu\":{\"value\":{\"Window\":\"popup\"},\"popup\":{\"menuitem\":[{\"value\":\"New\",\"onclick\":{\"action\":\"CreateNewDoc()\"}},{\"value\":\"Open\",\"onclick\":\"OpenDoc()\"},{\"value\":\"Close\",\"onclick\":\"CloseDoc()\"}]}}}", result);
         }
@@ -81,9 +81,9 @@ namespace JUST.UnitTests
         {
             const string transformer = "{ \"#\": [ \"#copy(#valueof($.boolean))\" ] }";
 
-            var result = Assert.Throws<ArgumentException>(() => JsonTransformer.Transform(transformer, ExampleInputs.Menu));
+            var result = Assert.Throws<ArgumentException>(() => new JsonTransformer().Transform(transformer, ExampleInputs.Menu));
 
-            Assert.AreEqual("Invalid jsonPath for #copy!", result.Message);
+            Assert.AreEqual($"Invalid path for #copy: '#valueof($.boolean)' resolved to null", result.Message);
         }
 
         [Test]
@@ -91,7 +91,7 @@ namespace JUST.UnitTests
         {
             const string transformer = "{ \"#\": [ \"#replace(#valueof($.boolean))\" ] }";
 
-            var result = Assert.Throws<Exception>(() => JsonTransformer.Transform(transformer, ExampleInputs.Menu));
+            var result = Assert.Throws<Exception>(() => new JsonTransformer().Transform(transformer, ExampleInputs.Menu));
 
             Assert.AreEqual("Function #replace needs two arguments - 1. jsonPath to be replaced, 2. token to replace with.", result.Message);
         }
@@ -101,7 +101,7 @@ namespace JUST.UnitTests
         {
             const string transformer = "{ \"#\": [ \"#replace(#valueof($.boolean), #valueof($.menu.value))\" ] }";
 
-            var result = Assert.Throws<ArgumentException>(() => JsonTransformer.Transform(transformer, ExampleInputs.Menu));
+            var result = Assert.Throws<ArgumentException>(() => new JsonTransformer().Transform(transformer, ExampleInputs.Menu));
 
             Assert.AreEqual("Invalid jsonPath for #replace!", result.Message);
         }
@@ -111,7 +111,7 @@ namespace JUST.UnitTests
         {
             const string transformer = "{ \"#\": [ \"#delete(#valueof($.boolean))\" ] }";
 
-            var result = Assert.Throws<ArgumentException>(() => JsonTransformer.Transform(transformer, ExampleInputs.Menu));
+            var result = Assert.Throws<ArgumentException>(() => new JsonTransformer().Transform(transformer, ExampleInputs.Menu));
 
             Assert.AreEqual("Invalid jsonPath for #delete!", result.Message);
         }

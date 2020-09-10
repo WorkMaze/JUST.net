@@ -1,4 +1,4 @@
-[![Build Status](https://workmaze.visualstudio.com/_apis/public/build/definitions/82d9da6f-b38c-4d61-a668-2087094c2849/1/badge)](https://workmaze.visualstudio.com/JUST.net/_build/index?definitionId=1)
+[![Build Status](https://courela.visualstudio.com/JUST.net/_apis/build/status/Truphone.JUST.net?branchName=develop)](https://courela.visualstudio.com/JUST.net/_build/latest?definitionId=1&branchName=develop)
 
 # JUST
 
@@ -12,10 +12,13 @@ The library is available as a NUGET package.
 
 This C# project has working examples of the transformations.
 
-**Types are now supported**. [New functions](#typeconvertions) were added to provide type convertions.
+**Types are now supported**. [New functions](#typeconversions) were added to provide type conversions.
 Also a new enum field called `EvaluationMode` was added to `JUSTContext`, which lets you select how type mismatches are handled:
 - option `Strict` mode will throw an exception on error;
 - option `FallbackToDefault` will return the default value for the return type of the function/expression being evaluated
+
+**New query languages accepted** besides [JsonPath](https://goessner.net/articles/JsonPath/). All you have to do is create a class that implements `ISelectableToken` and call generic `Transform` method with your type.
+[JmesPath](http://jmespath.org/) is included as an alternative ([example here](#jmesexample)).
 
 # JUST.NET Library
 
@@ -48,6 +51,17 @@ string transformer = File.ReadAllText("Examples/Transformer.json");
 
 // do the actual transformation
 string transformedString = JsonTransformer.Transform(transformer, input);
+
+// with context
+JUSTContext context = new JUSTContext 
+{ 
+  EvaluationMode = EvaluationMode.Strict,
+  DefaultDecimalPlaces = 4
+};
+string transformedString = new JsonTransformer(context).Transform(transformer, input);
+
+// with generic method
+string transformedString = JsonTransformer<JmesPathSelectable>.Transform(transformer, input);
 ```
 
 # Using JUST to transform JSON
@@ -102,6 +116,38 @@ Output:
 }
 ```
 
+#### <a name="jmesexample"></a> ...with JmesPath 
+
+Input:
+
+```JSON
+{
+  "locations": [
+    { "name": "Seattle", "state": "WA" },
+    { "name": "New York", "state": "NY" },
+    { "name": "Bellevue", "state": "WA" },
+    { "name": "Olympia", "state": "WA" }
+  ]
+}
+```
+
+Transformer:
+
+```JSON
+{
+  "result": "#valueof(locations[?state == 'WA'].name | sort(@) | {WashingtonCities: join(', ', @)})" 
+}
+```
+
+Output:
+
+```JSON
+{
+  "result": {
+    "WashingtonCities": "Bellevue, Olympia, Seattle"
+  }
+}
+```
 
 ## ifcondition
 
@@ -367,7 +413,7 @@ Output:
 ```
 
 
-## <a name="typeconvertions"></a> Type convertions
+## <a name="typeconversions"></a> Type conversions
 
 As type handling was introduced, functions to make type convertions are handy. 
 The following functions are available:
@@ -686,6 +732,79 @@ Output:
 	"2": "one"
   },
   "othervalue": "othervalue"
+}
+```
+
+## Array concatenation
+When a concatenation is needed, one can use #concat or #xconcat to join two arrays
+1. concat(object1, object2)
+2. xconcat(object1,object2......objectx)
+
+```JSON
+{
+  "drugs": [{ 
+      "code": "001", "display": "Drug1" 
+    },{
+      "code": "002", "display": "Drug2" 
+  }],
+  "pa": [{ 
+      "code": "pa1", "display": "PA1" 
+	},{
+      "code": "pa2", "display": "PA2" 
+  }],
+  "sa": [{ 
+      "code": "sa1", "display": "SA1" 
+	},{
+      "code": "sa2", "display": "SA2" 
+  }]
+}
+```
+
+```Transformer
+{
+  "concat": "#concat(#valueof($.drugs), #valueof($.pa))", 
+  "multipleConcat": "#concat(#concat(#valueof($.drugs), #valueof($.pa)), #valueof($.sa))\",
+  "xconcat": "#xconcat(#valueof($.drugs), #valueof($.pa), #valueof($.sa))" 
+}
+```
+
+```Output
+{
+  "concat": [{
+      "code": "001", "display": "Drug1" 
+	},{
+      "code": "002", "display": "Drug2" 
+    },{
+      "code": "pa1", "display": "PA1" 
+	},{ 
+      "code": "pa2", "display": "PA2" 
+  }],
+  "multipleConcat": [{ 
+      "code": "001", "display": "Drug1" 
+    },{ 
+      "code": "002", "display": "Drug2"
+    },{ 
+      "code": "pa1", "display": "PA1" 
+    },{ 
+      "code": "pa2", "display": "PA2" 
+    },{ 
+      "code": "sa1", "display": "SA1"
+    },{ 
+	  "code": "sa2", "display": "SA2"
+	}],
+  "xconcat": [{ 
+      "code": "001", "display": "Drug1" 
+    },{
+      "code": "002", "display": "Drug2"
+    },{ 
+      "code": "pa1", "display": "PA1"
+    },{ 
+      "code": "pa2", "display": "PA2" 
+    },{ 
+      "code": "sa1", "display": "SA1"
+    },{
+      "code": "sa2", "display":"SA2" 
+    }]
 }
 ```
 
@@ -1021,27 +1140,23 @@ Output:
 
 ## Register User Defined methods for seamless use
 
-To reduce the fuzz of calling custom methods, there's this class `JUSTContext`, where you can register your custom functions.
-`JsonTransformer` has a readonly field called `GlobalContext` where one can register functions that will be available for all subsequent calls
-of `Transform` methods. To only use some functions in one transformation, you can create a `JUSTContext` instance and pass it to `Transform` method.
+To reduce the fuzz of calling custom methods, there's this class `JUSTContext`, where you can register your custom functions, and then pass it as a parameter to `JsonTransformer` constructor. All calls of `Transform` methods will use the supplied `JUSTContext`.
+There's also this class `CustomFunction` that as all the necessary properties to register a custom function. One can create a list of there classes and pass it to `JUSTContext` constructor.
 
 Examples:
 ```C#
 new JUSTContext().RegisterCustomFunction(assemblyName, namespace, methodName, methodAlias);
-```
-```C#
-JsonTransformer.GlobalContext.RegisterCustomFunction(assemblyName, namespace, methodName, methodAlias);
+new JUSTContext().RegisterCustomFunction(new CustomFunction{ AssemblyName = "someAssembly", Namespace = "someNamespace", MethodName = "someMethod", MethodAlias = "someAlias" });
+new JUSTContext(new[] { new CustomFunction{ AssemblyName = "someAssembly", Namespace = "someNamespace", MethodName = "someMethod", MethodAlias = "someAlias" } });
 ```
 
 Parameter 'namespace' must include the class name as well, 'assemblyName' is optional, so as 'methodAlias', which can be 
 used to register methods with the same name under diferent namespaces.
 After registration you can call it like any other built-in function.
 
-Global context registrations are handled in a static property, so they will live as long as your application lives.
 You have the possibility to unregister a custom function or remove all registrations with the following methods:
-`JsonTransformer.GlobalContext.UnregisterCustomFunction(name)`
-`JsonTransformer.GlobalContext.ClearCustomFunctionRegistrations()`
-
+`new JUSTContext().UnregisterCustomFunction(aliasOrName)`
+`new JUSTContext().ClearCustomFunctionRegistrations()`
 
 Consider the following input:
 
@@ -1059,13 +1174,9 @@ Consider the following input:
 
 Registration:
 ```C#
-JsonTransformer.GlobalContext.RegisterCustomFunction("SomeAssemblyName", "NameSpace.Plus.ClassName", "IsSummer");
-```
-or
-```C#
-var localContext = new JUSTContext();
-localContext.RegisterCustomFunction("SomeAssemblyName", "NameSpace.Plus.ClassName", "IsSummer");
-JsonTransformer.Transform(<transformer>, <input>, localContext);
+var context = new JUSTContext();
+context.RegisterCustomFunction("SomeAssemblyName", "NameSpace.Plus.ClassName", "IsSummer");
+new JsonTransformer(context).Transform(<transformer>, <input>);
 ```
 
 
@@ -1223,6 +1334,7 @@ Output:
   "dynamic_expr": 100
 }
 ```
+
 
 
 ## Check for existance 

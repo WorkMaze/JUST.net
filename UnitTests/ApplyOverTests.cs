@@ -14,7 +14,7 @@ namespace JUST.UnitTests
             {
                 EvaluationMode = EvaluationMode.Strict
             };
-            var result = JsonTransformer.Transform(transformer, input, context);
+            var result = new JsonTransformer(context).Transform(transformer, input);
 
             Assert.AreEqual("{\"result\":true,\"after_result\":\"one\"}", result);
         }

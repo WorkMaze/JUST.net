@@ -14,7 +14,7 @@ namespace JUST.UnitTests
             string inputSpecial = File.ReadAllText("Inputs/Input_Customfunction_Nestedresult.json");
             string transformer = File.ReadAllText("Inputs/Transformer_customfunctionnestedresult.json");
             string result = JsonConvert.SerializeObject
-                (JsonTransformer.Transform(JObject.Parse(transformer), JObject.Parse(inputSpecial)));
+                (new JsonTransformer().Transform(JObject.Parse(transformer), JObject.Parse(inputSpecial)));
             Assert.AreEqual("{\"Seasons\":[[[[\"2017\"],[\"40\"],[\"20\"],[\"25\"],[\"10\"]],[[\"2018\"],[\"40\"],[\"20\"],[\"25\"],[\"10\"]],[[\"2019\"],[\"40\"],[\"20\"],[\"25\"],[\"10\"]]]]}", result);
         }
     }

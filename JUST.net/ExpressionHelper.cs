@@ -6,7 +6,7 @@ namespace JUST
     internal class ExpressionHelper
     {
         internal const char EscapeChar = '/'; //do not use backslash, it is already the escape char in JSON
-        private const string FunctionAndArgumentsRegex = "^#(.+?)[(](.*)[)]$";
+        private const string FunctionAndArgumentsRegex = "^\\s*#(.+?)[(](.*)[)]\\s*$";
 
         internal static bool TryParseFunctionNameAndArguments(string input, out string functionName, out string arguments)
         {
@@ -61,8 +61,8 @@ namespace JUST
                 else { isEscapedChar = false; }
             }
 
-            arguments.Add(index > 0 ? 
-                Unescape(functionString.Substring(index + 1, functionString.Length - index - 1)) : 
+            arguments.Add(index > 0 ?
+                Unescape(functionString.Substring(index + 1, functionString.Length - index - 1)) :
                 functionString);
 
             return arguments.ToArray();
@@ -82,7 +82,7 @@ namespace JUST
 
         internal static string UnescapeSharp(string val)
         {
-            return Regex.Replace(val, "^\\s*\\/#", "#");
+            return Regex.Replace(val, "^(\\s*)\\/(#)", "$1$2");
         }
     }
 }
