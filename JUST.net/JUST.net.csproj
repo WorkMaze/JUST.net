@@ -1,19 +1,26 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <Title>JUST - JSON Under Simple Transformation</Title>
     <TargetFrameworks>netstandard2.0;net461</TargetFrameworks>
     <Description>This a cool .NET Standard library which enables you to transform a JSON document into another JSON document using JSON transformations using JSON path. This is the JSON equivalent of XSLT. 
 This will repace the JUST and JUST.NETCore packages.</Description>
+    <Summary>This is the JSON equivalent of XSLT</Summary>
     <PackageProjectUrl>https://github.com/WorkMaze/JUST.net</PackageProjectUrl>
     <Copyright>Neeraj Salpekar 2018</Copyright>
+    <PackageRepositoryType>C#</PackageRepositoryType>
     <PackageLicenseUrl>https://github.com/WorkMaze/JUST.net/blob/master/License.md</PackageLicenseUrl>
     <PackageTags>C#;.NET;JSON;XSLT;Transformation;Schema</PackageTags>
     <RepositoryUrl>https://github.com/WorkMaze/JUST.net</RepositoryUrl>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
-    <PackageReleaseNotes>Fixed the following issues:-
-https://github.com/WorkMaze/JUST.net/issues/26
-https://github.com/WorkMaze/JUST.net/issues/25</PackageReleaseNotes>
+    <PackageReleaseNotes>
+      Made JsonTransformer non static.
+      Added generic ISelectableToken to JsonTransformer.
+      Split code into methods related with operations.</PackageReleaseNotes>
+    <Version>4.0.0</Version>
+    <AssemblyVersion>4.0.0.0</AssemblyVersion>
+    <FileVersion>4.0.0.0</FileVersion>
   </PropertyGroup>
 
   <ItemGroup>
