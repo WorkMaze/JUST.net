@@ -5,7 +5,8 @@ namespace JUST
 {
     internal class ExpressionHelper
     {
-        private const string FunctionAndArgumentsRegex = "^#(.+?)[(](.*)[)]$";
+        internal const char EscapeChar = '/'; //do not use backslash, it is already the escape char in JSON
+        private const string FunctionAndArgumentsRegex = "^\\s*#(.+?)[(](.*)[)]\\s*$";
 
         internal static bool TryParseFunctionNameAndArguments(string input, out string functionName, out string arguments)
         {
@@ -15,7 +16,7 @@ namespace JUST
             return match.Success;
         }
 
-        internal static string[] GetArguments(string functionString)
+        internal static string[] SplitArguments(string functionString)
         {
             if (string.IsNullOrEmpty(functionString))
             {
@@ -24,48 +25,69 @@ namespace JUST
 
             bool brackettOpen = false;
 
-            List<string> arguments = null;
+            List<string> arguments = new List<string>();
             int index = 0;
 
             int openBrackettCount = 0;
             int closebrackettCount = 0;
+            bool isEscapedChar = false;
 
             for (int i = 0; i < functionString.Length; i++)
             {
                 char currentChar = functionString[i];
-
+                if (currentChar == EscapeChar)
+                {
+                    isEscapedChar = !isEscapedChar;
+                    continue;
+                }
                 if (currentChar == '(')
-                    openBrackettCount++;
-
-                if (currentChar == ')')
-                    closebrackettCount++;
+                {
+                    if (!isEscapedChar) { openBrackettCount++; }
+                    else { isEscapedChar = !isEscapedChar; }
+                }
+                else if (currentChar == ')')
+                {
+                    if (!isEscapedChar) { closebrackettCount++; }
+                    else { isEscapedChar = !isEscapedChar; }
+                }
 
                 brackettOpen = openBrackettCount != closebrackettCount;
-
-                if ((currentChar == ',') && (!brackettOpen))
+                if (currentChar == ',' && !brackettOpen)
                 {
-                    if (arguments == null)
-                        arguments = new List<string>();
-                    
-                    arguments.Add(index != 0 ?
-                        functionString.Substring(index + 1, i - index - 1) :
-                        functionString.Substring(index, i));
-                    index = i;
+                    if (!isEscapedChar)
+                    {
+                        arguments.Add(Unescape(index != 0 ?
+                            functionString.Substring(index + 1, i - index - 1) :
+                            functionString.Substring(index, i)));
+                        index = i;
+                    }
+                    else { isEscapedChar = !isEscapedChar; }
                 }
+                else { isEscapedChar = false; }
             }
 
-            if (index > 0)
-            {
-                arguments.Add(functionString.Substring(index + 1, functionString.Length - index - 1));
-            }
-            else
-            {
-                if (arguments == null)
-                    arguments = new List<string>();
-                arguments.Add(functionString);
-            }
+            arguments.Add(index > 0 ?
+                Unescape(functionString.Substring(index + 1, functionString.Length - index - 1)) :
+                functionString);
 
             return arguments.ToArray();
+        }
+
+        private static string Unescape(string str)
+        {
+            return !IsFunction(str) ?
+                Regex.Replace(str, "\\/([\\/(),])", "$1") :
+                str;
+        }
+
+        internal static bool IsFunction(string val)
+        {
+            return Regex.IsMatch(val, "^\\s*#");
+        }
+
+        internal static string UnescapeSharp(string val)
+        {
+            return Regex.Replace(val, "^(\\s*)\\/(#)", "$1$2");
         }
     }
 }

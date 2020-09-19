@@ -36,7 +36,7 @@ namespace JUST.UnitTests
 
             var result = new JsonTransformer().Transform(transformer, input);
 
-            Assert.AreEqual("{\"stringresult\":{\"lastindexofand\":21,\"firstindexofand\":6,\"substring\":\"veryunuasua\",\"concat\":\"\",\"length_string\":34,\"length_array\":5},\"mathresult\":{\"add\":4,\"subtract\":4,\"multiply\":6,\"divide\":3,\"round\":10.01}}", result);
+            Assert.AreEqual("{\"stringresult\":{\"lastindexofand\":21,\"firstindexofand\":6,\"substring\":\"veryunuasua\",\"concat\":null,\"length_string\":34,\"length_array\":5},\"mathresult\":{\"add\":4,\"subtract\":4,\"multiply\":6,\"divide\":3,\"round\":10.01}}", result);
         }
 
         [Test]
@@ -214,6 +214,34 @@ namespace JUST.UnitTests
             var result = new JsonTransformer<JmesPathSelectable>(context).Transform(transformer, input);
 
             Assert.AreEqual("{\"result\":{\"WashingtonCities\":\"Bellevue, Olympia, Seattle\"}}", result);
+        }
+
+        [Test]
+        public void Escape()
+        {
+            var input = "{ \"arg\": \"some_value\" }";
+            var transformer = "{ \"sharp\": \"/#not_a_function\", \"parentheses\": \"#xconcat(func/(',#valueof($.arg),'/))\", \"comma\": \"#xconcat(func/(',#valueof($.arg),'/,'other_value'/))\" }";
+            var context = new JUSTContext
+            {
+                EvaluationMode = EvaluationMode.Strict
+            };
+            var result = new JsonTransformer(context).Transform(transformer, input);
+
+            Assert.AreEqual("{\"sharp\":\"#not_a_function\",\"parentheses\":\"func('some_value')\",\"comma\":\"func('some_value','other_value')\"}", result);
+        }
+
+        [Test]
+        public void ArrayConcatenation()
+        {
+            var input = "{ \"drugs\": [{ \"code\": \"001\", \"display\": \"Drug1\" },{ \"code\": \"002\", \"display\": \"Drug2\" }],\"pa\": [{ \"code\": \"pa1\", \"display\": \"PA1\" },{ \"code\": \"pa2\", \"display\": \"PA2\" }], \"sa\": [{ \"code\": \"sa1\", \"display\": \"SA1\" },{ \"code\": \"sa2\", \"display\": \"SA2\" }]}";
+            var transformer = "{ \"concat\": \"#concat(#valueof($.drugs), #valueof($.pa))\", \"multipleConcat\": \"#concat(#concat(#valueof($.drugs), #valueof($.pa)), #valueof($.sa))\", \"xconcat\": \"#xconcat(#valueof($.drugs), #valueof($.pa), #valueof($.sa))\" }";
+            var context = new JUSTContext
+            {
+                EvaluationMode = EvaluationMode.Strict
+            };
+            var result = new JsonTransformer(context).Transform(transformer, input);
+
+            Assert.AreEqual("{\"concat\":[{\"code\":\"001\",\"display\":\"Drug1\"},{\"code\":\"002\",\"display\":\"Drug2\"},{\"code\":\"pa1\",\"display\":\"PA1\"},{\"code\":\"pa2\",\"display\":\"PA2\"}],\"multipleConcat\":[{\"code\":\"001\",\"display\":\"Drug1\"},{\"code\":\"002\",\"display\":\"Drug2\"},{\"code\":\"pa1\",\"display\":\"PA1\"},{\"code\":\"pa2\",\"display\":\"PA2\"},{\"code\":\"sa1\",\"display\":\"SA1\"},{\"code\":\"sa2\",\"display\":\"SA2\"}],\"xconcat\":[{\"code\":\"001\",\"display\":\"Drug1\"},{\"code\":\"002\",\"display\":\"Drug2\"},{\"code\":\"pa1\",\"display\":\"PA1\"},{\"code\":\"pa2\",\"display\":\"PA2\"},{\"code\":\"sa1\",\"display\":\"SA1\"},{\"code\":\"sa2\",\"display\":\"SA2\"}]}", result);
         }
     }
 }

@@ -4,7 +4,7 @@ using NUnit.Framework;
 namespace JUST.UnitTests
 {
     [TestFixture]
-    public class TypeConversions
+    public class TypeConversionTests
     {
         [TestCase("\"true\"", true)]
         [TestCase("\"false\"", false)]

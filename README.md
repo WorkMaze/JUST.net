@@ -735,6 +735,79 @@ Output:
 }
 ```
 
+## Array concatenation
+When a concatenation is needed, one can use #concat or #xconcat to join two arrays
+1. concat(object1, object2)
+2. xconcat(object1,object2......objectx)
+
+```JSON
+{
+  "drugs": [{ 
+      "code": "001", "display": "Drug1" 
+    },{
+      "code": "002", "display": "Drug2" 
+  }],
+  "pa": [{ 
+      "code": "pa1", "display": "PA1" 
+	},{
+      "code": "pa2", "display": "PA2" 
+  }],
+  "sa": [{ 
+      "code": "sa1", "display": "SA1" 
+	},{
+      "code": "sa2", "display": "SA2" 
+  }]
+}
+```
+
+```Transformer
+{
+  "concat": "#concat(#valueof($.drugs), #valueof($.pa))", 
+  "multipleConcat": "#concat(#concat(#valueof($.drugs), #valueof($.pa)), #valueof($.sa))\",
+  "xconcat": "#xconcat(#valueof($.drugs), #valueof($.pa), #valueof($.sa))" 
+}
+```
+
+```Output
+{
+  "concat": [{
+      "code": "001", "display": "Drug1" 
+	},{
+      "code": "002", "display": "Drug2" 
+    },{
+      "code": "pa1", "display": "PA1" 
+	},{ 
+      "code": "pa2", "display": "PA2" 
+  }],
+  "multipleConcat": [{ 
+      "code": "001", "display": "Drug1" 
+    },{ 
+      "code": "002", "display": "Drug2"
+    },{ 
+      "code": "pa1", "display": "PA1" 
+    },{ 
+      "code": "pa2", "display": "PA2" 
+    },{ 
+      "code": "sa1", "display": "SA1"
+    },{ 
+	  "code": "sa2", "display": "SA2"
+	}],
+  "xconcat": [{ 
+      "code": "001", "display": "Drug1" 
+    },{
+      "code": "002", "display": "Drug2"
+    },{ 
+      "code": "pa1", "display": "PA1"
+    },{ 
+      "code": "pa2", "display": "PA2" 
+    },{ 
+      "code": "sa1", "display": "SA1"
+    },{
+      "code": "sa2", "display":"SA2" 
+    }]
+}
+```
+
 ## Nested array looping (looping within context)
 A new function `loopwithincontext` has been introduced to be able to loop withing the context of an outer loop.
 Cosider the input:
@@ -1216,6 +1289,53 @@ Output:
   "AgeOfParents": 137
 }
 ```
+
+
+## Escaping reserved characters
+
+Characters like '(' and ')' (round brackets), and ',' (comma) are considered reserved characters when used within a function (not on a regular string). Also '#' (sharp) is a reserved character when used at the start of a statement (value of property or argument of a function). To avoid parsing these characters as reserved characters you may "escape" them, adding a '/' (slash) before the reserved character. For '#', it is only necessary to escape when it occurs at the start of a statement.
+This is especially useful when creating dynamic expressions.
+
+Consider the following input:
+
+```JSON
+{
+  "arg": 1,
+  "arr": [{
+	"id": 1,
+	"val": 100
+  },{
+	"id": 2,
+	"val": 200
+  }]
+}
+```
+
+Transformer:
+
+```JSON
+{
+  "sharp": "/#not_a_function",
+  "sharp_arg": "#xconcat(/#not,_a_function_arg)",
+  "parentheses": "#xconcat(func/(',#valueof($.arg),'/))", 
+  "comma": "#xconcat(func/(',#valueof($.arg),'/,'other_value'/))",
+  "dynamic_expr": "#valueof(#xconcat($.arr[?/(@.id==,#valueof($.arg),/)].val))"
+}
+```
+
+
+Output:
+```JSON
+{
+  "sharp": "#not_a_function",
+  "sharp_arg": "#not_a_function_arg",
+  "parentheses": "func('1')", 
+  "comma": "func('1','other_value')",
+  "dynamic_expr": 100
+}
+```
+
+
 
 ## Check for existance 
 
