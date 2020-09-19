@@ -11,7 +11,7 @@ namespace JUST.UnitTests
             const string transformer = "{ \"IsBought\": \"#exists($.BuyDate)\", \"HasExpireDate\": \"#exists($.ExpireDate)\", \"HasDefects\": \"#exists($.Defects)\", \"HasNotes\": \"#exists($.Notes)\" }";
             const string input = "{ \"BuyDate\": \"2017-04-10T11:36:39+03:00\", \"Defects\": \"\", \"Notes\": null }";
 
-            var result = JsonTransformer.Transform(transformer, input);
+            var result = new JsonTransformer().Transform(transformer, input);
 
             Assert.AreEqual("{\"IsBought\":true,\"HasExpireDate\":false,\"HasDefects\":true,\"HasNotes\":true}", result);
         }
@@ -22,7 +22,7 @@ namespace JUST.UnitTests
             const string transformer = "{ \"IsBought\": \"#exists(#valueof($.path))\", \"HasExpireDate\": \"#exists($.ExpireDate)\", \"HasDefects\": \"#exists($.Defects)\", \"HasNotes\": \"#exists($.Notes)\" }";
             const string input = "{ \"path\": \"$.BuyDate\",\"BuyDate\": \"2017-04-10T11:36:39+03:00\", \"Defects\": \"\", \"Notes\": null }";
 
-            var result = JsonTransformer.Transform(transformer, input);
+            var result = new JsonTransformer().Transform(transformer, input);
 
             Assert.AreEqual("{\"IsBought\":true,\"HasExpireDate\":false,\"HasDefects\":true,\"HasNotes\":true}", result);
         }
@@ -33,7 +33,7 @@ namespace JUST.UnitTests
             const string transformer = "{ \"IsBought\": \"#existsandnotempty($.BuyDate)\", \"HasExpireDate\": \"#existsandnotempty($.ExpireDate)\", \"HasDefects\": \"#existsandnotempty($.Defects)\", \"HasNotes\": \"#existsandnotempty($.Notes)\" }";
             const string input = "{ \"BuyDate\": \"2017-04-10T11:36:39+03:00\", \"Defects\": \"\", \"Notes\": null }";
 
-            var result = JsonTransformer.Transform(transformer, input);
+            var result = new JsonTransformer().Transform(transformer, input);
 
             Assert.AreEqual("{\"IsBought\":true,\"HasExpireDate\":false,\"HasDefects\":false,\"HasNotes\":false}", result);
         }
@@ -44,7 +44,7 @@ namespace JUST.UnitTests
             const string transformer = "{ \"IsBought\": \"#existsandnotempty(#valueof($.path))\", \"HasExpireDate\": \"#existsandnotempty($.ExpireDate)\", \"HasDefects\": \"#existsandnotempty($.Defects)\", \"HasNotes\": \"#existsandnotempty($.Notes)\" }";
             const string input = "{ \"path\": \"$.BuyDate\", \"BuyDate\": \"2017-04-10T11:36:39+03:00\", \"Defects\": \"\", \"Notes\": null }";
 
-            var result = JsonTransformer.Transform(transformer, input);
+            var result = new JsonTransformer().Transform(transformer, input);
 
             Assert.AreEqual("{\"IsBought\":true,\"HasExpireDate\":false,\"HasDefects\":false,\"HasNotes\":false}", result);
         }
@@ -55,7 +55,7 @@ namespace JUST.UnitTests
             const string input = "[{ \"id\": \"id1\", \"category\": \"cat1\" }, { \"id\": \"id2\" } ]";
             const string transformer = "{ \"items\": { \"#loop($)\": { \"id\": \"#currentvalueatpath($.id)\", \"existance\": \"#exists($.category)\" } } }";
 
-            var result = JsonTransformer.Transform(transformer, input, new JUSTContext { EvaluationMode = EvaluationMode.Strict });
+            var result = new JsonTransformer(new JUSTContext { EvaluationMode = EvaluationMode.Strict }).Transform(transformer, input);
 
             Assert.AreEqual("{\"items\":[{\"id\":\"id1\",\"existance\":true},{\"id\":\"id2\",\"existance\":false}]}", result);
         }

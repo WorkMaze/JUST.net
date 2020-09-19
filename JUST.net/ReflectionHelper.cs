@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json.Linq;
+using JUST.net.Selectables;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -12,27 +13,32 @@ namespace JUST
 {
     internal static class ReflectionHelper
     {
-        private const string EXTERNAL_ASSEMBLY_REGEX = "([\\w.]+)[:]{2}([\\w.]+)[:]{0,2}([\\w.]*)";
+        internal const string EXTERNAL_ASSEMBLY_REGEX = "([\\w.]+)[:]{2}([\\w.]+)[:]{0,2}([\\w.]*)";
 
-        internal static object caller(Assembly assembly, string myclass, string mymethod, object[] parameters, bool convertParameters, JUSTContext context)
+        internal static object Caller<T>(Assembly assembly, string myclass, string mymethod, object[] parameters, bool convertParameters, JUSTContext context) where T : ISelectableToken
         {
             Type type = assembly?.GetType(myclass) ?? Type.GetType(myclass);
-            MethodInfo methodInfo = type.GetTypeInfo().GetMethod(mymethod);
-            var instance = !methodInfo.IsStatic ? Activator.CreateInstance(type) : null;
-
+            if (type?.ContainsGenericParameters ?? false)
+            {
+                type = type.MakeGenericType(typeof(T));
+            }
+            MethodInfo methodInfo = type?.GetMethod(mymethod);
+            if (methodInfo == null)
+            {
+                throw new Exception($"Invalid function: #{mymethod}");
+            }
             try
             {
-                return InvokeCustomMethod(methodInfo, parameters, convertParameters, context);
+                return InvokeCustomMethod<T>(methodInfo, parameters, convertParameters, context);
             }
-            catch
+            catch (Exception ex)
             {
-                EvaluationMode mode = context.EvaluationMode;
-                if (mode == EvaluationMode.Strict) { throw; }
-                return GetDefaultValue(methodInfo.ReturnType);
+                ExceptionHelper.HandleException(ex, context.EvaluationMode);
             }
+            return GetDefaultValue(methodInfo.ReturnType);
         }
 
-        internal static object InvokeCustomMethod(MethodInfo methodInfo, object[] parameters, bool convertParameters, JUSTContext context)
+        internal static object InvokeCustomMethod<T>(MethodInfo methodInfo, object[] parameters, bool convertParameters, JUSTContext context) where T : ISelectableToken
         {
             var instance = !methodInfo.IsStatic ? Activator.CreateInstance(methodInfo.DeclaringType) : null;
 
@@ -48,7 +54,8 @@ namespace JUST
             }
             try
             {
-                return methodInfo.Invoke(instance, convertParameters ? typedParameters.ToArray() : parameters);
+                return (methodInfo.IsGenericMethodDefinition ? methodInfo.MakeGenericMethod(typeof(T)) : methodInfo)
+                    .Invoke(instance, convertParameters ? typedParameters.ToArray() : parameters);
             }
             catch(Exception ex)
             {
@@ -60,7 +67,7 @@ namespace JUST
             }
         }
 
-        internal static object CallExternalAssembly(string functionName, object[] parameters, JUSTContext context)
+        internal static object CallExternalAssembly<T>(string functionName, object[] parameters, JUSTContext context) where T : ISelectableToken
         {
             var match = Regex.Match(functionName, EXTERNAL_ASSEMBLY_REGEX);
             var isAssemblyDefined = match.Groups.Count == 4 && match.Groups[3].Value != string.Empty;
@@ -71,7 +78,7 @@ namespace JUST
             var assembly = GetAssembly(isAssemblyDefined, assemblyName, namespc, methodName);
             if (assembly != null)
             {
-                return caller(assembly, namespc, methodName, FilterParameters(parameters), true, context);
+                return Caller<T>(assembly, namespc, methodName, FilterParameters(parameters), true, context);
             }
 
             throw new MissingMethodException((assemblyName != null ? $"{assemblyName}." : string.Empty) + $"{namespc}.{methodName}");
@@ -142,6 +149,60 @@ namespace JUST
             return parameters;
         }
 
+        internal static Type GetType(JTokenType jType)
+        {
+            Type result = null;
+            switch (jType)
+            {
+                case JTokenType.Object:
+                    result = typeof(object);
+                    break;
+                case JTokenType.Array:
+                    result = typeof(Array);
+                    break;
+                case JTokenType.Integer:
+                    result = typeof(int);
+                    break;
+                case JTokenType.Float:
+                    result = typeof(float);
+                    break;
+                case JTokenType.String:
+                    result = typeof(string);
+                    break;
+                case JTokenType.Boolean:
+                    result = typeof(bool);
+                    break;
+                case JTokenType.Date:
+                    result = typeof(DateTime);
+                    break;
+                case JTokenType.Bytes:
+                    result = typeof(byte);
+                    break;
+                case JTokenType.Guid:
+                    result = typeof(Guid);
+                    break;
+                case JTokenType.TimeSpan:
+                    result = typeof(TimeSpan);
+                    break;
+                case JTokenType.Comment:
+                case JTokenType.Property:
+                case JTokenType.Constructor:
+                case JTokenType.Undefined:
+                case JTokenType.Raw:
+                case JTokenType.None:
+                case JTokenType.Uri:
+                case JTokenType.Null:
+                default:
+                    break;
+            }
+            return result;
+        }
+
+        internal static object GetTypedValue(JTokenType jType, object val, EvaluationMode mode)
+        {
+            return GetTypedValue(GetType(jType), val, mode);
+        }
+
         internal static object GetTypedValue(Type pType, object val, EvaluationMode mode)
         {
             object typedValue = val;
@@ -188,9 +249,9 @@ namespace JUST
                     }
                 }
             }
-            catch
+            catch (Exception ex)
             {
-                if (mode == EvaluationMode.Strict) { throw; }
+                ExceptionHelper.HandleException(ex, mode);
                 typedValue = GetDefaultValue(pType);
             }
             return typedValue;
@@ -202,11 +263,6 @@ namespace JUST
                 return Activator.CreateInstance(t);
 
             return null;
-        }
-
-        internal static bool IsExternalFunction(string functionName)
-        {
-            return Regex.IsMatch(functionName, EXTERNAL_ASSEMBLY_REGEX);
         }
     }
 }

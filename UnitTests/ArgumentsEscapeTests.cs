@@ -11,7 +11,7 @@ namespace JUST.UnitTests
         {
             const string args = "arg1";
             const string transformer = "{ \"result\": \"#xconcat(" + args + ",#constant_hash())\" }";
-            var result = JsonTransformer.Transform(transformer, "{}");
+            var result = new JsonTransformer().Transform(transformer, "{}");
 
             Assert.AreEqual("{\"result\":\"arg1#\"}", result);
         }
@@ -21,7 +21,7 @@ namespace JUST.UnitTests
         {
             var args = $"{EscapeChar}({EscapeChar})";
             var transformer = "{ \"result\": \"#xconcat(" + args + ",#constant_hash())\" }";
-            var result = JsonTransformer.Transform(transformer, "{}");
+            var result = new JsonTransformer().Transform(transformer, "{}");
 
             Assert.AreEqual("{\"result\":\"()#\"}", result);
         }
@@ -31,17 +31,27 @@ namespace JUST.UnitTests
         {
             var args = $"{EscapeChar},";
             var transformer = "{ \"result\": \"#xconcat(" + args + ",#constant_hash())\" }";
-            var result = JsonTransformer.Transform(transformer, "{}");
+            var result = new JsonTransformer().Transform(transformer, "{}");
 
             Assert.AreEqual("{\"result\":\",#\"}", result);
         }
 
         [Test]
-        public void EscapedSharp()
+        public void EscapedSharpValue()
+        {
+            var args = $"{EscapeChar}#";
+            var transformer = "{ \"result\": \"" + args + "\" }";
+            var result = new JsonTransformer().Transform(transformer, "{}");
+
+            Assert.AreEqual($"{{\"result\":\"#\"}}", result);
+        }
+
+        [Test]
+        public void EscapedSharpArgument()
         {
             var args = $"{EscapeChar}#";
             var transformer = "{ \"result\": \"#xconcat(" + args + ",#constant_hash())\" }";
-            var result = JsonTransformer.Transform(transformer, "{}");
+            var result = new JsonTransformer().Transform(transformer, "{}");
 
             Assert.AreEqual($"{{\"result\":\"##\"}}", result);
         }
@@ -53,7 +63,7 @@ namespace JUST.UnitTests
             const string input = "{ \"test\": \"" + args + "\" }";
 
             const string transformer = "{ \"result\": \"#xconcat(" + args + ",#constant_hash())\" }";
-            var result = JsonTransformer.Transform(transformer, input);
+            var result = new JsonTransformer().Transform(transformer, input);
 
             Assert.AreEqual("{\"result\":\"#arg1#notfunc(),,arg2.3.1#'arg2.3.3,5#\"}", result);
         }
@@ -68,7 +78,7 @@ namespace JUST.UnitTests
             const string input = "{ \"test\": \"" + args + "\" }";
 
             const string transformer = "{ \"result\": \"#xconcat(" + args + ",#constant_hash())\" }";
-            var result = JsonTransformer.Transform(transformer, input);
+            var result = new JsonTransformer().Transform(transformer, input);
 
             Assert.AreEqual("{\"result\":\"arg1arg2.1,arg2.3.1#arg2.3.33arg4(.1)arg5,#\"}", result);
         }
@@ -77,15 +87,15 @@ namespace JUST.UnitTests
         public void ConsecutiveEscapedCharacters()
         {
             const string transformer = "{ \"result\": \"#xconcat(///),_end)\" }";
-            var result = JsonTransformer.Transform(transformer, "{}");
-            Assert.AreEqual("{\"result\":\"/)_end\"}",result);
+            var result = new JsonTransformer().Transform(transformer, "{}");
+            Assert.AreEqual("{\"result\":\"/)_end\"}", result);
         }
 
         [Test]
         public void EscapedEscapeCharacter()
         {
             const string transformer = "{ \"result\": \"#xconcat(//,_end)\" }";
-            var result = JsonTransformer.Transform(transformer, "{}");
+            var result = new JsonTransformer().Transform(transformer, "{}");
             Assert.AreEqual("{\"result\":\"/_end\"}", result);
         }
     }

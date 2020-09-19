@@ -1,32 +1,94 @@
-﻿using System;
+﻿using JUST.net.Selectables;
+using Newtonsoft.Json.Linq;
+using System;
 using System.Collections;
 using System.Linq;
-using Newtonsoft.Json.Linq;
 
 namespace JUST
 {
     internal class Transformer
     {
-        public static object valueof(string jsonPath, JUSTContext context)
+        protected static object TypedNumber(decimal number)
         {
-            JToken token = context.Input;
-            JToken selectedToken = token.SelectToken(jsonPath);
+            return number * 10 % 10 == 0 ? (object)Convert.ToInt32(number) : number;
+        }
+
+        internal static object GetValue(JToken selectedToken)
+        {
+            object output = null;
+            if (selectedToken != null)
+            {
+                switch (selectedToken.Type)
+                {
+                    case JTokenType.Object:
+                        output = selectedToken;
+                        break;
+                    case JTokenType.Array:
+                        output = selectedToken.Values<object>().ToArray();
+                        break;
+                    case JTokenType.Integer:
+                        output = selectedToken.ToObject<long>();
+                        break;
+                    case JTokenType.Float:
+                        output = selectedToken.ToObject<double>();
+                        break;
+                    case JTokenType.String:
+                        output = selectedToken.ToString();
+                        break;
+                    case JTokenType.Boolean:
+                        output = selectedToken.ToObject<bool>();
+                        break;
+                    case JTokenType.Date:
+                        DateTime value = selectedToken.Value<DateTime>();
+                        output = value.ToString("yyyy-MM-ddTHH:mm:ss.fffK");
+                        break;
+                    case JTokenType.Raw:
+                        break;
+                    case JTokenType.Bytes:
+                        output = selectedToken.Value<byte[]>();
+                        break;
+                    case JTokenType.Guid:
+                        output = selectedToken.Value<Guid>();
+                        break;
+                    case JTokenType.TimeSpan:
+                        output = selectedToken.Value<TimeSpan>();
+                        break;
+                    case JTokenType.Uri:
+                    case JTokenType.Undefined:
+                    case JTokenType.Constructor:
+                    case JTokenType.Property:
+                    case JTokenType.Comment:
+                    case JTokenType.Null:
+                    case JTokenType.None:
+                        break;
+                    default:
+                        break;
+                }
+            }
+            return output;
+        }
+    }
+
+    internal class Transformer<T> : Transformer where T : ISelectableToken
+    {
+        public static object valueof(string path, JUSTContext context)
+        {
+            var selector = context.Resolve<T>(context.Input);
+            JToken selectedToken = selector.Select(path);
             return GetValue(selectedToken);
         }
 
-        public static bool exists(string jsonPath, JUSTContext context)
+        public static bool exists(string path, JUSTContext context)
         {
-            JToken token = context.Input;
-            JToken selectedToken = token.SelectToken(jsonPath);
-
+            var selector = context.Resolve<T>(context.Input);
+            JToken selectedToken = selector.Select(path);
             return selectedToken != null;
         }
 
-        public static bool existsandnotempty(string jsonPath, JUSTContext context)
+        public static bool existsandnotempty(string path, JUSTContext context)
         {
-            JToken token = context.Input;
-            JToken selectedToken = token.SelectToken(jsonPath);
-
+            var selector = context.Resolve<T>(context.Input);
+            JToken selectedToken = selector.Select(path);
             return selectedToken != null && selectedToken.ToString().Trim() != string.Empty;
         }
 
@@ -41,11 +103,59 @@ namespace JUST
         }
 
         #region string functions
-
-        public static string concat(string string1, string string2, JUSTContext context)
+        private static object ConcatArray(object obj1, object obj2)
         {
-            string string2Result = (string2 != null) ? string2 : string.Empty;
-            return string1 != null ? string1 + string2Result : string.Empty + string2Result;
+            JArray item = new JArray();
+            JToken item1 = null, item2 = null;
+            for (int i = 0; i < ((object[])obj1).Length; i++)
+            {
+                if (((object[])obj1)[i] is JValue)
+                {
+                    item1 = (JValue)((object[])obj1)[i];
+                    item.Add(item1);
+                }
+                else
+                {
+                    item1 = (JObject)((object[])obj1)[i];
+                    item.Add(item1);
+                }
+            }
+            for (int j = 0; obj2 != null && j < ((object[])obj2).Length; j++)
+            {
+                if (((object[])obj2)[j] is JValue)
+                {
+                    item2 = (JValue)((object[])obj2)[j];
+                    item1.AddAfterSelf(item2);
+                }
+                else
+                {
+                    item2 = (JObject)((object[])obj2)[j];
+                    item.Add(item2);
+                }
+            }
+            return item.ToObject<object[]>();
+        }
+
+        public static object concat(object obj1, object obj2, JUSTContext context)
+        {
+            if (obj1 != null)
+            {
+                if (obj1 is string str1)
+                {
+                    return str1.Length > 0 ? str1 + obj2?.ToString() : string.Empty + obj2.ToString();
+                }
+                return ConcatArray(obj1, obj2);
+            }
+            else if (obj2 != null)
+            {
+                if (obj2 is string str2)
+                {
+                    return str2.Length > 0 ? obj1?.ToString() + str2 : obj1.ToString() + string.Empty;
+                }
+                return ConcatArray(obj2, obj1);
+            }
+
+            return null;
         }
 
         public static string substring(string stringRef, int startIndex, int length, JUSTContext context)
@@ -54,10 +164,11 @@ namespace JUST
             {
                 return stringRef.Substring(startIndex, length);
             }
-            catch
+            catch (Exception ex)
             {
-                return null;
+                ExceptionHelper.HandleException(ex, context.EvaluationMode);
             }
+            return null;
         }
 
         public static int firstindexof(string stringRef, string searchString, JUSTContext context)
@@ -76,10 +187,16 @@ namespace JUST
 
             if (parsedArray != null)
             {
+                if (result == null)
+                {
+                    result = string.Empty;
+                }
                 foreach (JToken token in parsedArray.Children())
                 {
-                    if (result == null)
-                        result = string.Empty;
+                    if (context.EvaluationMode == EvaluationMode.Strict && token.Type != JTokenType.String)
+                    {
+                        throw new Exception($"Invalid value in array to concatenate: {token.ToString()}");
+                    }
                     result += token.ToString();
                 }
             }
@@ -87,21 +204,21 @@ namespace JUST
             return result;
         }
 
-        public static string concatallatpath(JArray parsedArray, string jsonPath, JUSTContext context)
+        public static string concatallatpath(JArray parsedArray, string path, JUSTContext context)
         {
             string result = null;
 
             if (parsedArray != null)
             {
-
+                result = string.Empty;
                 foreach (JToken token in parsedArray.Children())
                 {
-
-                    JToken selectedToken = token.SelectToken(jsonPath);
-
-                    if (result == null)
-                        result = string.Empty;
-
+                    var selector = context.Resolve<T>(token);
+                    JToken selectedToken = selector.Select(path);
+                    if (context.EvaluationMode == EvaluationMode.Strict && selectedToken.Type != JTokenType.String)
+                    {
+                        throw new Exception($"Invalid value in array to concatenate: {selectedToken.ToString()}");
+                    }
                     result += selectedToken.ToString();
                 }
             }
@@ -131,10 +248,6 @@ namespace JUST
         {
             return TypedNumber(num1 / num2);
         }
-        private static object TypedNumber(decimal number)
-        {
-            return number * 10 % 10 == 0 ? (object)Convert.ToInt32(number) : number;
-        }
         #endregion
 
         #region aggregate functions
@@ -152,14 +265,15 @@ namespace JUST
             return TypedNumber(result);
         }
 
-        public static object sumatpath(JArray parsedArray, string jsonPath, JUSTContext context)
+        public static object sumatpath(JArray parsedArray, string path, JUSTContext context)
         {
             decimal result = 0;
             if (parsedArray != null)
             {
                 foreach (JToken token in parsedArray.Children())
                 {
-                    JToken selectedToken = token.SelectToken(jsonPath);
+                    var selector = context.Resolve<T>(token);
+                    JToken selectedToken = selector.Select(path);
                     result += Convert.ToDecimal(selectedToken.ToString());
                 }
             }
@@ -181,7 +295,7 @@ namespace JUST
             return TypedNumber(result / parsedArray.Count);
         }
 
-        public static object averageatpath(JArray parsedArray, string jsonPath, JUSTContext context)
+        public static object averageatpath(JArray parsedArray, string path, JUSTContext context)
         {
             decimal result = 0;
 
@@ -189,7 +303,8 @@ namespace JUST
             {
                 foreach (JToken token in parsedArray.Children())
                 {
-                    JToken selectedToken = token.SelectToken(jsonPath);
+                    var selector = context.Resolve<T>(token);
+                    JToken selectedToken = selector.Select(path);
                     result += Convert.ToDecimal(selectedToken.ToString());
                 }
             }
@@ -212,14 +327,15 @@ namespace JUST
             return TypedNumber(result);
         }
 
-        public static object maxatpath(JArray parsedArray, string jsonPath, JUSTContext context)
+        public static object maxatpath(JArray parsedArray, string path, JUSTContext context)
         {
             decimal result = 0;
             if (parsedArray != null)
             {
                 foreach (JToken token in parsedArray.Children())
                 {
-                    JToken selectedToken = token.SelectToken(jsonPath);
+                    var selector = context.Resolve<T>(token);
+                    JToken selectedToken = selector.Select(path);
                     decimal thisValue = Convert.ToDecimal(selectedToken.ToString());
                     result = Math.Max(result, thisValue);
                 }
@@ -243,7 +359,7 @@ namespace JUST
             return TypedNumber(result);
         }
 
-        public static object minatpath(JArray parsedArray, string jsonPath, JUSTContext context)
+        public static object minatpath(JArray parsedArray, string path, JUSTContext context)
         {
             decimal result = decimal.MaxValue;
 
@@ -251,7 +367,8 @@ namespace JUST
             {
                 foreach (JToken token in parsedArray.Children())
                 {
-                    JToken selectedToken = token.SelectToken(jsonPath);
+                    var selector = context.Resolve<T>(token);
+                    JToken selectedToken = selector.Select(path);
                     decimal thisValue = Convert.ToDecimal(selectedToken.ToString());
                     result = Math.Min(result, thisValue);
                 }
@@ -289,10 +406,10 @@ namespace JUST
             return array.Count - 1;
         }
 
-        public static object currentvalueatpath(JArray array, JToken currentElement, string jsonPath)
+        public static object currentvalueatpath(JArray array, JToken currentElement, string path, JUSTContext context)
         {
-            JToken selectedToken = currentElement.SelectToken(jsonPath);
-
+            var selector = context.Resolve<T>(currentElement);
+            JToken selectedToken = selector.Select(path);
             return GetValue(selectedToken);
         }
 
@@ -306,10 +423,10 @@ namespace JUST
             return prop.Name;
         }
 
-        public static object lastvalueatpath(JArray array, JToken currentElement, string jsonPath)
+        public static object lastvalueatpath(JArray array, JToken currentElement, string path, JUSTContext context)
         {
-            JToken selectedToken = array.Last.SelectToken(jsonPath);
-
+            var selector = context.Resolve<T>(array.Last);
+            JToken selectedToken = selector.Select(path);
             return GetValue(selectedToken);
         }
         #endregion
@@ -329,14 +446,16 @@ namespace JUST
         #endregion
 
         #region Variable parameter functions
-        public static string xconcat(object[] list)
+        public static object xconcat(object[] list)
         {
-            string result = string.Empty;
+            object result = null;
 
             for (int i = 0; i < list.Length - 1; i++)
             {
                 if (list[i] != null)
-                    result += list[i].ToString();
+                {
+                    result = concat(result, list[i], null);
+                }
             }
 
             return result;
@@ -355,74 +474,21 @@ namespace JUST
             return TypedNumber(add);
         }
         #endregion
-
-        public static object GetValue(JToken selectedToken)
-        {
-            object output = null;
-            if (selectedToken != null)
-            {
-                switch (selectedToken.Type)
-                {
-                    case JTokenType.Object:
-                        output = selectedToken;
-                        break;
-                    case JTokenType.Array:
-                        output = selectedToken.Values<object>().ToArray();
-                        break;
-                    case JTokenType.Integer:
-                        output = selectedToken.ToObject<long>();
-                        break;
-                    case JTokenType.Float:
-                        output = selectedToken.ToObject<double>();
-                        break;
-                    case JTokenType.String:
-                        output = selectedToken.ToString();
-                        break;
-                    case JTokenType.Boolean:
-                        output = selectedToken.ToObject<bool>();
-                        break;
-                    case JTokenType.Date:
-                        DateTime value = Convert.ToDateTime(selectedToken.Value<DateTime>());
-                        output = value.ToString("yyyy-MM-ddTHH:mm:ssZ");
-                        break;
-                    case JTokenType.Raw:
-                        break;
-                    case JTokenType.Bytes:
-                        break;
-                    case JTokenType.Guid:
-                        break;
-                    case JTokenType.Uri:
-                        break;
-                    case JTokenType.TimeSpan:
-                        break;
-                    case JTokenType.Undefined:
-                    case JTokenType.Constructor:
-                    case JTokenType.Property:
-                    case JTokenType.Comment:
-                    case JTokenType.Null:
-                    case JTokenType.None:
-                        break;
-                    default:
-                        break;
-                }
-            }
-            return output;
-        }
-
+        
         #region grouparrayby
-        public static JArray grouparrayby(string jsonPath, string groupingElement, string groupedElement, JUSTContext context)
+        public static JArray grouparrayby(string path, string groupingElement, string groupedElement, JUSTContext context)
         {
             JArray result;
-            JToken inObj = context.Input;
-            JArray arr = (JArray)inObj.SelectToken(jsonPath);
+            var selector = context.Resolve<T>(context.Input);
+            JArray arr = (JArray)selector.Select(path);
             if (!groupingElement.Contains(":"))
             {
-                result = Utilities.GroupArray(arr, groupingElement, groupedElement);
+                result = Utilities.GroupArray<T>(arr, groupingElement, groupedElement, context);
             }
             else
             {
                 string[] groupingElements = groupingElement.Split(':');
-                result = Utilities.GroupArrayMultipleProperties(arr, groupingElements, groupedElement);
+                result = Utilities.GroupArrayMultipleProperties<T>(arr, groupingElements, groupedElement, context);
             }
             return result;
         }
@@ -568,7 +634,7 @@ namespace JUST
             {
                 if (context.EvaluationMode == EvaluationMode.Strict)
                 {
-                    throw new ArgumentException($"Argument not elegible for #length: {val.ToString()}");
+                    throw new ArgumentException($"Argument not elegible for #length: {val}");
                 }
             }
             return result;

@@ -10,7 +10,7 @@ namespace JUST.UnitTests
         {
             var transformer = "{ \"mathresult\": { \"add\": \"#add(#valueof($.numbers[0]),3)\" }}";
 
-            var result = JsonTransformer.Transform(transformer, ExampleInputs.NumbersArray);
+            var result = new JsonTransformer().Transform(transformer, ExampleInputs.NumbersArray);
 
             Assert.AreEqual("{\"mathresult\":{\"add\":4}}", result);
         }
@@ -20,7 +20,7 @@ namespace JUST.UnitTests
         {
             var transformer = "{ \"mathresult\": { \"subtract\": \"#subtract(#valueof($.numbers[4]),#valueof($.numbers[0]))\" }}";
 
-            var result = JsonTransformer.Transform(transformer, ExampleInputs.NumbersArray);
+            var result = new JsonTransformer().Transform(transformer, ExampleInputs.NumbersArray);
 
             Assert.AreEqual("{\"mathresult\":{\"subtract\":4}}", result);
         }
@@ -30,7 +30,7 @@ namespace JUST.UnitTests
         {
             var transformer = "{ \"mathresult\": { \"multiply\": \"#multiply(2,#valueof($.numbers[2]))\" }}";
 
-            var result = JsonTransformer.Transform(transformer, ExampleInputs.NumbersArray);
+            var result = new JsonTransformer().Transform(transformer, ExampleInputs.NumbersArray);
 
             Assert.AreEqual("{\"mathresult\":{\"multiply\":6}}", result);
         }
@@ -40,7 +40,7 @@ namespace JUST.UnitTests
         {
             var transformer = "{ \"mathresult\": { \"divide\": \"#divide(9,#valueof($.numbers[2]))\" }}";
 
-            var result = JsonTransformer.Transform(transformer, ExampleInputs.NumbersArray);
+            var result = new JsonTransformer().Transform(transformer, ExampleInputs.NumbersArray);
 
             Assert.AreEqual("{\"mathresult\":{\"divide\":3}}", result);
         }
@@ -53,7 +53,7 @@ namespace JUST.UnitTests
             var input = $"{{ \"value\": {typedValue} }}";
             var transformer = $"{{ \"result\": \"#round(#valueof($.value),{decimalPlaces})\" }}";
 
-            var result = JsonTransformer.Transform(transformer, input);
+            var result = new JsonTransformer().Transform(transformer, input);
 
             Assert.AreEqual($"{{\"result\":{expectedResult}}}", result);
         }
@@ -63,7 +63,7 @@ namespace JUST.UnitTests
         {
             var transformer = "{ \"mathresult\": { \"mathequals\": \"#mathequals(#valueof($.numbers[2]),3)\" }}";
 
-            var result = JsonTransformer.Transform(transformer, ExampleInputs.NumbersArray);
+            var result = new JsonTransformer().Transform(transformer, ExampleInputs.NumbersArray);
 
             Assert.AreEqual("{\"mathresult\":{\"mathequals\":true}}", result);
         }
@@ -73,7 +73,7 @@ namespace JUST.UnitTests
         {
             var transformer = "{ \"mathresult\": { \"mathgreaterthan\": \"#mathgreaterthan(#valueof($.numbers[2]),2)\" }}";
 
-            var result = JsonTransformer.Transform(transformer, ExampleInputs.NumbersArray);
+            var result = new JsonTransformer().Transform(transformer, ExampleInputs.NumbersArray);
 
             Assert.AreEqual("{\"mathresult\":{\"mathgreaterthan\":true}}", result);
         }
@@ -83,7 +83,7 @@ namespace JUST.UnitTests
         {
             var transformer = "{ \"mathresult\": { \"mathlessthan\": \"#mathlessthan(#valueof($.numbers[2]),4)\" }}";
 
-            var result = JsonTransformer.Transform(transformer, ExampleInputs.NumbersArray);
+            var result = new JsonTransformer().Transform(transformer, ExampleInputs.NumbersArray);
 
             Assert.AreEqual("{\"mathresult\":{\"mathlessthan\":true}}", result);
         }
@@ -93,7 +93,7 @@ namespace JUST.UnitTests
         {
             var transformer = "{ \"mathresult\": { \"mathgreaterthanorequalto\": \"#mathgreaterthanorequalto(#valueof($.numbers[2]),4)\" }}";
 
-            var result = JsonTransformer.Transform(transformer, ExampleInputs.NumbersArray);
+            var result = new JsonTransformer().Transform(transformer, ExampleInputs.NumbersArray);
 
             Assert.AreEqual("{\"mathresult\":{\"mathgreaterthanorequalto\":false}}", result);
         }
@@ -103,7 +103,7 @@ namespace JUST.UnitTests
         {
             var transformer = "{ \"mathresult\": { \"mathlessthanorequalto\": \"#mathlessthanorequalto(#valueof($.numbers[2]),2)\" }}";
 
-            var result = JsonTransformer.Transform(transformer, ExampleInputs.NumbersArray);
+            var result = new JsonTransformer().Transform(transformer, ExampleInputs.NumbersArray);
 
             Assert.AreEqual("{\"mathresult\":{\"mathlessthanorequalto\":false}}", result);
         }

@@ -5,10 +5,15 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Text;
 using System.Linq;
+using JUST.net.Selectables;
 
 namespace JUST
 {
-    public class DataTransformer
+    public class DataTransformer : DataTransformer<JsonPathSelectable>
+    {
+    }
+
+    public class DataTransformer<T> where T: ISelectableToken
     {
         public static string Transform(string transformer, string inputJson)
         {
@@ -154,9 +159,9 @@ namespace JUST
                 }
                 else if (functionName == "currentvalue" || functionName == "currentindex" || functionName == "lastindex"
                     || functionName == "lastvalue")
-                    output = caller("JUST.Transformer", functionName, new object[] { array, currentArrayElement });
+                    output = caller("JUST.Transformer`1", functionName, new object[] { array, currentArrayElement });
                 else if (functionName == "currentvalueatpath" || functionName == "lastvalueatpath")
-                    output = caller("JUST.Transformer", functionName, new object[] { array, currentArrayElement, arguments[0] });
+                    output = caller("JUST.Transformer`1", functionName, new object[] { array, currentArrayElement, arguments[0] });
                 else if (functionName == "customfunction")
                     output = CallCustomFunction(parameters);
                 else if (functionName == "xconcat" || functionName == "xadd" || functionName == "mathequals" || functionName == "mathgreaterthan" || functionName == "mathlessthan"
@@ -166,10 +171,10 @@ namespace JUST
                 {
                     object[] oParams = new object[1];
                     oParams[0] = parameters;
-                    output = caller("JUST.Transformer", functionName, oParams);
+                    output = caller("JUST.Transformer`1", functionName, oParams);
                 }
                 else
-                    output = caller("JUST.Transformer", functionName, parameters);
+                    output = caller("JUST.Transformer`1", functionName, parameters);
             }
             return output;
         }
@@ -194,8 +199,9 @@ namespace JUST
             if (parameters.Length < 2)
                 throw new Exception("Incorrect number of parameters for function #Loop");
 
-            JToken token = (parameters[parameters.Length - 1] as JUSTContext).Input;
-            JToken selectedToken = token.SelectToken(parameters[0].ToString());
+            var context = (JUSTContext)parameters[parameters.Length - 1];
+            JToken token = context.Input;
+            JToken selectedToken = context.Resolve<T>(token).Select(parameters[0].ToString());
 
             if (selectedToken.Type != JTokenType.Array)
                 throw new Exception("The JSONPath argument inside a #loop function must be an Array");
@@ -276,7 +282,7 @@ namespace JUST
         private static object caller(string myclass, string mymethod, object[] parameters)
         {
             Assembly assembly = null;
-            return ReflectionHelper.caller(assembly, myclass, mymethod, parameters, true, new JUSTContext());
+            return ReflectionHelper.Caller<T>(assembly, myclass, mymethod, parameters, true, new JUSTContext());
         }        
     }
 }
