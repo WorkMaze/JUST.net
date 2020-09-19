@@ -742,7 +742,7 @@ When a concatenation is needed, one can use #concat or #xconcat to join two arra
 
 ```JSON
 {
-  "drugs\": [{ 
+  "drugs": [{ 
       "code": "001", "display": "Drug1" 
     },{
       "code": "002", "display": "Drug2" 
@@ -750,12 +750,12 @@ When a concatenation is needed, one can use #concat or #xconcat to join two arra
   "pa": [{ 
       "code": "pa1", "display": "PA1" 
 	},{
-	  "code": "pa2", "display": "PA2" 
+      "code": "pa2", "display": "PA2" 
   }],
   "sa": [{ 
       "code": "sa1", "display": "SA1" 
 	},{
-	  "code": "sa2", "display": "SA2" 
+      "code": "sa2", "display": "SA2" 
   }]
 }
 ```
@@ -763,45 +763,45 @@ When a concatenation is needed, one can use #concat or #xconcat to join two arra
 ```Transformer
 {
   "concat": "#concat(#valueof($.drugs), #valueof($.pa))", 
-  "multipleConcat\": "#concat(#concat(#valueof($.drugs), #valueof($.pa)), #valueof($.sa))\",
+  "multipleConcat": "#concat(#concat(#valueof($.drugs), #valueof($.pa)), #valueof($.sa))\",
   "xconcat": "#xconcat(#valueof($.drugs), #valueof($.pa), #valueof($.sa))" 
 }
 ```
 
 ```Output
 {
-  "concat\": [{
+  "concat": [{
       "code": "001", "display": "Drug1" 
 	},{
-	  "code": "002", "display": "Drug2" 
+      "code": "002", "display": "Drug2" 
     },{
-	  "code": "pa1", "display": "PA1" 
+      "code": "pa1", "display": "PA1" 
 	},{ 
-	  "code": "pa2", "display": "PA2" 
-	}],
-  "multipleConcat\": [{ 
+      "code": "pa2", "display": "PA2" 
+  }],
+  "multipleConcat": [{ 
       "code": "001", "display": "Drug1" 
     },{ 
-	  "code": "002", "display": "Drug2"
-	},{ 
-	  "code": "pa1", "display": "PA1" 
-	},{ 
-	  "code": "pa2", "display": "PA2" 
-	},{ 
-	  "code": "sa1", "display": "SA1"
-	},{ 
+      "code": "002", "display": "Drug2"
+    },{ 
+      "code": "pa1", "display": "PA1" 
+    },{ 
+      "code": "pa2", "display": "PA2" 
+    },{ 
+      "code": "sa1", "display": "SA1"
+    },{ 
 	  "code": "sa2", "display": "SA2"
 	}],
   "xconcat": [{ 
       "code": "001", "display": "Drug1" 
-	},{
-	  "code": "002", "display": "Drug2"
-	},{ 
-	  "code": "pa1", "display": "PA1"
-	},{ 
-	  "code": "pa2", "display": "PA2" 
-	},{ 
-	  "code": "sa1", "display": "SA1"
+    },{
+      "code": "002", "display": "Drug2"
+    },{ 
+      "code": "pa1", "display": "PA1"
+    },{ 
+      "code": "pa2", "display": "PA2" 
+    },{ 
+      "code": "sa1", "display": "SA1"
     },{
       "code": "sa2", "display":"SA2" 
     }]
