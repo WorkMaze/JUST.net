@@ -109,11 +109,11 @@ namespace JUST.UnitTests
         public void NestedArrayLooping()
         {
             const string input = "{ \"NestedLoop\": { \"Organization\": { \"Employee\": [ { \"Name\": \"E2\", \"Surname\": \"S2\", \"Details\": [ { \"Countries\": [ { \"Name\": \"Iceland\", \"Language\": \"Icelandic\" } ], \"Age\": 30 } ] }, { \"Name\": \"E1\", \"Surname\": \"S1\", \"Details\": [ { \"Countries\": [{ \"Name\": \"Denmark\", \"Language\": \"Danish\" }, { \"Name\": \"Greenland\", \"Language\": \"Danish\" } ], \"Age\": 31 } ] } ] } } }";
-            const string transformer = "{ \"hello\": { \"#loop($.NestedLoop.Organization.Employee, employees)\": { \"CurrentName\": \"#currentvalueatpath($.Name, employees)\", \"Details\": { \"#loop($.Details, details)\": { \"Surname\": \"#currentvalueatpath($.Surname, employees)\", \"Country\": { \"#loop($.Countries[0], countries)\": { \"CurrentCountry\": \"#currentvalueatpath($.Name, countries)\", \"Age\": \"#currentvalueatpath($.Age, details)\" } } } } } }";
+            const string transformer = "{ \"hello\": { \"#loop($.NestedLoop.Organization.Employee, employees)\": { \"CurrentName\": \"#currentvalueatpath($.Name, employees)\", \"Details\": { \"#loop($.Details)\": { \"Surname\": \"#currentvalueatpath($.Surname, employees)\", \"Age\": \"#currentvalueatpath($.Age)\", \"Country\": { \"#loop($.Countries[0], countries)\": { \"CurrentCountry\": \"#currentvalueatpath($.Name, countries)\" } } } } } }";
 
             var result = new JsonTransformer(new JUSTContext { EvaluationMode = EvaluationMode.Strict}).Transform(transformer, input);
 
-            Assert.AreEqual("{\"hello\":[{\"CurrentName\":\"E2\",\"Details\":[{\"Surname\":\"S2\",\"Country\":[{\"CurrentCountry\":\"Iceland\",\"Age\":30}]}]},{\"CurrentName\":\"E1\",\"Details\":[{\"Surname\":\"S1\",\"Country\":[{\"CurrentCountry\":\"Denmark\",\"Age\":31}]}]}]}", result);
+            Assert.AreEqual("{\"hello\":[{\"CurrentName\":\"E2\",\"Details\":[{\"Surname\":\"S2\",\"Age\":30,\"Country\":[{\"CurrentCountry\":\"Iceland\"}]}]},{\"CurrentName\":\"E1\",\"Details\":[{\"Surname\":\"S1\",\"Age\":31,\"Country\":[{\"CurrentCountry\":\"Denmark\"}]}]}]}", result);
         }
 
         [Test]

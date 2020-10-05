@@ -859,12 +859,12 @@ Transformer:
     "#loop($.NestedLoop.Organization.Employee, employees)": {
       "CurrentName": "#currentvalueatpath($.Name, employees)",
       "Details": {
-        "#loop($.Details, details)": {
-          "Surname": "#currentvalueatpath($.Surname, employees)"
+        "#loop($.Details)": {
+          "Surname": "#currentvalueatpath($.Surname, employees)",
+		  "Age": "#currentvalueatpath($.Age)",
           "Country": {
             "#loop($.Countries[0], countries)": {
-              "CurrentCountry": "#currentvalueatpath($.Name, countries)",
-              "Age": "#currentvalueatpath($.Age, details)"
+              "CurrentCountry": "#currentvalueatpath($.Name, countries)"
 		    }
           }
         }
@@ -883,9 +883,9 @@ Output:
       "CurrentName": "E2",
       "Details": [{
           "Surname": "S2",
+		  "Age": 30,
 		  "Country": [{
-              "CurrentCountry": "Iceland",
-		      "Age": 30
+              "CurrentCountry": "Iceland"
             }
           ]
         }
@@ -894,9 +894,9 @@ Output:
       "CurrentName": "E1",
       "Details": [{
           "Surname": "S1",
+          "Age": 31,
           "Country": [{
-              "CurrentCountry": "Denmark",
-              "Age": 31
+              "CurrentCountry": "Denmark"
             }
           ]
         }
