@@ -133,17 +133,17 @@ namespace JUST
                         BulkOperations(values.Children(), parentArray, currentArrayToken, ref selectedTokens, ref tokensToReplace, ref tokensToDelete);
                         isBulk = true;
                     }
-                    else if (property.Name.TrimStart().StartsWith("#eval"))
+                    else if (property.Name.TrimStart().Replace(" ", "").StartsWith("#eval("))
                     {
                         EvalOperation(property, parentArray, currentArrayToken, ref loopProperties, ref tokensToAdd);
                     }
-                    else if (property.Name.TrimStart().Contains("#ifgroup"))
+                    else if (property.Name.TrimStart().Replace(" ", "").StartsWith("#ifgroup("))
                     {
                         ConditionalGroupOperation(property, parentArray, currentArrayToken, ref loopProperties, ref tokenToForm, childToken);
 
                         isLoop = true;
                     }
-                    else if (property.Name.TrimStart().Contains("#loop"))
+                    else if (property.Name.TrimStart().Replace(" ", "").StartsWith("#loop("))
                     {
                         LoopOperation(property, parentArray, currentArrayToken, ref loopProperties, ref arrayToForm, ref dictToForm, childToken);
                         isLoop = true;
@@ -197,32 +197,9 @@ namespace JUST
                 }
             }
 
-            if (tokensToReplace != null)
-            {
-                foreach (KeyValuePair<string, JToken> tokenToReplace in tokensToReplace)
-                {
-                    JToken selectedToken = (parentToken as JObject).SelectToken(tokenToReplace.Key);
-                    selectedToken.Replace(tokenToReplace.Value);
-                }
-            }
-
-            if (tokensToDelete != null)
-            {
-                foreach (string selectedToken in tokensToDelete)
-                {
-                    JToken tokenToRemove = GetSelectableToken(parentToken, Context).Select(selectedToken);
-
-                    if (tokenToRemove != null)
-                        tokenToRemove.Ancestors().First().Remove();
-                }
-            }
-            if (tokensToAdd != null)
-            {
-                foreach (JToken token in tokensToAdd)
-                {
-                    (parentToken as JObject).Add((token as JProperty).Name, (token as JProperty).Value);
-                }
-            }
+            ReplacePostOperationBuildUp(parentToken, tokensToReplace);
+            DeletePostOperationBuildUp(parentToken, tokensToDelete);
+            AddPostOperationBuildUp(parentToken, tokensToAdd);
 
             if (tokenToForm != null)
             {
@@ -237,6 +214,50 @@ namespace JUST
                 jObject.Remove("#");
             }
 
+            LoopPostOperationBuildUp(parentToken, loopProperties, arrayToForm, dictToForm);
+
+            return parentToken;
+        }
+
+        private static void AddPostOperationBuildUp(JToken parentToken, List<JToken> tokensToAdd)
+        {
+            if (tokensToAdd != null)
+            {
+                foreach (JToken token in tokensToAdd)
+                {
+                    (parentToken as JObject).Add((token as JProperty).Name, (token as JProperty).Value);
+                }
+            }
+        }
+
+        private void DeletePostOperationBuildUp(JToken parentToken, List<JToken> tokensToDelete)
+        {
+            if (tokensToDelete != null)
+            {
+                foreach (string selectedToken in tokensToDelete)
+                {
+                    JToken tokenToRemove = GetSelectableToken(parentToken, Context).Select(selectedToken);
+
+                    if (tokenToRemove != null)
+                        tokenToRemove.Ancestors().First().Remove();
+                }
+            }
+        }
+
+        private static void ReplacePostOperationBuildUp(JToken parentToken, Dictionary<string, JToken> tokensToReplace)
+        {
+            if (tokensToReplace != null)
+            {
+                foreach (KeyValuePair<string, JToken> tokenToReplace in tokensToReplace)
+                {
+                    JToken selectedToken = (parentToken as JObject).SelectToken(tokenToReplace.Key);
+                    selectedToken.Replace(tokenToReplace.Value);
+                }
+            }
+        }
+
+        private static void LoopPostOperationBuildUp(JToken parentToken, List<string> loopProperties, JArray arrayToForm, JObject dictToForm)
+        {
             if (loopProperties != null)
             {
                 foreach (string propertyToDelete in loopProperties)
@@ -280,8 +301,6 @@ namespace JUST
                     }
                 }
             }
-
-            return parentToken;
         }
 
         private void LoopOperation(JProperty property, IDictionary<string, JArray> parentArray, IDictionary<string, JToken> currentArrayToken, ref List<string> loopProperties, ref JArray arrayToForm, ref JObject dictToForm, JToken childToken)
@@ -385,7 +404,7 @@ namespace JUST
 
             if (loopProperties == null)
                 loopProperties = new List<string>();
-
+            
             loopProperties.Add(property.Name);
             _loopCounter--;
         }

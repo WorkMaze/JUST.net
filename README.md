@@ -808,8 +808,10 @@ When a concatenation is needed, one can use #concat or #xconcat to join two arra
 }
 ```
 
-## Nested array looping (looping within context)
-A new function `loopwithincontext` has been introduced to be able to loop withing the context of an outer loop.
+## Nested array looping
+It is possible to loop over more than one array at once. By default, the last array is used, but one can use properties from other arrays by using alias for array looping.
+One side note: loops must be last property, any properties after that will be ignored.
+
 Cosider the input:
 ```JSON
 {
@@ -817,20 +819,29 @@ Cosider the input:
     "Organization": {
       "Employee": [{
           "Name": "E2",
+		  "Surname": "S2",
           "Details": [{
-              "Country": "Iceland",
-              "Age": "30",
-              "Name": "Sven",
-              "Language": "Icelandic"
+              "Countries": [{
+			      "Name": "Iceland",
+                  "Language": "Icelandic"
+                }
+			  ],
+              "Age": "30"
             }
           ]
         }, {
           "Name": "E1",
+		  "Surname": "S1",
           "Details": [{
-              "Country": "Denmark",
-              "Age": "30",
-              "Name": "Svein",
-              "Language": "Danish"
+              "Countries": [{
+                  "Name": "Denmark",
+                  "Language": "Danish"
+                },{
+                  "Name": "Greenland",
+                  "Language": "Danish"
+                }
+              ],
+              "Age": "31"
             }
           ]
         }
@@ -845,11 +856,17 @@ Transformer:
 ```JSON
 {
   "hello": {
-    "#loop($.NestedLoop.Organization.Employee)": {
-      "CurrentName": "#currentvalueatpath($.Name)",
+    "#loop($.NestedLoop.Organization.Employee, employees)": {
+      "CurrentName": "#currentvalueatpath($.Name, employees)",
       "Details": {
-        "#loopwithincontext($.Details)": {
-          "CurrentCountry": "#currentvalueatpath($.Country)"
+        "#loop($.Details, details)": {
+          "Surname": "#currentvalueatpath($.Surname, employees)"
+          "Country": {
+            "#loop($.Countries[0], countries)": {
+              "CurrentCountry": "#currentvalueatpath($.Name, countries)",
+              "Age": "#currentvalueatpath($.Age, details)"
+		    }
+          }
         }
       }
     }
@@ -865,13 +882,23 @@ Output:
   [{
       "CurrentName": "E2",
       "Details": [{
-          "CurrentCountry": "Iceland"
+          "Surname": "S2",
+		  "Country": [{
+              "CurrentCountry": "Iceland",
+		      "Age": 30
+            }
+          ]
         }
       ]
     }, {
       "CurrentName": "E1",
       "Details": [{
-          "CurrentCountry": "Denmark"
+          "Surname": "S1",
+          "Country": [{
+              "CurrentCountry": "Denmark",
+              "Age": 31
+            }
+          ]
         }
       ]
     }
