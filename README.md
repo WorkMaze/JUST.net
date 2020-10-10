@@ -863,9 +863,7 @@ Transformer:
           "Surname": "#currentvalueatpath($.Surname, employees)",
 		  "Age": "#currentvalueatpath($.Age)",
           "Country": {
-            "#loop($.Countries[0], countries)": {
-              "CurrentCountry": "#currentvalueatpath($.Name, countries)"
-		    }
+            "#loop($.Countries[0], countries)": "#currentvalueatpath($.Name, countries)"
           }
         }
       }
@@ -884,10 +882,7 @@ Output:
       "Details": [{
           "Surname": "S2",
 		  "Age": 30,
-		  "Country": [{
-              "CurrentCountry": "Iceland"
-            }
-          ]
+		  "Country": [ "Iceland" ]
         }
       ]
     }, {
@@ -895,10 +890,7 @@ Output:
       "Details": [{
           "Surname": "S1",
           "Age": 31,
-          "Country": [{
-              "CurrentCountry": "Denmark"
-            }
-          ]
+          "Country": [ "Denmark" ]
         }
       ]
     }
