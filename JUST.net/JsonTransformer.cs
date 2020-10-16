@@ -366,13 +366,13 @@ namespace JUST
                 result = false;
             }
 
-            if (result == true)
+            if (loopProperties == null)
+                loopProperties = new List<string>();
+
+            loopProperties.Add(property.Name);
+
+            if (result)
             {
-                if (loopProperties == null)
-                    loopProperties = new List<string>();
-
-                loopProperties.Add(property.Name);
-
                 RecursiveEvaluate(childToken, parentArray, currentArrayToken);
 
                 if (tokenToForm == null)
@@ -382,15 +382,6 @@ namespace JUST
 
                 foreach (JToken grandChildToken in childToken.Children())
                     tokenToForm.Add(grandChildToken.DeepClone());
-            }
-            else
-            {
-                if (loopProperties == null)
-                {
-                    loopProperties = new List<string>();
-                }
-
-                loopProperties.Add(property.Name);
             }
         }
 
