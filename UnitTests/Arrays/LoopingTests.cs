@@ -108,7 +108,7 @@ namespace JUST.UnitTests.Arrays
         [Test]
         public void NestedLooping()
         {
-            const string transformer = "{ \"hello\": { \"#loop($.NestedLoop.Organization.Employee)\": { \"Details\": { \"#loopwithincontext($.Details)\": { \"CurrentCountry\": \"#currentvalueatpath($.Country)\" } } } } }";
+            const string transformer = "{ \"hello\": { \"#loop($.NestedLoop.Organization.Employee)\": { \"Details\": { \"#loop($.Details)\": { \"CurrentCountry\": \"#currentvalueatpath($.Country)\" } } } } }";
 
             var result = new JsonTransformer().Transform(transformer, ExampleInputs.NestedArrays);
 
@@ -138,7 +138,7 @@ namespace JUST.UnitTests.Arrays
         [Test]
         public void NestedLoopingContextInput()
         {
-            const string transformer = "{ \"hello\": { \"#loop($.NestedLoop.Organization.Employee)\": { \"Details\": { \"#loopwithincontext($.Details)\": { \"Exists\": \"#exists($.Country)\", \"IsIsland\": \"#ifcondition(#currentvalueatpath($.Country),Iceland,#toboolean(True),#toboolean(False))\", \"CurrentCountry\": \"#currentvalueatpath($.Country)\" } } } } }";
+            const string transformer = "{ \"hello\": { \"#loop($.NestedLoop.Organization.Employee)\": { \"Details\": { \"#loop($.Details)\": { \"Exists\": \"#exists($.Country)\", \"IsIsland\": \"#ifcondition(#currentvalueatpath($.Country),Iceland,#toboolean(True),#toboolean(False))\", \"CurrentCountry\": \"#currentvalueatpath($.Country)\" } } } } }";
 
             var result = new JsonTransformer().Transform(transformer, ExampleInputs.NestedArrays);
 
@@ -148,7 +148,7 @@ namespace JUST.UnitTests.Arrays
         [Test]
         public void FunctionAsLoopArgument()
         {
-            const string transformer = "{ \"hello\": { \"#loop(#xconcat($.NestedLoop.,Organization,.Employee))\": { \"Details\": { \"#loopwithincontext(#concat($.,Details))\": { \"CurrentCountry\": \"#currentvalueatpath($.Country)\" } } } } }";
+            const string transformer = "{ \"hello\": { \"#loop(#xconcat($.NestedLoop.,Organization,.Employee))\": { \"Details\": { \"#loop(#concat($.,Details))\": { \"CurrentCountry\": \"#currentvalueatpath($.Country)\" } } } } }";
 
             var result = new JsonTransformer().Transform(transformer, ExampleInputs.NestedArrays);
 

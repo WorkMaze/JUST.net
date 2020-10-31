@@ -281,7 +281,7 @@ namespace JUST
         private void LoopOperation(JProperty property, JArray parentArray, JToken currentArrayToken, ref List<string> loopProperties, ref JArray arrayToForm, ref JObject dictToForm, JToken childToken)
         {
             ExpressionHelper.TryParseFunctionNameAndArguments(property.Name, out string functionName, out string arguments);
-            var token = currentArrayToken != null && functionName == "loopwithincontext" ? currentArrayToken : Context.Input;
+            var token = currentArrayToken != null ? currentArrayToken : Context.Input;
 
             var strArrayToken = ParseArgument(parentArray, currentArrayToken, arguments) as string;
 

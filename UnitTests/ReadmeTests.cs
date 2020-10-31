@@ -109,7 +109,7 @@ namespace JUST.UnitTests
         public void NestedArrayLooping()
         {
             const string input = "{ \"NestedLoop\": { \"Organization\": { \"Employee\": [ { \"Name\": \"E2\", \"Details\": [ { \"Country\": \"Iceland\", \"Age\": \"30\", \"Name\": \"Sven\", \"Language\": \"Icelandic\" } ] }, { \"Name\": \"E1\", \"Details\": [ { \"Country\": \"Denmark\", \"Age\": \"30\", \"Name\": \"Svein\", \"Language\": \"Danish\" } ] } ] } } }";
-            const string transformer = "{ \"hello\": { \"#loop($.NestedLoop.Organization.Employee)\": { \"CurrentName\": \"#currentvalueatpath($.Name)\", \"Details\": { \"#loopwithincontext($.Details)\": { \"CurrentCountry\": \"#currentvalueatpath($.Country)\" } } } } }";
+            const string transformer = "{ \"hello\": { \"#loop($.NestedLoop.Organization.Employee)\": { \"CurrentName\": \"#currentvalueatpath($.Name)\", \"Details\": { \"#loop($.Details)\": { \"CurrentCountry\": \"#currentvalueatpath($.Country)\" } } } } }";
 
             var result = new JsonTransformer().Transform(transformer, input);
 
