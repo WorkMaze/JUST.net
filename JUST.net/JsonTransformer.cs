@@ -133,24 +133,29 @@ namespace JUST
                         BulkOperations(values.Children(), parentArray, currentArrayToken, ref selectedTokens, ref tokensToReplace, ref tokensToDelete);
                         isBulk = true;
                     }
-                    else if (property.Name.TrimStart().Replace(" ", "").StartsWith("#eval("))
+                    else
                     {
-                        EvalOperation(property, parentArray, currentArrayToken, ref loopProperties, ref tokensToAdd);
-                    }
-                    else if (property.Name.TrimStart().Replace(" ", "").StartsWith("#ifgroup("))
-                    {
-                        ConditionalGroupOperation(property, parentArray, currentArrayToken, ref loopProperties, ref tokenToForm, childToken);
-
-                        isLoop = true;
-                    }
-                    else if (property.Name.TrimStart().Replace(" ", "").StartsWith("#loop("))
-                    {
-                        LoopOperation(property, parentArray, currentArrayToken, ref loopProperties, ref arrayToForm, ref dictToForm, childToken);
-                        isLoop = true;
-                    }
-                    else if (property.Value.ToString().Trim().StartsWith("#"))
-                    {
-                        property.Value = GetToken(ParseFunction(property.Value.ToString(), parentArray, currentArrayToken));
+                        if (ExpressionHelper.TryParseFunctionNameAndArguments(property.Name, out string functionName, out string arguments))
+                        {
+                            switch(functionName)
+                            {
+                                case "ifgroup":
+                                    ConditionalGroupOperation(property.Name, arguments, parentArray, currentArrayToken, ref loopProperties, ref tokenToForm, childToken);
+                                    isLoop = true;
+                                    break;
+                                case "loop":
+                                    LoopOperation(property.Name, arguments, parentArray, currentArrayToken, ref loopProperties, ref arrayToForm, ref dictToForm, childToken);
+                                    isLoop = true;
+                                    break;
+                                case "eval":
+                                    EvalOperation(property, arguments, parentArray, currentArrayToken, ref loopProperties, ref tokensToAdd);
+                                    break;
+                            }
+                        }
+                        else if (property.Value.ToString().Trim().StartsWith("#"))
+                        {
+                            property.Value = GetToken(ParseFunction(property.Value.ToString(), parentArray, currentArrayToken));
+                        }
                     }
 
                     if (property.Name != null && property.Value.ToString().StartsWith($"{ExpressionHelper.EscapeChar}#"))
@@ -303,9 +308,8 @@ namespace JUST
             }
         }
 
-        private void LoopOperation(JProperty property, IDictionary<string, JArray> parentArray, IDictionary<string, JToken> currentArrayToken, ref List<string> loopProperties, ref JArray arrayToForm, ref JObject dictToForm, JToken childToken)
+        private void LoopOperation(string propertyName, string arguments, IDictionary<string, JArray> parentArray, IDictionary<string, JToken> currentArrayToken, ref List<string> loopProperties, ref JArray arrayToForm, ref JObject dictToForm, JToken childToken)
         {
-            ExpressionHelper.TryParseFunctionNameAndArguments(property.Name, out string functionName, out string arguments);
             var args = ExpressionHelper.SplitArguments(arguments);
             var previousAlias = "root";
             ++_loopCounter;
@@ -405,13 +409,12 @@ namespace JUST
             if (loopProperties == null)
                 loopProperties = new List<string>();
             
-            loopProperties.Add(property.Name);
+            loopProperties.Add(propertyName);
             _loopCounter--;
         }
 
-        private void ConditionalGroupOperation(JProperty property, IDictionary<string, JArray> parentArray, IDictionary<string, JToken> currentArrayToken, ref List<string> loopProperties, ref List<JToken> tokenToForm, JToken childToken)
+        private void ConditionalGroupOperation(string propertyName, string arguments, IDictionary<string, JArray> parentArray, IDictionary<string, JToken> currentArrayToken, ref List<string> loopProperties, ref List<JToken> tokenToForm, JToken childToken)
         {
-            ExpressionHelper.TryParseFunctionNameAndArguments(property.Name, out string functionName, out string arguments);
             object functionResult = ParseFunction(arguments, parentArray, currentArrayToken);
             bool result = false;
 
@@ -430,7 +433,7 @@ namespace JUST
                 if (loopProperties == null)
                     loopProperties = new List<string>();
 
-                loopProperties.Add(property.Name);
+                loopProperties.Add(propertyName);
 
                 RecursiveEvaluate(childToken, parentArray, currentArrayToken);
 
@@ -449,13 +452,12 @@ namespace JUST
                     loopProperties = new List<string>();
                 }
 
-                loopProperties.Add(property.Name);
+                loopProperties.Add(propertyName);
             }
         }
 
-        private void EvalOperation(JProperty property, IDictionary<string, JArray> parentArray, IDictionary<string, JToken> currentArrayToken, ref List<string> loopProperties, ref List<JToken> tokensToAdd)
+        private void EvalOperation(JProperty property, string arguments, IDictionary<string, JArray> parentArray, IDictionary<string, JToken> currentArrayToken, ref List<string> loopProperties, ref List<JToken> tokensToAdd)
         {
-            ExpressionHelper.TryParseFunctionNameAndArguments(property.Name, out string functionName, out string arguments);
             object functionResult = ParseFunction(arguments, parentArray, currentArrayToken);
 
             JProperty clonedProperty = new JProperty(functionResult.ToString(),
