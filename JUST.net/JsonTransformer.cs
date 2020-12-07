@@ -122,7 +122,6 @@ namespace JUST
                     IEnumerable<object> itemsToAdd = TransformArray(childToken.Children(), parentArray, currentArrayToken);
                     BuildArrayToken(childToken as JArray, itemsToAdd);
                 }
-
                 else if (childToken.Type == JTokenType.Property && childToken is JProperty property && property.Name != null)
                 {
                     /* For looping*/
@@ -313,7 +312,16 @@ namespace JUST
             var args = ExpressionHelper.SplitArguments(arguments);
             var previousAlias = "root";
             ++_loopCounter;
-            var alias = args?.Length > 1 ? args[1].Trim() : $"loop{_loopCounter}";
+            string alias;
+            args[0] = (string)ParseFunction(args[0], parentArray, currentArrayToken);
+            if (args.Length > 1)
+            {
+                alias = args[1].Trim();
+            }
+            else
+            {
+                alias = $"loop{_loopCounter}";
+            }
 
             if (currentArrayToken?.Any() ?? false)
             {
@@ -428,7 +436,7 @@ namespace JUST
                 result = false;
             }
 
-            if (result == true)
+            if (result)
             {
                 if (loopProperties == null)
                     loopProperties = new List<string>();
