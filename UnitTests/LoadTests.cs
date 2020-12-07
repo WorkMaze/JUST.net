@@ -18,7 +18,7 @@ namespace JUST.UnitTests
             new JsonTransformer().Transform(transformer, input);
             w.Stop();
             var timeConsumed = w.Elapsed;
-            Assert.LessOrEqual(timeConsumed, TimeSpan.FromSeconds(4));
+            Assert.LessOrEqual(timeConsumed, TimeSpan.FromSeconds(5));
         }
 
         [Test]

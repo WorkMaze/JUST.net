@@ -153,7 +153,7 @@ namespace JUST
                         }
                         else if (property.Value.ToString().Trim().StartsWith("#"))
                         {
-                            property.Value = GetToken(ParseFunction(property.Value.ToString(), parentArray, currentArrayToken));
+                            property.Value = GetToken(ParseFunction(property.Value.ToString().Trim(), parentArray, currentArrayToken));
                         }
                     }
 
@@ -311,26 +311,22 @@ namespace JUST
         {
             var args = ExpressionHelper.SplitArguments(arguments);
             var previousAlias = "root";
-            ++_loopCounter;
-            string alias;
             args[0] = (string)ParseFunction(args[0], parentArray, currentArrayToken);
-            if (args.Length > 1)
+            string alias = args.Length > 1 ? (string)ParseFunction(args[1].Trim(), parentArray, currentArrayToken) : $"loop{++_loopCounter}";
+            
+            if (args.Length > 2)
             {
-                alias = args[1].Trim();
+                previousAlias = (string)ParseFunction(args[2].Trim(), parentArray, currentArrayToken);
+                currentArrayToken = new Dictionary<string, JToken> { { previousAlias, Context.Input } };
             }
-            else
-            {
-                alias = $"loop{_loopCounter}";
-            }
-
-            if (currentArrayToken?.Any() ?? false)
+            else if (currentArrayToken?.Any() ?? false)
             {
                 previousAlias = currentArrayToken.Last().Key;
             }
             else
             {
                 currentArrayToken = new Dictionary<string, JToken> { { previousAlias, Context.Input } };
-            }    
+            }
 
             var strArrayToken = ParseArgument(parentArray, currentArrayToken, args[0]) as string;
 
@@ -340,7 +336,7 @@ namespace JUST
             arrayToken = selectable.Select(strArrayToken);
             
             //workaround: result should be an array if path ends up with array filter
-            if (typeof(T) == typeof(JsonPathSelectable) && Regex.IsMatch(strArrayToken ?? string.Empty, "\\[.+\\]$") && arrayToken.Type != JTokenType.Array)
+            if (typeof(T) == typeof(JsonPathSelectable) && arrayToken?.Type != JTokenType.Array && (Regex.IsMatch(strArrayToken ?? string.Empty, "\\[.+\\]$") || (currentArrayToken != null && currentArrayToken.ContainsKey(alias) && currentArrayToken[alias] != null && Regex.IsMatch(currentArrayToken[alias].Value<string>(), "\\[.+\\]$"))))
             {
                 arrayToken = new JArray(arrayToken);
             }

@@ -277,5 +277,29 @@ namespace JUST.UnitTests.Arrays
 
             Assert.AreEqual("{\"score_pcs_tot\":[{\"score_data\":\"2020-04-08T10:20:21.335+00:00\",\"score_type\":\"pcs_tot\",\"score_value\":0.5},{\"score_data\":\"2020-04-09T10:22:03.267+00:00\",\"score_type\":\"pcs_tot\",\"score_value\":0.38},{\"score_data\":\"2020-04-09T10:23:05.748+00:00\",\"score_type\":\"pcs_tot\",\"score_value\":0.44}],\"score_pcs_help\":[{\"score_data\":\"2020-04-08T10:20:21.335+00:00\",\"score_type\":{\"score_type\":\"pcs_rum\",\"score_value\":0.5},\"score_value\":0.46},{\"score_data\":\"2020-04-09T10:22:03.267+00:00\",\"score_type\":{\"score_type\":\"pcs_rum\",\"score_value\":0.35},\"score_value\":0.42},{\"score_data\":\"2020-04-09T10:23:05.748+00:00\",\"score_type\":{\"score_type\":\"pcs_rum\",\"score_value\":0.5},\"score_value\":0.38}],\"score_pcs_rum\":[{\"score_data\":\"2020-04-08T10:20:21.335+00:00\",\"score_type\":\"pcs_help\",\"score_value\":0.5},{\"score_data\":\"2020-04-09T10:22:03.267+00:00\",\"score_type\":\"pcs_help\",\"score_value\":0.35},{\"score_data\":\"2020-04-09T10:23:05.748+00:00\",\"score_type\":\"pcs_help\",\"score_value\":0.5}],\"score_pcs_mag\":[{\"score_data\":\"2020-04-08T10:20:21.335+00:00\",\"score_value\":0.63},{\"score_data\":\"2020-04-09T10:22:03.267+00:00\",\"score_value\":0.38},{\"score_data\":\"2020-04-09T10:23:05.748+00:00\",\"score_value\":0.5}]}", result);
         }
+
+        [Test]
+        public void InsideLoopOverRoot()
+        {
+            const string input = "{ \"ontologyElements\": [ { \"id\":\"8b8b9d6e-4574-466b-b2c3-0062ad0642fe\", \"name\":\"Ontology1\",\"description\":\"test1\", \"entityType\":\"Ontology\" }, { \"id\":\"3ac89bbd-0de2-4692-a077-1d5d41efab69\", \"name\":\"MainType1\",\"order\":1, \"entityType\":\"MainType\", \"ontologyId\":\"8b8b9d6e-4574-466b-b2c3-0062ad0642fe\" }, { \"id\":\"97aa4eb2-0515-43d6-ba59-ffd931956b1a\", \"name\":\"SubType1\", \"order\":1, \"entityType\":\"SubType\", \"ontologyId\":\"8b8b9d6e-4574-466b-b2c3-0062ad0642fe\", \"mainTypeId\":\"3ac89bbd-0de2-4692-a077-1d5d41efab69\" } ] }";
+            
+            const string transformer = "{ \"id\": \"#valueof($.ontologyElements[?(@.entityType == 'Ontology')].id)\", \"description\": \"#valueof($.ontologyElements[?(@.entityType == 'Ontology')].description)\", \"maintypes\": { \"#loop($.ontologyElements[?(@.entityType == 'MainType')])\" : { \"id\": \"#currentvalueatpath($.id)\", \"name\": \"#currentvalueatpath($.name)\", \"order\": \"#currentvalueatpath($.order)\", \"subTypes\" : { \"#loop($.ontologyElements[?/(@.entityType == 'SubType' && @.ontologyId == '8b8b9d6e-4574-466b-b2c3-0062ad0642fe'/)], insideLoop, root)\": { \"name\": \"#currentvalueatpath($.name, insideLoop)\" } } } } }";
+
+            var result = new JsonTransformer(new JUSTContext { EvaluationMode = EvaluationMode.Strict }).Transform(transformer, input);
+
+            Assert.AreEqual("{\"id\":\"8b8b9d6e-4574-466b-b2c3-0062ad0642fe\",\"description\":\"test1\",\"maintypes\":[{\"id\":\"3ac89bbd-0de2-4692-a077-1d5d41efab69\",\"name\":\"MainType1\",\"order\":1,\"subTypes\":[{\"name\":\"SubType1\"}]}]}", result);
+        }
+
+        [Test]
+        public void DynamicExpression()
+        {
+            const string input = "{ \"ontologyElements\": [ { \"id\":\"8b8b9d6e-4574-466b-b2c3-0062ad0642fe\", \"name\":\"Ontology1\",\"description\":\"test1\", \"entityType\":\"Ontology\" }, { \"id\":\"3ac89bbd-0de2-4692-a077-1d5d41efab69\", \"name\":\"MainType1\",\"order\":1, \"entityType\":\"MainType\", \"ontologyId\":\"8b8b9d6e-4574-466b-b2c3-0062ad0642fe\" }, { \"id\":\"97aa4eb2-0515-43d6-ba59-ffd931956b1a\", \"name\":\"SubType1\", \"order\":1, \"entityType\":\"SubType\", \"ontologyId\":\"8b8b9d6e-4574-466b-b2c3-0062ad0642fe\", \"mainTypeId\":\"3ac89bbd-0de2-4692-a077-1d5d41efab69\" } ] }";
+
+            const string transformer = "{ \"id\": \"#valueof($.ontologyElements[?(@.entityType == 'Ontology')].id)\", \"description\": \"#valueof($.ontologyElements[?(@.entityType == 'Ontology')].description)\", \"maintypes\": { \"#loop($.ontologyElements[?(@.entityType == 'MainType')])\" : { \"id\": \"#currentvalueatpath($.id)\", \"name\": \"#currentvalueatpath($.name)\", \"order\": \"#currentvalueatpath($.order)\", \"subTypes\" : { \"#loop(#xconcat($.ontologyElements[?/(@.entityType == 'SubType' && @.ontologyId == ', #currentvalueatpath($.ontologyId),'/)]), #concat(inside,Loop), #concat(ro, ot))\": { \"name\": \"#currentvalueatpath($.name,insideLoop)\" } } } } }";
+
+            var result = new JsonTransformer(new JUSTContext { EvaluationMode = EvaluationMode.Strict }).Transform(transformer, input);
+
+            Assert.AreEqual("{\"id\":\"8b8b9d6e-4574-466b-b2c3-0062ad0642fe\",\"description\":\"test1\",\"maintypes\":[{\"id\":\"3ac89bbd-0de2-4692-a077-1d5d41efab69\",\"name\":\"MainType1\",\"order\":1,\"subTypes\":[{\"name\":\"SubType1\"}]}]}", result);
+        }
     }
 }
