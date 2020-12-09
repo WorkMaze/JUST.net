@@ -289,61 +289,64 @@ namespace JUST
             JToken arrayToken;
             var selectable = GetSelectableToken(token, Context);
             arrayToken = selectable.Select(strArrayToken);
-            
-            //workaround: result should be an array if path ends up with array filter
-            if (typeof(T) == typeof(JsonPathSelectable) && Regex.IsMatch(strArrayToken ?? string.Empty, "\\[.+\\]$") && arrayToken.Type != JTokenType.Array)
-            {
-                arrayToken = new JArray(arrayToken);
-            }
 
-            if (arrayToken is IDictionary<string, JToken> dict) //JObject is a dictionary
+            if (arrayToken != null)
             {
-                isDictionary = true;
-                JArray arr = new JArray();
-                foreach (var item in dict)
+
+                //workaround: result should be an array if path ends up with array filter
+                if (typeof(T) == typeof(JsonPathSelectable) && Regex.IsMatch(strArrayToken ?? string.Empty, "\\[.+\\]$") && arrayToken.Type != JTokenType.Array)
                 {
-                    arr.Add(new JObject { { item.Key, item.Value } });
+                    arrayToken = new JArray(arrayToken);
                 }
 
-                arrayToken = arr;
-            }
-
-            JArray array = arrayToken as JArray;
-
-            if (array != null)
-            {
-                using (IEnumerator<JToken> elements = array.GetEnumerator())
+                if (arrayToken is IDictionary<string, JToken> dict) //JObject is a dictionary
                 {
-                    arrayToForm = new JArray();
-                    if (!isDictionary)
+                    isDictionary = true;
+                    JArray arr = new JArray();
+                    foreach (var item in dict)
                     {
-                        while (elements.MoveNext())
-                        {
-                            JToken clonedToken = childToken.DeepClone();
-                            RecursiveEvaluate(clonedToken, array, elements.Current);
+                        arr.Add(new JObject { { item.Key, item.Value } });
+                    }
 
-                            foreach (JToken replacedProperty in clonedToken.Children())
+                    arrayToken = arr;
+                }
+
+                JArray array = arrayToken as JArray;
+
+                if (array != null)
+                {
+                    using (IEnumerator<JToken> elements = array.GetEnumerator())
+                    {
+                        arrayToForm = new JArray();
+                        if (!isDictionary)
+                        {
+                            while (elements.MoveNext())
                             {
-                                arrayToForm.Add(replacedProperty.Type != JTokenType.Null ? replacedProperty : new JObject());
+                                JToken clonedToken = childToken.DeepClone();
+                                RecursiveEvaluate(clonedToken, array, elements.Current);
+
+                                foreach (JToken replacedProperty in clonedToken.Children())
+                                {
+                                    arrayToForm.Add(replacedProperty.Type != JTokenType.Null ? replacedProperty : new JObject());
+                                }
+                            }
+                        }
+                        else
+                        {
+                            dictToForm = new JObject();
+                            while (elements.MoveNext())
+                            {
+                                JToken clonedToken = childToken.DeepClone();
+                                RecursiveEvaluate(clonedToken, array, elements.Current);
+                                foreach (JToken replacedProperty in clonedToken.Children().Select(t => t.First))
+                                {
+                                    dictToForm.Add(replacedProperty);
+                                }
                             }
                         }
                     }
-                    else
-                    {
-                        dictToForm = new JObject();
-                        while (elements.MoveNext())
-                        {
-                            JToken clonedToken = childToken.DeepClone();
-                            RecursiveEvaluate(clonedToken, array, elements.Current);
-                            foreach (JToken replacedProperty in clonedToken.Children().Select(t => t.First))
-                            {
-                                dictToForm.Add(replacedProperty);
-                            }
-                        }
-                    }
                 }
             }
-
             if (loopProperties == null)
                 loopProperties = new List<string>();
 
