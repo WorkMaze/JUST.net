@@ -49,8 +49,8 @@ string input = File.ReadAllText("Examples/Input.json");
 //read the transformer from a JSON file
 string transformer = File.ReadAllText("Examples/Transformer.json");
 
-// do the actual transformation
-string transformedString = JsonTransformer.Transform(transformer, input);
+// do the actual transformation [equal to new JsonTransformer<JsonPathSelectable>(...) for backward compatibility]
+string transformedString = new JsonTransformer().Transform(transformer, input);
 
 // with context
 JUSTContext context = new JUSTContext 
@@ -61,7 +61,7 @@ JUSTContext context = new JUSTContext
 string transformedString = new JsonTransformer(context).Transform(transformer, input);
 
 // with generic method
-string transformedString = JsonTransformer<JmesPathSelectable>.Transform(transformer, input);
+string transformedString = new JsonTransformer<JmesPathSelectable>.Transform(transformer, input);
 ```
 
 # Using JUST to transform JSON
@@ -117,6 +117,7 @@ Output:
 ```
 
 #### <a name="jmesexample"></a> ...with JmesPath 
+Note: default is JsonPath
 
 Input:
 
