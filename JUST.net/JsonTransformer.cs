@@ -107,6 +107,7 @@ namespace JUST
             List<JToken> tokensToDelete = null;
 
             List<string> loopProperties = null;
+            List<string> condProps = null;
             JArray arrayToForm = null;
             JObject dictToForm = null;
             List<JToken> tokenToForm = null;
@@ -139,8 +140,7 @@ namespace JUST
                             switch(functionName)
                             {
                                 case "ifgroup":
-                                    ConditionalGroupOperation(property.Name, arguments, parentArray, currentArrayToken, ref loopProperties, ref tokenToForm, childToken);
-                                    isLoop = true;
+                                    ConditionalGroupOperation(property.Name, arguments, parentArray, currentArrayToken, ref condProps, ref tokenToForm, childToken);
                                     break;
                                 case "loop":
                                     LoopOperation(property.Name, arguments, parentArray, currentArrayToken, ref loopProperties, ref arrayToForm, ref dictToForm, childToken);
@@ -178,10 +178,10 @@ namespace JUST
                 }
             }
 
-            parentToken = PostOperationsBuildUp(parentToken, selectedTokens, tokensToReplace, tokensToDelete, loopProperties, arrayToForm, dictToForm, tokenToForm, tokensToAdd);
+            parentToken = PostOperationsBuildUp(parentToken, selectedTokens, tokensToReplace, tokensToDelete, condProps, loopProperties, arrayToForm, dictToForm, tokenToForm, tokensToAdd);
         }
 
-        private JToken PostOperationsBuildUp(JToken parentToken, List<JToken> selectedTokens, Dictionary<string, JToken> tokensToReplace, List<JToken> tokensToDelete, List<string> loopProperties, JArray arrayToForm, JObject dictToForm, List<JToken> tokenToForm, List<JToken> tokensToAdd)
+        private JToken PostOperationsBuildUp(JToken parentToken, List<JToken> selectedTokens, Dictionary<string, JToken> tokensToReplace, List<JToken> tokensToDelete, List<string> condProps, List<string> loopProperties, JArray arrayToForm, JObject dictToForm, List<JToken> tokenToForm, List<JToken> tokensToAdd)
         {
             if (selectedTokens != null)
             {
@@ -218,7 +218,7 @@ namespace JUST
                 jObject.Remove("#");
             }
 
-            LoopPostOperationBuildUp(parentToken, loopProperties, arrayToForm, dictToForm);
+            LoopPostOperationBuildUp(parentToken, condProps, loopProperties, arrayToForm, dictToForm);
 
             return parentToken;
         }
@@ -260,7 +260,7 @@ namespace JUST
             }
         }
 
-        private static void LoopPostOperationBuildUp(JToken parentToken, List<string> loopProperties, JArray arrayToForm, JObject dictToForm)
+        private static void LoopPostOperationBuildUp(JToken parentToken, List<string> condProps, List<string> loopProperties, JArray arrayToForm, JObject dictToForm)
         {
             if (loopProperties != null)
             {
@@ -274,6 +274,14 @@ namespace JUST
                     {
                         (parentToken as JObject).Remove(propertyToDelete);
                     }
+                }
+            }
+
+            if (condProps != null)
+            {
+                foreach (string propertyToDelete in condProps)
+                {
+                    (parentToken as JObject).Remove(propertyToDelete);
                 }
             }
 
@@ -417,7 +425,7 @@ namespace JUST
             _loopCounter--;
         }
 
-        private void ConditionalGroupOperation(string propertyName, string arguments, IDictionary<string, JArray> parentArray, IDictionary<string, JToken> currentArrayToken, ref List<string> loopProperties, ref List<JToken> tokenToForm, JToken childToken)
+        private void ConditionalGroupOperation(string propertyName, string arguments, IDictionary<string, JArray> parentArray, IDictionary<string, JToken> currentArrayToken, ref List<string> condProps, ref List<JToken> tokenToForm, JToken childToken)
         {
             object functionResult = ParseFunction(arguments, parentArray, currentArrayToken);
             bool result = false;
@@ -434,10 +442,10 @@ namespace JUST
 
             if (result)
             {
-                if (loopProperties == null)
-                    loopProperties = new List<string>();
+                if (condProps == null)
+                    condProps = new List<string>();
 
-                loopProperties.Add(propertyName);
+                condProps.Add(propertyName);
 
                 RecursiveEvaluate(childToken, parentArray, currentArrayToken);
 
@@ -447,16 +455,18 @@ namespace JUST
                 }
 
                 foreach (JToken grandChildToken in childToken.Children())
+                {
                     tokenToForm.Add(grandChildToken.DeepClone());
+                }
             }
             else
             {
-                if (loopProperties == null)
+                if (condProps == null)
                 {
-                    loopProperties = new List<string>();
+                    condProps = new List<string>();
                 }
 
-                loopProperties.Add(propertyName);
+                condProps.Add(propertyName);
             }
         }
 
