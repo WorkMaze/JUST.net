@@ -342,79 +342,81 @@ namespace JUST
             JToken arrayToken;
             var selectable = GetSelectableToken(currentArrayToken[previousAlias], Context);
             arrayToken = selectable.Select(strArrayToken);
-            
-            //workaround: result should be an array if path ends up with array filter
-            if (typeof(T) == typeof(JsonPathSelectable) && arrayToken?.Type != JTokenType.Array && (Regex.IsMatch(strArrayToken ?? string.Empty, "\\[.+\\]$") || (currentArrayToken != null && currentArrayToken.ContainsKey(alias) && currentArrayToken[alias] != null && Regex.IsMatch(currentArrayToken[alias].Value<string>(), "\\[.+\\]$"))))
-            {
-                arrayToken = new JArray(arrayToken);
-            }
 
-            if (arrayToken is IDictionary<string, JToken> dict) //JObject is a dictionary
+            if (arrayToken != null)
             {
-                isDictionary = true;
-                JArray arr = new JArray();
-                foreach (var item in dict)
+                //workaround: result should be an array if path ends up with array filter
+                if (typeof(T) == typeof(JsonPathSelectable) && arrayToken.Type != JTokenType.Array && (Regex.IsMatch(strArrayToken ?? string.Empty, "\\[.+\\]$") || (currentArrayToken != null && currentArrayToken.ContainsKey(alias) && currentArrayToken[alias] != null && Regex.IsMatch(currentArrayToken[alias].Value<string>(), "\\[.+\\]$"))))
                 {
-                    arr.Add(new JObject { { item.Key, item.Value } });
+                    arrayToken = new JArray(arrayToken);
                 }
 
-                arrayToken = arr;
-            }
-
-            JArray array = arrayToken as JArray;
-
-            if (array != null)
-            {
-                using (IEnumerator<JToken> elements = array.GetEnumerator())
+                if (arrayToken is IDictionary<string, JToken> dict) //JObject is a dictionary
                 {
-                    if (parentArray?.Any() ?? false)
+                    isDictionary = true;
+                    JArray arr = new JArray();
+                    foreach (var item in dict)
                     {
-                        parentArray.Add(alias, array);
-                    }
-                    else
-                    {
-                        parentArray = new Dictionary<string, JArray> { { alias, array } };
+                        arr.Add(new JObject { { item.Key, item.Value } });
                     }
 
-                    arrayToForm = new JArray();
-                    if (!isDictionary)
+                    arrayToken = arr;
+                }
+
+                JArray array = arrayToken as JArray;
+                if (array != null)
+                {
+                    using (IEnumerator<JToken> elements = array.GetEnumerator())
                     {
-                        while (elements.MoveNext())
+                        if (parentArray?.Any() ?? false)
                         {
-                            JToken clonedToken = childToken.DeepClone();
+                            parentArray.Add(alias, array);
+                        }
+                        else
+                        {
+                            parentArray = new Dictionary<string, JArray> { { alias, array } };
+                        }
 
-                            if (currentArrayToken.ContainsKey(alias))
+                        arrayToForm = new JArray();
+                        if (!isDictionary)
+                        {
+                            while (elements.MoveNext())
                             {
-                                currentArrayToken[alias] = elements.Current;
-                            }
-                            else
-                            {
-                                currentArrayToken.Add(alias, elements.Current);
-                            }
-                            RecursiveEvaluate(clonedToken, parentArray, currentArrayToken);
+                                JToken clonedToken = childToken.DeepClone();
 
-                            foreach (JToken replacedProperty in clonedToken.Children())
-                            {
-                                arrayToForm.Add(replacedProperty.Type != JTokenType.Null ? replacedProperty : new JObject());
+                                if (currentArrayToken.ContainsKey(alias))
+                                {
+                                    currentArrayToken[alias] = elements.Current;
+                                }
+                                else
+                                {
+                                    currentArrayToken.Add(alias, elements.Current);
+                                }
+                                RecursiveEvaluate(clonedToken, parentArray, currentArrayToken);
+
+                                foreach (JToken replacedProperty in clonedToken.Children())
+                                {
+                                    arrayToForm.Add(replacedProperty.Type != JTokenType.Null ? replacedProperty : new JObject());
+                                }
                             }
                         }
-                    }
-                    else
-                    {
-                        dictToForm = new JObject();
-                        while (elements.MoveNext())
+                        else
                         {
-                            JToken clonedToken = childToken.DeepClone();
-                            RecursiveEvaluate(clonedToken, new Dictionary<string, JArray> { { alias, array } }, new Dictionary<string, JToken> { { alias, elements.Current } });
-                            foreach (JToken replacedProperty in clonedToken.Children().Select(t => t.First))
+                            dictToForm = new JObject();
+                            while (elements.MoveNext())
                             {
-                                dictToForm.Add(replacedProperty);
+                                JToken clonedToken = childToken.DeepClone();
+                                RecursiveEvaluate(clonedToken, new Dictionary<string, JArray> { { alias, array } }, new Dictionary<string, JToken> { { alias, elements.Current } });
+                                foreach (JToken replacedProperty in clonedToken.Children().Select(t => t.First))
+                                {
+                                    dictToForm.Add(replacedProperty);
+                                }
                             }
                         }
-                    }
 
-                    parentArray.Remove(alias);
-                    currentArrayToken.Remove(alias);
+                        parentArray.Remove(alias);
+                        currentArrayToken.Remove(alias);
+                    }
                 }
             }
 
