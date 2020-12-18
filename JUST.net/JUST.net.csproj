@@ -14,11 +14,8 @@ This will repace the JUST and JUST.NETCore packages.</Description>
     <RepositoryUrl>https://github.com/WorkMaze/JUST.net</RepositoryUrl>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
-    <PackageReleaseNotes>
-      Made JsonTransformer non static.
-      Added generic ISelectableToken to JsonTransformer.
-      Split code into methods related with operations.</PackageReleaseNotes>
-    <Version>4.0.0</Version>
+    <PackageReleaseNotes>Looping within context</PackageReleaseNotes>
+    <Version>4.0.2</Version>
     <AssemblyVersion>4.0.0.0</AssemblyVersion>
     <FileVersion>4.0.0.0</FileVersion>
   </PropertyGroup>
