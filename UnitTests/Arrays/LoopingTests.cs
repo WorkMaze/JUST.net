@@ -108,7 +108,7 @@ namespace JUST.UnitTests.Arrays
         [Test]
         public void NestedLooping()
         {
-            const string transformer = "{ \"hello\": { \"#loop($.NestedLoop.Organization.Employee)\": { \"Details\": { \"#loopwithincontext($.Details)\": { \"CurrentCountry\": \"#currentvalueatpath($.Country)\" } } } } }";
+            const string transformer = "{ \"hello\": { \"#loop($.NestedLoop.Organization.Employee)\": { \"Details\": { \"#loop($.Details)\": { \"CurrentCountry\": \"#currentvalueatpath($.Country)\" } } } } }";
 
             var result = new JsonTransformer().Transform(transformer, ExampleInputs.NestedArrays);
 
@@ -138,7 +138,7 @@ namespace JUST.UnitTests.Arrays
         [Test]
         public void NestedLoopingContextInput()
         {
-            const string transformer = "{ \"hello\": { \"#loop($.NestedLoop.Organization.Employee)\": { \"Details\": { \"#loopwithincontext($.Details)\": { \"Exists\": \"#exists($.Country)\", \"IsIsland\": \"#ifcondition(#currentvalueatpath($.Country),Iceland,#toboolean(True),#toboolean(False))\", \"CurrentCountry\": \"#currentvalueatpath($.Country)\" } } } } }";
+            const string transformer = "{ \"hello\": { \"#loop($.NestedLoop.Organization.Employee)\": { \"Details\": { \"#loop($.Details)\": { \"Exists\": \"#exists($.Country)\", \"IsIsland\": \"#ifcondition(#currentvalueatpath($.Country),Iceland,#toboolean(True),#toboolean(False))\", \"CurrentCountry\": \"#currentvalueatpath($.Country)\" } } } } }";
 
             var result = new JsonTransformer().Transform(transformer, ExampleInputs.NestedArrays);
 
@@ -148,7 +148,7 @@ namespace JUST.UnitTests.Arrays
         [Test]
         public void FunctionAsLoopArgument()
         {
-            const string transformer = "{ \"hello\": { \"#loop(#xconcat($.NestedLoop.,Organization,.Employee))\": { \"Details\": { \"#loopwithincontext(#concat($.,Details))\": { \"CurrentCountry\": \"#currentvalueatpath($.Country)\" } } } } }";
+            const string transformer = "{ \"hello\": { \"#loop(#xconcat($.NestedLoop.,Organization,.Employee))\": { \"Details\": { \"#loop(#concat($.,Details))\": { \"CurrentCountry\": \"#currentvalueatpath($.Country)\" } } } } }";
 
             var result = new JsonTransformer().Transform(transformer, ExampleInputs.NestedArrays);
 
@@ -248,6 +248,26 @@ namespace JUST.UnitTests.Arrays
         }
 
         [Test]
+        public void LoopingAlias()
+        {
+            const string transformer = "{ \"hello\": { \"#loop($.NestedLoop.Organization.Employee, employee)\": { \"Details\": { \"#loop($.Details, details)\": { \"CurrentCountry\": \"#currentvalueatpath($.Country, details)\", \"OuterName\": \"#currentvalueatpath($.Name, employee)\", \"FirstLevel\": { \"#loop($.Roles, roles)\": { \"Employee\": \"#currentvalue(employee)\", \"Job\": \"#currentvalueatpath($.Job, roles)\" } } } } } } }";
+
+            var result = new JsonTransformer().Transform(transformer, ExampleInputs.NestedArrays);
+
+            Assert.AreEqual("{\"hello\":[{\"Details\":[{\"CurrentCountry\":\"Iceland\",\"OuterName\":\"E2\",\"FirstLevel\":[{\"Employee\":{\"Name\":\"E2\",\"Details\":[{\"Country\":\"Iceland\",\"Age\":\"30\",\"Name\":\"Sven\",\"Language\":\"Icelandic\",\"Roles\":[{\"Job\":\"Janitor\",\"Salary\":100},{\"Job\":\"Security\",\"Salary\":200}]}]},\"Job\":\"Janitor\"},{\"Employee\":{\"Name\":\"E2\",\"Details\":[{\"Country\":\"Iceland\",\"Age\":\"30\",\"Name\":\"Sven\",\"Language\":\"Icelandic\",\"Roles\":[{\"Job\":\"Janitor\",\"Salary\":100},{\"Job\":\"Security\",\"Salary\":200}]}]},\"Job\":\"Security\"}]}]},{\"Details\":[{\"CurrentCountry\":\"Denmark\",\"OuterName\":\"E1\",\"FirstLevel\":[{\"Employee\":{\"Name\":\"E1\",\"Details\":[{\"Country\":\"Denmark\",\"Age\":\"30\",\"Name\":\"Svein\",\"Language\":\"Danish\",\"Roles\":[{\"Job\":\"Manager\",\"Salary\":300},{\"Job\":\"Developer\",\"Salary\":400}]}]},\"Job\":\"Manager\"},{\"Employee\":{\"Name\":\"E1\",\"Details\":[{\"Country\":\"Denmark\",\"Age\":\"30\",\"Name\":\"Svein\",\"Language\":\"Danish\",\"Roles\":[{\"Job\":\"Manager\",\"Salary\":300},{\"Job\":\"Developer\",\"Salary\":400}]}]},\"Job\":\"Developer\"}]}]}]}", result);
+        }
+
+        [Test]
+        public void MixedLoopingAlias()
+        {
+            const string transformer = "{ \"hello\": { \"#loop($.NestedLoop.Organization.Employee, employee)\": { \"Details\": { \"#loop($.Details)\": { \"CurrentCountry\": \"#currentvalueatpath($.Country)\", \"OuterName\": \"#currentvalueatpath($.Name, employee)\" } } } } }";
+
+            var result = new JsonTransformer().Transform(transformer, ExampleInputs.NestedArrays);
+
+            Assert.AreEqual("{\"hello\":[{\"Details\":[{\"CurrentCountry\":\"Iceland\",\"OuterName\":\"E2\"}]},{\"Details\":[{\"CurrentCountry\":\"Denmark\",\"OuterName\":\"E1\"}]}]}", result);
+        }
+
+        [Test]
         public void BulkFunctions()
         {
             const string input = "{\"score_PCS\": [{\"data\": \"2020-04-08T10:20:21.335+00:00\",\"score\": [{\"score_type\": \"pcs_tot\",\"score_value\": 0.5},{\"score_type\": \"pcs_help\",\"score_value\": 0.46},{\"score_type\": \"pcs_rum\",\"score_value\": 0.5},{\"score_type\": \"pcs_mag\",\"score_value\": 0.63}]},{\"data\": \"2020-04-09T10:22:03.267+00:00\",\"score\": [{\"score_type\": \"pcs_tot\",\"score_value\": 0.38},{\"score_type\": \"pcs_help\",\"score_value\": 0.42},{\"score_type\": \"pcs_rum\",\"score_value\": 0.35},{\"score_type\": \"pcs_mag\",\"score_value\": 0.38}]},{\"data\": \"2020-04-09T10:23:05.748+00:00\",\"score\": [{\"score_type\": \"pcs_tot\",\"score_value\": 0.44},{\"score_type\": \"pcs_help\",\"score_value\": 0.38},{\"score_type\": \"pcs_rum\",\"score_value\": 0.5},{\"score_type\": \"pcs_mag\",\"score_value\": 0.5}]}]}";
@@ -256,6 +276,30 @@ namespace JUST.UnitTests.Arrays
             var result = new JsonTransformer().Transform(transformer, input);
 
             Assert.AreEqual("{\"score_pcs_tot\":[{\"score_data\":\"2020-04-08T10:20:21.335+00:00\",\"score_type\":\"pcs_tot\",\"score_value\":0.5},{\"score_data\":\"2020-04-09T10:22:03.267+00:00\",\"score_type\":\"pcs_tot\",\"score_value\":0.38},{\"score_data\":\"2020-04-09T10:23:05.748+00:00\",\"score_type\":\"pcs_tot\",\"score_value\":0.44}],\"score_pcs_help\":[{\"score_data\":\"2020-04-08T10:20:21.335+00:00\",\"score_type\":{\"score_type\":\"pcs_rum\",\"score_value\":0.5},\"score_value\":0.46},{\"score_data\":\"2020-04-09T10:22:03.267+00:00\",\"score_type\":{\"score_type\":\"pcs_rum\",\"score_value\":0.35},\"score_value\":0.42},{\"score_data\":\"2020-04-09T10:23:05.748+00:00\",\"score_type\":{\"score_type\":\"pcs_rum\",\"score_value\":0.5},\"score_value\":0.38}],\"score_pcs_rum\":[{\"score_data\":\"2020-04-08T10:20:21.335+00:00\",\"score_type\":\"pcs_help\",\"score_value\":0.5},{\"score_data\":\"2020-04-09T10:22:03.267+00:00\",\"score_type\":\"pcs_help\",\"score_value\":0.35},{\"score_data\":\"2020-04-09T10:23:05.748+00:00\",\"score_type\":\"pcs_help\",\"score_value\":0.5}],\"score_pcs_mag\":[{\"score_data\":\"2020-04-08T10:20:21.335+00:00\",\"score_value\":0.63},{\"score_data\":\"2020-04-09T10:22:03.267+00:00\",\"score_value\":0.38},{\"score_data\":\"2020-04-09T10:23:05.748+00:00\",\"score_value\":0.5}]}", result);
+        }
+
+        [Test]
+        public void InsideLoopOverRoot()
+        {
+            const string input = "{ \"ontologyElements\": [ { \"id\":\"8b8b9d6e-4574-466b-b2c3-0062ad0642fe\", \"name\":\"Ontology1\",\"description\":\"test1\", \"entityType\":\"Ontology\" }, { \"id\":\"3ac89bbd-0de2-4692-a077-1d5d41efab69\", \"name\":\"MainType1\",\"order\":1, \"entityType\":\"MainType\", \"ontologyId\":\"8b8b9d6e-4574-466b-b2c3-0062ad0642fe\" }, { \"id\":\"97aa4eb2-0515-43d6-ba59-ffd931956b1a\", \"name\":\"SubType1\", \"order\":1, \"entityType\":\"SubType\", \"ontologyId\":\"8b8b9d6e-4574-466b-b2c3-0062ad0642fe\", \"mainTypeId\":\"3ac89bbd-0de2-4692-a077-1d5d41efab69\" } ] }";
+            
+            const string transformer = "{ \"id\": \"#valueof($.ontologyElements[?(@.entityType == 'Ontology')].id)\", \"description\": \"#valueof($.ontologyElements[?(@.entityType == 'Ontology')].description)\", \"maintypes\": { \"#loop($.ontologyElements[?(@.entityType == 'MainType')])\" : { \"id\": \"#currentvalueatpath($.id)\", \"name\": \"#currentvalueatpath($.name)\", \"order\": \"#currentvalueatpath($.order)\", \"subTypes\" : { \"#loop($.ontologyElements[?/(@.entityType == 'SubType' && @.ontologyId == '8b8b9d6e-4574-466b-b2c3-0062ad0642fe'/)], insideLoop, root)\": { \"name\": \"#currentvalueatpath($.name, insideLoop)\" } } } } }";
+
+            var result = new JsonTransformer(new JUSTContext { EvaluationMode = EvaluationMode.Strict }).Transform(transformer, input);
+
+            Assert.AreEqual("{\"id\":\"8b8b9d6e-4574-466b-b2c3-0062ad0642fe\",\"description\":\"test1\",\"maintypes\":[{\"id\":\"3ac89bbd-0de2-4692-a077-1d5d41efab69\",\"name\":\"MainType1\",\"order\":1,\"subTypes\":[{\"name\":\"SubType1\"}]}]}", result);
+        }
+
+        [Test]
+        public void DynamicExpression()
+        {
+            const string input = "{ \"ontologyElements\": [ { \"id\":\"8b8b9d6e-4574-466b-b2c3-0062ad0642fe\", \"name\":\"Ontology1\",\"description\":\"test1\", \"entityType\":\"Ontology\" }, { \"id\":\"3ac89bbd-0de2-4692-a077-1d5d41efab69\", \"name\":\"MainType1\",\"order\":1, \"entityType\":\"MainType\", \"ontologyId\":\"8b8b9d6e-4574-466b-b2c3-0062ad0642fe\" }, { \"id\":\"97aa4eb2-0515-43d6-ba59-ffd931956b1a\", \"name\":\"SubType1\", \"order\":1, \"entityType\":\"SubType\", \"ontologyId\":\"8b8b9d6e-4574-466b-b2c3-0062ad0642fe\", \"mainTypeId\":\"3ac89bbd-0de2-4692-a077-1d5d41efab69\" } ] }";
+
+            const string transformer = "{ \"id\": \"#valueof($.ontologyElements[?(@.entityType == 'Ontology')].id)\", \"description\": \"#valueof($.ontologyElements[?(@.entityType == 'Ontology')].description)\", \"maintypes\": { \"#loop($.ontologyElements[?(@.entityType == 'MainType')])\" : { \"id\": \"#currentvalueatpath($.id)\", \"name\": \"#currentvalueatpath($.name)\", \"order\": \"#currentvalueatpath($.order)\", \"subTypes\" : { \"#loop(#xconcat($.ontologyElements[?/(@.entityType == 'SubType' && @.ontologyId == ', #currentvalueatpath($.ontologyId),'/)]), #concat(inside,Loop), #concat(ro, ot))\": { \"name\": \"#currentvalueatpath($.name,insideLoop)\" } } } } }";
+
+            var result = new JsonTransformer(new JUSTContext { EvaluationMode = EvaluationMode.Strict }).Transform(transformer, input);
+
+            Assert.AreEqual("{\"id\":\"8b8b9d6e-4574-466b-b2c3-0062ad0642fe\",\"description\":\"test1\",\"maintypes\":[{\"id\":\"3ac89bbd-0de2-4692-a077-1d5d41efab69\",\"name\":\"MainType1\",\"order\":1,\"subTypes\":[{\"name\":\"SubType1\"}]}]}", result);
         }
     }
 }

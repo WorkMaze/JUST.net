@@ -17,6 +17,8 @@ namespace JUST
 
     public class JsonTransformer<T> where T: ISelectableToken
     {
+        private int _loopCounter = 0;
+
         private readonly JUSTContext Context;
 
         public JsonTransformer(JUSTContext context = null)
@@ -93,7 +95,7 @@ namespace JUST
         #region RecursiveEvaluate
 
 
-        private void RecursiveEvaluate(JToken parentToken, JArray parentArray, JToken currentArrayToken)
+        private void RecursiveEvaluate(JToken parentToken, IDictionary<string, JArray> parentArray, IDictionary<string, JToken> currentArrayToken)
         {
             if (parentToken == null)
                 return;
@@ -121,7 +123,6 @@ namespace JUST
                     IEnumerable<object> itemsToAdd = TransformArray(childToken.Children(), parentArray, currentArrayToken);
                     BuildArrayToken(childToken as JArray, itemsToAdd);
                 }
-
                 else if (childToken.Type == JTokenType.Property && childToken is JProperty property && property.Name != null)
                 {
                     /* For looping*/
@@ -132,23 +133,28 @@ namespace JUST
                         BulkOperations(values.Children(), parentArray, currentArrayToken, ref selectedTokens, ref tokensToReplace, ref tokensToDelete);
                         isBulk = true;
                     }
-                    else if (property.Name.TrimStart().StartsWith("#eval"))
+                    else
                     {
-                        EvalOperation(property, parentArray, currentArrayToken, ref loopProperties, ref tokensToAdd);
-                    }
-                    else if (property.Name.TrimStart().Contains("#ifgroup"))
-                    {
-                        ConditionalGroupOperation(property, parentArray, currentArrayToken, ref condProps, ref tokenToForm, childToken);
-                        isLoop = false;
-                    }
-                    else if (property.Name.TrimStart().Contains("#loop"))
-                    {
-                        LoopOperation(property, parentArray, currentArrayToken, ref loopProperties, ref arrayToForm, ref dictToForm, childToken);
-                        isLoop = true;
-                    }
-                    else if (property.Value.ToString().Trim().StartsWith("#"))
-                    {
-                        property.Value = GetToken(ParseFunction(property.Value.ToString(), parentArray, currentArrayToken));
+                        if (ExpressionHelper.TryParseFunctionNameAndArguments(property.Name, out string functionName, out string arguments))
+                        {
+                            switch(functionName)
+                            {
+                                case "ifgroup":
+                                    ConditionalGroupOperation(property.Name, arguments, parentArray, currentArrayToken, ref condProps, ref tokenToForm, childToken);
+                                    break;
+                                case "loop":
+                                    LoopOperation(property.Name, arguments, parentArray, currentArrayToken, ref loopProperties, ref arrayToForm, ref dictToForm, childToken);
+                                    isLoop = true;
+                                    break;
+                                case "eval":
+                                    EvalOperation(property, arguments, parentArray, currentArrayToken, ref loopProperties, ref tokensToAdd);
+                                    break;
+                            }
+                        }
+                        else if (property.Value.ToString().Trim().StartsWith("#"))
+                        {
+                            property.Value = GetToken(ParseFunction(property.Value.ToString().Trim(), parentArray, currentArrayToken));
+                        }
                     }
 
                     if (property.Name != null && property.Value.ToString().StartsWith($"{ExpressionHelper.EscapeChar}#"))
@@ -172,7 +178,7 @@ namespace JUST
                 }
             }
 
-            parentToken = PostOperationsBuildUp(parentToken, selectedTokens, tokensToReplace, tokensToDelete, condProps,loopProperties, arrayToForm, dictToForm, tokenToForm, tokensToAdd);
+            parentToken = PostOperationsBuildUp(parentToken, selectedTokens, tokensToReplace, tokensToDelete, condProps, loopProperties, arrayToForm, dictToForm, tokenToForm, tokensToAdd);
         }
 
         private JToken PostOperationsBuildUp(JToken parentToken, List<JToken> selectedTokens, Dictionary<string, JToken> tokensToReplace, List<JToken> tokensToDelete, List<string> condProps, List<string> loopProperties, JArray arrayToForm, JObject dictToForm, List<JToken> tokenToForm, List<JToken> tokensToAdd)
@@ -195,32 +201,9 @@ namespace JUST
                 }
             }
 
-            if (tokensToReplace != null)
-            {
-                foreach (KeyValuePair<string, JToken> tokenToReplace in tokensToReplace)
-                {
-                    JToken selectedToken = (parentToken as JObject).SelectToken(tokenToReplace.Key);
-                    selectedToken.Replace(tokenToReplace.Value);
-                }
-            }
-
-            if (tokensToDelete != null)
-            {
-                foreach (string selectedToken in tokensToDelete)
-                {
-                    JToken tokenToRemove = GetSelectableToken(parentToken, Context).Select(selectedToken);
-
-                    if (tokenToRemove != null)
-                        tokenToRemove.Ancestors().First().Remove();
-                }
-            }
-            if (tokensToAdd != null)
-            {
-                foreach (JToken token in tokensToAdd)
-                {
-                    (parentToken as JObject).Add((token as JProperty).Name, (token as JProperty).Value);
-                }
-            }
+            ReplacePostOperationBuildUp(parentToken, tokensToReplace);
+            DeletePostOperationBuildUp(parentToken, tokensToDelete);
+            AddPostOperationBuildUp(parentToken, tokensToAdd);
 
             if (tokenToForm != null)
             {
@@ -235,6 +218,50 @@ namespace JUST
                 jObject.Remove("#");
             }
 
+            LoopPostOperationBuildUp(parentToken, condProps, loopProperties, arrayToForm, dictToForm);
+
+            return parentToken;
+        }
+
+        private static void AddPostOperationBuildUp(JToken parentToken, List<JToken> tokensToAdd)
+        {
+            if (tokensToAdd != null)
+            {
+                foreach (JToken token in tokensToAdd)
+                {
+                    (parentToken as JObject).Add((token as JProperty).Name, (token as JProperty).Value);
+                }
+            }
+        }
+
+        private void DeletePostOperationBuildUp(JToken parentToken, List<JToken> tokensToDelete)
+        {
+            if (tokensToDelete != null)
+            {
+                foreach (string selectedToken in tokensToDelete)
+                {
+                    JToken tokenToRemove = GetSelectableToken(parentToken, Context).Select(selectedToken);
+
+                    if (tokenToRemove != null)
+                        tokenToRemove.Ancestors().First().Remove();
+                }
+            }
+        }
+
+        private static void ReplacePostOperationBuildUp(JToken parentToken, Dictionary<string, JToken> tokensToReplace)
+        {
+            if (tokensToReplace != null)
+            {
+                foreach (KeyValuePair<string, JToken> tokenToReplace in tokensToReplace)
+                {
+                    JToken selectedToken = (parentToken as JObject).SelectToken(tokenToReplace.Key);
+                    selectedToken.Replace(tokenToReplace.Value);
+                }
+            }
+        }
+
+        private static void LoopPostOperationBuildUp(JToken parentToken, List<string> condProps, List<string> loopProperties, JArray arrayToForm, JObject dictToForm)
+        {
             if (loopProperties != null)
             {
                 foreach (string propertyToDelete in loopProperties)
@@ -264,45 +291,62 @@ namespace JUST
             }
             else if (arrayToForm != null)
             {
-                if (parentToken.Parent != null && parentToken.Parent is JArray arr)
+                if (parentToken.Parent != null)
                 {
-                    foreach (var item in arrayToForm)
+                    if (parentToken.Parent is JArray arr)
                     {
-                        arr.Add(item);
+                        foreach (var item in arrayToForm)
+                        {
+                            arr.Add(item);
+                        }
+                        if (!parentToken.HasValues)
+                        {
+                            var tmp = parentToken;
+                            parentToken = arr;
+                            tmp.Remove();
+                        }
                     }
-                    if (!parentToken.HasValues)
+                    else
                     {
-                        var tmp = parentToken;
-                        parentToken = arr;
-                        tmp.Remove();
+                        //parentToken.Parent.AddAfterSelf(arrayToForm);
+                        parentToken.Replace(arrayToForm);
                     }
-                }
-                else if (parentToken.Parent != null)
-                {
-                    parentToken.Replace(arrayToForm);
                 }
             }
-
-            return parentToken;
         }
 
-        private void LoopOperation(JProperty property, JArray parentArray, JToken currentArrayToken, ref List<string> loopProperties, ref JArray arrayToForm, ref JObject dictToForm, JToken childToken)
+        private void LoopOperation(string propertyName, string arguments, IDictionary<string, JArray> parentArray, IDictionary<string, JToken> currentArrayToken, ref List<string> loopProperties, ref JArray arrayToForm, ref JObject dictToForm, JToken childToken)
         {
-            ExpressionHelper.TryParseFunctionNameAndArguments(property.Name, out string functionName, out string arguments);
-            var token = currentArrayToken != null && functionName == "loopwithincontext" ? currentArrayToken : Context.Input;
+            var args = ExpressionHelper.SplitArguments(arguments);
+            var previousAlias = "root";
+            args[0] = (string)ParseFunction(args[0], parentArray, currentArrayToken);
+            string alias = args.Length > 1 ? (string)ParseFunction(args[1].Trim(), parentArray, currentArrayToken) : $"loop{++_loopCounter}";
+            
+            if (args.Length > 2)
+            {
+                previousAlias = (string)ParseFunction(args[2].Trim(), parentArray, currentArrayToken);
+                currentArrayToken = new Dictionary<string, JToken> { { previousAlias, Context.Input } };
+            }
+            else if (currentArrayToken?.Any() ?? false)
+            {
+                previousAlias = currentArrayToken.Last().Key;
+            }
+            else
+            {
+                currentArrayToken = new Dictionary<string, JToken> { { previousAlias, Context.Input } };
+            }
 
-            var strArrayToken = ParseArgument(parentArray, currentArrayToken, arguments) as string;
+            var strArrayToken = ParseArgument(parentArray, currentArrayToken, args[0]) as string;
 
             bool isDictionary = false;
             JToken arrayToken;
-            var selectable = GetSelectableToken(token, Context);
+            var selectable = GetSelectableToken(currentArrayToken[previousAlias], Context);
             arrayToken = selectable.Select(strArrayToken);
 
             if (arrayToken != null)
             {
-
                 //workaround: result should be an array if path ends up with array filter
-                if (typeof(T) == typeof(JsonPathSelectable) && Regex.IsMatch(strArrayToken ?? string.Empty, "\\[.+\\]$") && arrayToken.Type != JTokenType.Array)
+                if (typeof(T) == typeof(JsonPathSelectable) && arrayToken.Type != JTokenType.Array && (Regex.IsMatch(strArrayToken ?? string.Empty, "\\[.+\\]$") || (currentArrayToken != null && currentArrayToken.ContainsKey(alias) && currentArrayToken[alias] != null && Regex.IsMatch(currentArrayToken[alias].Value<string>(), "\\[.+\\]$"))))
                 {
                     arrayToken = new JArray(arrayToken);
                 }
@@ -320,18 +364,35 @@ namespace JUST
                 }
 
                 JArray array = arrayToken as JArray;
-
                 if (array != null)
                 {
                     using (IEnumerator<JToken> elements = array.GetEnumerator())
                     {
+                        if (parentArray?.Any() ?? false)
+                        {
+                            parentArray.Add(alias, array);
+                        }
+                        else
+                        {
+                            parentArray = new Dictionary<string, JArray> { { alias, array } };
+                        }
+
                         arrayToForm = new JArray();
                         if (!isDictionary)
                         {
                             while (elements.MoveNext())
                             {
                                 JToken clonedToken = childToken.DeepClone();
-                                RecursiveEvaluate(clonedToken, array, elements.Current);
+
+                                if (currentArrayToken.ContainsKey(alias))
+                                {
+                                    currentArrayToken[alias] = elements.Current;
+                                }
+                                else
+                                {
+                                    currentArrayToken.Add(alias, elements.Current);
+                                }
+                                RecursiveEvaluate(clonedToken, parentArray, currentArrayToken);
 
                                 foreach (JToken replacedProperty in clonedToken.Children())
                                 {
@@ -345,25 +406,29 @@ namespace JUST
                             while (elements.MoveNext())
                             {
                                 JToken clonedToken = childToken.DeepClone();
-                                RecursiveEvaluate(clonedToken, array, elements.Current);
+                                RecursiveEvaluate(clonedToken, new Dictionary<string, JArray> { { alias, array } }, new Dictionary<string, JToken> { { alias, elements.Current } });
                                 foreach (JToken replacedProperty in clonedToken.Children().Select(t => t.First))
                                 {
                                     dictToForm.Add(replacedProperty);
                                 }
                             }
                         }
+
+                        parentArray.Remove(alias);
+                        currentArrayToken.Remove(alias);
                     }
                 }
             }
+
             if (loopProperties == null)
                 loopProperties = new List<string>();
-
-            loopProperties.Add(property.Name);
+            
+            loopProperties.Add(propertyName);
+            _loopCounter--;
         }
 
-        private void ConditionalGroupOperation(JProperty property, JArray parentArray, JToken currentArrayToken, ref List<string> condProps, ref List<JToken> tokenToForm, JToken childToken)
+        private void ConditionalGroupOperation(string propertyName, string arguments, IDictionary<string, JArray> parentArray, IDictionary<string, JToken> currentArrayToken, ref List<string> condProps, ref List<JToken> tokenToForm, JToken childToken)
         {
-            ExpressionHelper.TryParseFunctionNameAndArguments(property.Name, out string functionName, out string arguments);
             object functionResult = ParseFunction(arguments, parentArray, currentArrayToken);
             bool result = false;
 
@@ -382,7 +447,7 @@ namespace JUST
                 if (condProps == null)
                     condProps = new List<string>();
 
-                condProps.Add(property.Name);
+                condProps.Add(propertyName);
 
                 RecursiveEvaluate(childToken, parentArray, currentArrayToken);
 
@@ -403,13 +468,12 @@ namespace JUST
                     condProps = new List<string>();
                 }
 
-                condProps.Add(property.Name);
+                condProps.Add(propertyName);
             }
         }
 
-        private void EvalOperation(JProperty property, JArray parentArray, JToken currentArrayToken, ref List<string> loopProperties, ref List<JToken> tokensToAdd)
+        private void EvalOperation(JProperty property, string arguments, IDictionary<string, JArray> parentArray, IDictionary<string, JToken> currentArrayToken, ref List<string> loopProperties, ref List<JToken> tokensToAdd)
         {
-            ExpressionHelper.TryParseFunctionNameAndArguments(property.Name, out string functionName, out string arguments);
             object functionResult = ParseFunction(arguments, parentArray, currentArrayToken);
 
             JProperty clonedProperty = new JProperty(functionResult.ToString(),
@@ -435,7 +499,7 @@ namespace JUST
             tokensToAdd.Add(clonedProperty);
         }
 
-        private void BulkOperations(JEnumerable<JToken> arrayValues, JArray parentArray, JToken currentArrayToken, ref List<JToken> selectedTokens, ref Dictionary<string, JToken> tokensToReplace, ref List<JToken> tokensToDelete)
+        private void BulkOperations(JEnumerable<JToken> arrayValues, IDictionary<string, JArray> parentArray, IDictionary<string, JToken> currentArrayToken, ref List<JToken> selectedTokens, ref Dictionary<string, JToken> tokensToReplace, ref List<JToken> tokensToDelete)
         {
             foreach (JToken arrayValue in arrayValues)
             {
@@ -447,7 +511,6 @@ namespace JUST
                     {
                         if (selectedTokens == null)
                             selectedTokens = new List<JToken>();
-
                         selectedTokens.Add(Copy(arguments, parentArray, currentArrayToken));
                     }
                     else if (functionName == "replace")
@@ -533,7 +596,7 @@ namespace JUST
             return result;
         }
 
-        private IEnumerable<object> TransformArray(JEnumerable<JToken> children, JArray parentArray, JToken currentArrayToken)
+        private IEnumerable<object> TransformArray(JEnumerable<JToken> children, IDictionary<string, JArray> parentArray, IDictionary<string, JToken> currentArrayToken)
         {
             var result = new List<object>();
 
@@ -554,44 +617,56 @@ namespace JUST
         }
 
         #region Copy
-        private JToken Copy(string argument, JArray parentArray, JToken currentArrayElement)
+        private JToken Copy(string arguments, IDictionary<string, JArray> parentArray, IDictionary<string, JToken> currentArrayElement)
         {
-            if (!(ParseArgument(parentArray, currentArrayElement, argument) is string jsonPath))
+            string[] argumentArr = ExpressionHelper.SplitArguments(arguments);
+            string path = argumentArr[0];
+            if (!(ParseArgument(parentArray, currentArrayElement, path) is string jsonPath))
             {
-                throw new ArgumentException($"Invalid path for #copy: '{argument}' resolved to null");
+                throw new ArgumentException($"Invalid path for #copy: '{argumentArr[0]}' resolved to null!");
             }
-            JToken selectedToken = GetSelectableToken(currentArrayElement ?? Context.Input,Context).Select(jsonPath);
+
+            string alias = null;
+            if (argumentArr.Length > 1)
+            {
+                alias = ParseArgument(parentArray, currentArrayElement, argumentArr[1]) as string;
+                if (!(currentArrayElement?.ContainsKey(alias) ?? false))
+                {
+                    throw new ArgumentException($"Unknown loop alias: '{argumentArr[1]}'");
+                }
+            }
+            JToken input = alias != null ? currentArrayElement[alias] : currentArrayElement?.Last().Value ?? Context.Input;
+            JToken selectedToken = GetSelectableToken(input, Context).Select(jsonPath);
             return selectedToken;
         }
 
         #endregion
 
         #region Replace
-        private KeyValuePair<string, JToken> Replace(string arguments, JArray parentArray, JToken currentArrayElement)
+        private KeyValuePair<string, JToken> Replace(string arguments, IDictionary<string, JArray> parentArray, IDictionary<string, JToken> currentArrayElement)
         {
             string[] argumentArr = ExpressionHelper.SplitArguments(arguments);
             if (argumentArr.Length < 2)
             {
-                throw new Exception("Function #replace needs two arguments - 1. jsonPath to be replaced, 2. token to replace with.");
+                throw new Exception("Function #replace needs at least two arguments - 1. path to be replaced, 2. token to replace with.");
             }
             if (!(ParseArgument(parentArray, currentArrayElement, argumentArr[0]) is string key))
             {
-                throw new ArgumentException("Invalid jsonPath for #replace!");
+                throw new ArgumentException($"Invalid path for #replace: '{argumentArr[0]}' resolved to null!");
             }
             object str = ParseArgument(parentArray, currentArrayElement, argumentArr[1]);
-
-            JToken newToken = GetToken(str); 
+            JToken newToken = GetToken(str);
             return new KeyValuePair<string, JToken>(key, newToken);
         }
 
         #endregion
 
         #region Delete
-        private string Delete(string argument, JArray parentArray, JToken currentArrayElement)
+        private string Delete(string argument, IDictionary<string, JArray> parentArray, IDictionary<string, JToken> currentArrayElement)
         {
             if (!(ParseArgument(parentArray, currentArrayElement, argument) is string result))
             {
-                throw new ArgumentException("Invalid jsonPath for #delete!");
+                throw new ArgumentException($"Invalid path for #delete: '{argument}' resolved to null!");
             }
             return result;
         }
@@ -599,7 +674,7 @@ namespace JUST
 
         #region ParseFunction
 
-        private object ParseFunction(string functionString, JArray array, JToken currentArrayElement)
+        private object ParseFunction(string functionString, IDictionary<string, JArray> array, IDictionary<string, JToken> currentArrayElement)
         {
             try
             {
@@ -628,32 +703,40 @@ namespace JUST
                     {
                         listParameters.Add(ParseArgument(array, currentArrayElement, arguments[i]));
                     }
-
                     listParameters.Add(Context);
-                    var parameters = listParameters.ToArray();
 
+                    var parameters = listParameters.ToArray();
                     var convertParameters = true;
-                    if(new[] { "concat", "xconcat", "currentproperty"}.Contains(functionName))
+                    if (new[] { "concat", "xconcat", "currentproperty" }.Contains(functionName))
                     {
                         convertParameters = false;
                     }
 
                     if (new[] { "currentvalue", "currentindex", "lastindex", "lastvalue" }.Contains(functionName))
-                        output = ReflectionHelper.Caller<T>(null, "JUST.Transformer`1", functionName, new object[] { array, currentArrayElement }, convertParameters, Context);
+                    {
+                        var alias = ParseLoopAlias(listParameters, 1);
+                        output = ReflectionHelper.Caller<T>(null, "JUST.Transformer`1", functionName, new object[] { array[alias], currentArrayElement[alias] }, convertParameters, Context);
+                    }
                     else if (new[] { "currentvalueatpath", "lastvalueatpath" }.Contains(functionName))
+                    {
+                        var alias = ParseLoopAlias(listParameters, 2);
                         output = ReflectionHelper.Caller<T>(
-                            null, 
-                            "JUST.Transformer`1", 
-                            functionName, 
-                            new [] { array, currentArrayElement }.Concat(parameters).ToArray(), 
-                            convertParameters, 
+                            null,
+                            "JUST.Transformer`1",
+                            functionName,
+                            new[] { array[alias], currentArrayElement[alias] }.Concat(listParameters.ToArray()).ToArray(),
+                            convertParameters,
                             Context);
+                    }
                     else if (functionName == "currentproperty")
-                        output = ReflectionHelper.Caller<T>(null, "JUST.Transformer`1", functionName, 
-                            new object[] { array, currentArrayElement, Context }, 
+                    {
+                        var alias = ParseLoopAlias(listParameters, 1);
+                        output = ReflectionHelper.Caller<T>(null, "JUST.Transformer`1", functionName,
+                            new object[] { array[alias], currentArrayElement[alias], Context },
                             convertParameters, Context);
+                    }
                     else if (functionName == "customfunction")
-                        output = CallCustomFunction(parameters);
+                        output = CallCustomFunction(listParameters.ToArray());
                     else if (Context?.IsRegisteredCustomFunction(functionName) ?? false)
                     {
                         var methodInfo = Context.GetCustomMethod(functionName);
@@ -666,7 +749,7 @@ namespace JUST
                     }
                     else if (Regex.IsMatch(functionName, ReflectionHelper.EXTERNAL_ASSEMBLY_REGEX))
                     {
-                        output = ReflectionHelper.CallExternalAssembly<T>(functionName, parameters, Context);
+                        output = ReflectionHelper.CallExternalAssembly<T>(functionName, listParameters.ToArray(), Context);
                     }
                     else if (new[] { "xconcat", "xadd",
                         "mathequals", "mathgreaterthan", "mathlessthan", "mathgreaterthanorequalto", "mathlessthanorequalto",
@@ -686,10 +769,10 @@ namespace JUST
                     }
                     else
                     {
-                        var input = ((JUSTContext)parameters.Last()).Input;
+                        var input = ((JUSTContext)listParameters.Last()).Input;
                         if (currentArrayElement != null && functionName != "valueof")
                         {
-                            ((JUSTContext)parameters.Last()).Input = currentArrayElement;
+                            ((JUSTContext)listParameters.Last()).Input = currentArrayElement.Last().Value;
                         }
                         output = ReflectionHelper.Caller<T>(null, "JUST.Transformer`1", functionName, parameters, convertParameters, Context);
                         ((JUSTContext)parameters.Last()).Input = input;
@@ -704,7 +787,22 @@ namespace JUST
             }
         }
 
-        private object ParseArgument(JArray array, JToken currentArrayElement, string argument)
+        private string ParseLoopAlias(List<object> listParameters, int index)
+        {
+            string alias;
+            if (listParameters.Count > index)
+            {
+                alias = (listParameters[index - 1] as string).Trim();
+                listParameters.RemoveAt(index - 1);
+            }
+            else
+            {
+                alias = $"loop{_loopCounter}";
+            }
+            return alias;
+        }
+
+        private object ParseArgument(IDictionary<string, JArray> array, IDictionary<string, JToken> currentArrayElement, string argument)
         {
             var trimmedArgument = argument.Trim();
             if (trimmedArgument.StartsWith("#"))
