@@ -108,12 +108,12 @@ namespace JUST.UnitTests
         [Test]
         public void NestedArrayLooping()
         {
-            const string input = "{ \"NestedLoop\": { \"Organization\": { \"Employee\": [ { \"Name\": \"E2\", \"Details\": [ { \"Country\": \"Iceland\", \"Age\": \"30\", \"Name\": \"Sven\", \"Language\": \"Icelandic\" } ] }, { \"Name\": \"E1\", \"Details\": [ { \"Country\": \"Denmark\", \"Age\": \"30\", \"Name\": \"Svein\", \"Language\": \"Danish\" } ] } ] } } }";
-            const string transformer = "{ \"hello\": { \"#loop($.NestedLoop.Organization.Employee)\": { \"CurrentName\": \"#currentvalueatpath($.Name)\", \"Details\": { \"#loopwithincontext($.Details)\": { \"CurrentCountry\": \"#currentvalueatpath($.Country)\" } } } } }";
+            const string input = "{ \"NestedLoop\": { \"Organization\": { \"Employee\": [ { \"Name\": \"E2\", \"Surname\": \"S2\", \"Details\": [ { \"Countries\": [ { \"Name\": \"Iceland\", \"Language\": \"Icelandic\" } ], \"Age\": 30 } ] }, { \"Name\": \"E1\", \"Surname\": \"S1\", \"Details\": [ { \"Countries\": [{ \"Name\": \"Denmark\", \"Language\": \"Danish\" }, { \"Name\": \"Greenland\", \"Language\": \"Danish\" } ], \"Age\": 31 } ] } ] } } }";
+            const string transformer = "{ \"hello\": { \"#loop($.NestedLoop.Organization.Employee, employees)\": { \"CurrentName\": \"#currentvalueatpath($.Name, employees)\", \"Details\": { \"#loop($.Details)\": { \"Surname\": \"#currentvalueatpath($.Surname, employees)\", \"Age\": \"#currentvalueatpath($.Age)\", \"Country\": { \"#loop($.Countries[0], countries)\": \"#currentvalueatpath($.Name, countries)\" } } } } }";
 
-            var result = new JsonTransformer().Transform(transformer, input);
+            var result = new JsonTransformer(new JUSTContext { EvaluationMode = EvaluationMode.Strict}).Transform(transformer, input);
 
-            Assert.AreEqual("{\"hello\":[{\"CurrentName\":\"E2\",\"Details\":[{\"CurrentCountry\":\"Iceland\"}]},{\"CurrentName\":\"E1\",\"Details\":[{\"CurrentCountry\":\"Denmark\"}]}]}", result);
+            Assert.AreEqual("{\"hello\":[{\"CurrentName\":\"E2\",\"Details\":[{\"Surname\":\"S2\",\"Age\":30,\"Country\":[\"Iceland\"]}]},{\"CurrentName\":\"E1\",\"Details\":[{\"Surname\":\"S1\",\"Age\":31,\"Country\":[\"Denmark\"]}]}]}", result);
         }
 
         [Test]

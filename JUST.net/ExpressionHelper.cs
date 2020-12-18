@@ -18,6 +18,11 @@ namespace JUST
 
         internal static string[] SplitArguments(string functionString)
         {
+            if (string.IsNullOrEmpty(functionString))
+            {
+                return new string[0]; 
+            }
+
             bool brackettOpen = false;
 
             List<string> arguments = new List<string>();
