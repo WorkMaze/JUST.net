@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json.Linq;
+﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System.Linq;
 
 namespace JUST.net.Selectables
@@ -14,7 +15,7 @@ namespace JUST.net.Selectables
             {
                 return Token.SelectToken(path);
             }
-            catch
+            catch (JsonException)
             {
                 var result = Token.SelectTokens(path);
                 return new JArray(result.ToArray());
