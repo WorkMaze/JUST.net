@@ -178,5 +178,47 @@ namespace JUST.UnitTests
 
             Assert.AreEqual("{\"iteration\":[{},{\"current_value_at_path\":\"UK\"},{}]}", result);
         }
+
+        [Test, Category("IfGroup"), Category("Loops")]
+        public void ConditionalGroupTrueWithLoopInside()
+        {
+            var input = "{ \"errors\": { \"account\": [ \"error1\", \"error2\" ] } }";
+            var transformer = "{ \"Result\": { \"#ifgroup(#exists($.errors.account))\": { \"#loop($.errors.account)\": { \"ValidationMessage\": \"#currentvalueatpath($)\" } } }, \"Other\": \"property\" }";
+            var context = new JUSTContext
+            {
+                EvaluationMode = EvaluationMode.FallbackToDefault
+            };
+            var result = new JsonTransformer(context).Transform(transformer, input);
+
+            Assert.AreEqual("{\"Result\":[{\"ValidationMessage\":\"error1\"},{\"ValidationMessage\":\"error2\"}],\"Other\":\"property\"}", result);
+        }
+
+        [Test, Category("IfGroup"), Category("Loops")]
+        public void ConditionalGroupFalseWithLoopInside()
+        {
+            var input = "{ \"errors\": { \"account\": [ ] } }";
+            var transformer = "{ \"Result\": { \"#ifgroup(#exists($.errors.account))\": { \"#loop($.errors.account)\": { \"ValidationMessage\": \"#currentvalueatpath($)\" } } }, \"Other\": \"property\" }";
+            var context = new JUSTContext
+            {
+                EvaluationMode = EvaluationMode.FallbackToDefault
+            };
+            var result = new JsonTransformer(context).Transform(transformer, input);
+
+            Assert.AreEqual("{\"Result\":{},\"Other\":\"property\"}", result);
+        }
+
+        [Test, Category("IfGroup"), Category("Loops")]
+        public void ConditionalGroupNonExistingWithLoopInside()
+        {
+            var input = "{ }";
+            var transformer = "{ \"Result\": { \"#ifgroup(#exists($.errors.account))\": { \"#loop($.errors.account)\": { \"ValidationMessage\": \"#currentvalueatpath($)\" } } }, \"Other\": \"property\" }";
+            var context = new JUSTContext
+            {
+                EvaluationMode = EvaluationMode.FallbackToDefault
+            };
+            var result = new JsonTransformer(context).Transform(transformer, input);
+
+            Assert.AreEqual("{\"Result\":{},\"Other\":\"property\"}", result);
+        }
     }
 }
