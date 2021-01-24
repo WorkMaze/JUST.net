@@ -319,8 +319,7 @@ namespace JUST
             {
                 foreach (JToken token in parsedArray.Children())
                 {
-                    decimal thisValue = Convert.ToDecimal(token.ToString());
-                    result = Math.Max(result, thisValue);
+                    result = Max(result, token.ToString());
                 }
             }
 
@@ -336,12 +335,17 @@ namespace JUST
                 {
                     var selector = context.Resolve<T>(token);
                     JToken selectedToken = selector.Select(path);
-                    decimal thisValue = Convert.ToDecimal(selectedToken.ToString());
-                    result = Math.Max(result, thisValue);
+                    result = Max(result, selectedToken.ToString());
                 }
             }
 
             return TypedNumber(result);
+        }
+
+        private static decimal Max(decimal val1, object val2)
+        {
+            decimal thisValue = Convert.ToDecimal(val2);
+            return Math.Max(val1, thisValue);
         }
 
         public static object min(JArray parsedArray, JUSTContext context)
