@@ -622,7 +622,11 @@ namespace JUST
         public static int length(object val, JUSTContext context)
         {
             int result = 0;
-            if (val is IEnumerable enumerable)
+            if (val is string path && path.StartsWith(context.Resolve<T>(null).RootReference))
+            {
+                result = length(valueof(path, context), context);
+            }
+            else if (val is IEnumerable enumerable)
             {
                 var enumerator = enumerable.GetEnumerator();
                 while (enumerator.MoveNext())
