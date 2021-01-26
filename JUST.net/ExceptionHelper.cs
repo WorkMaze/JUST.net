@@ -6,7 +6,7 @@ namespace JUST
     {
         internal static void HandleException(Exception ex, EvaluationMode evaluationMode)
         {
-            if (evaluationMode == EvaluationMode.Strict)
+            if ( (evaluationMode & EvaluationMode.Strict) == EvaluationMode.Strict)
             {
                 if (ex.InnerException != null)
                 {
