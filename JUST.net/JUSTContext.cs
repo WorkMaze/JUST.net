@@ -26,10 +26,12 @@ namespace JUST
         }
     }
 
-    public enum EvaluationMode
+    [Flags]
+    public enum EvaluationMode : short
     {
-        FallbackToDefault,
-        Strict
+        FallbackToDefault = 1,
+        AddOrReplaceProperties = 2,
+        Strict = 4
     }
 
     public class JUSTContext
@@ -64,6 +66,21 @@ namespace JUST
         internal JUSTContext(string inputJson)
         {
             Input = JToken.Parse(inputJson);
+        }
+
+        internal bool IsStrictMode()
+        {
+            return (EvaluationMode & EvaluationMode.Strict) == EvaluationMode;
+        }
+
+        internal bool IsAddOrReplacePropertiesMode()
+        {
+            return (EvaluationMode & EvaluationMode.AddOrReplaceProperties) == EvaluationMode;
+        }
+
+        internal bool IsFallbackToDefault()
+        {
+            return (EvaluationMode & EvaluationMode.FallbackToDefault) == EvaluationMode;
         }
 
         public void RegisterCustomFunction(CustomFunction customFunction)

@@ -183,24 +183,7 @@ namespace JUST
 
         private JToken PostOperationsBuildUp(JToken parentToken, List<JToken> selectedTokens, Dictionary<string, JToken> tokensToReplace, List<JToken> tokensToDelete, List<string> condProps, List<string> loopProperties, JArray arrayToForm, JObject dictToForm, List<JToken> tokenToForm, List<JToken> tokensToAdd)
         {
-            if (selectedTokens != null)
-            {
-                foreach (JToken selectedToken in selectedTokens)
-                {
-                    if (selectedToken != null)
-                    {
-                        JEnumerable<JToken> copyChildren = selectedToken.Children();
-
-                        foreach (JToken copyChild in copyChildren)
-                        {
-                            JProperty property = copyChild as JProperty;
-
-                            (parentToken as JObject).Add(property.Name, property.Value);
-                        }
-                    }
-                }
-            }
-
+            CopyPostOperationBuildUp(parentToken, selectedTokens);
             ReplacePostOperationBuildUp(parentToken, tokensToReplace);
             DeletePostOperationBuildUp(parentToken, tokensToDelete);
             AddPostOperationBuildUp(parentToken, tokensToAdd);
@@ -221,7 +204,7 @@ namespace JUST
                         }
                         else
                         {
-                            if (Context.EvaluationMode == EvaluationMode.Strict)
+                            if (Context.IsStrictMode())
                             {
                                 throw new Exception($"found {parentToken.Type} without parent!");
                             }
@@ -237,6 +220,68 @@ namespace JUST
             LoopPostOperationBuildUp(parentToken, condProps, loopProperties, arrayToForm, dictToForm);
 
             return parentToken;
+        }
+
+        private void CopyPostOperationBuildUp(JToken parentToken, List<JToken> selectedTokens)
+        {
+            if (selectedTokens != null)
+            {
+                foreach (JToken selectedToken in selectedTokens)
+                {
+                    if (selectedToken != null)
+                    {
+                        JObject parent = parentToken as JObject;
+                        JEnumerable<JToken> copyChildren = selectedToken.Children();
+                        if (Context.IsAddOrReplacePropertiesMode())
+                        {
+                            CopyDescendants(parent, copyChildren);
+                        }
+                        else
+                        {
+                            foreach(JProperty property in copyChildren)
+                            {
+                                parent.Add(property.Name, property.Value);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        private static void CopyDescendants(JObject parent, JEnumerable<JToken> children)
+        {
+            if (parent == null)
+            {
+                return;
+            }
+
+            int i = 0;
+            while (i < children.Count())
+            {
+                JToken token = children.ElementAt(i);
+                if (token is JProperty property)
+                {
+                    if (parent.ContainsKey(property.Name))
+                    {
+                        CopyDescendants(parent[property.Name] as JObject, property.Children());
+                        property.Remove();
+                    }
+                    else
+                    {
+                        parent.Add(property.Name, property.Value);
+                        i++;
+                    }
+                }
+                else if (token is JObject obj)
+                {
+                    CopyDescendants(parent, obj.Children());
+                    i++;
+                }
+                else
+                {
+                    i++;
+                }
+            }
         }
 
         private static void AddPostOperationBuildUp(JToken parentToken, List<JToken> tokensToAdd)
@@ -462,7 +507,7 @@ namespace JUST
             }
             catch
             {
-                if (IsStrictMode(Context)) { throw; }
+                if (Context.IsStrictMode()) { throw; }
                 result = false;
             }
 
@@ -600,12 +645,12 @@ namespace JUST
                     }
                     catch
                     {
-                        if (IsStrictMode(Context))
+                        if (Context.IsStrictMode())
                         {
                             throw;
                         }
 
-                        if (IsFallbackToDefault(Context))
+                        if (Context.IsFallbackToDefault())
                         {
                             result = JValue.CreateNull();
                         }
@@ -955,16 +1000,6 @@ namespace JUST
             }
 
             return index;
-        }
-
-        private static bool IsStrictMode(JUSTContext context)
-        {
-            return context.EvaluationMode == EvaluationMode.Strict;
-        }
-
-        private static bool IsFallbackToDefault(JUSTContext context)
-        {
-            return context.EvaluationMode == EvaluationMode.FallbackToDefault;
         }
 
         private static T GetSelectableToken(JToken token, JUSTContext context)
