@@ -70,17 +70,17 @@ namespace JUST
 
         internal bool IsStrictMode()
         {
-            return (EvaluationMode & EvaluationMode.Strict) == EvaluationMode;
+            return (EvaluationMode & EvaluationMode.Strict) == EvaluationMode.Strict;
         }
 
         internal bool IsAddOrReplacePropertiesMode()
         {
-            return (EvaluationMode & EvaluationMode.AddOrReplaceProperties) == EvaluationMode;
+            return (EvaluationMode & EvaluationMode.AddOrReplaceProperties) == EvaluationMode.AddOrReplaceProperties;
         }
 
         internal bool IsFallbackToDefault()
         {
-            return (EvaluationMode & EvaluationMode.FallbackToDefault) == EvaluationMode;
+            return (EvaluationMode & EvaluationMode.FallbackToDefault) == EvaluationMode.FallbackToDefault;
         }
 
         public void RegisterCustomFunction(CustomFunction customFunction)
