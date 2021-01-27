@@ -10,7 +10,7 @@ namespace JUST
     {
         protected static object TypedNumber(decimal number)
         {
-            return number * 10 % 10 == 0 ? (object)Convert.ToInt32(number) : number;
+            return number * 10 % 10 == 0 ? (number <= int.MaxValue ? (object)Convert.ToInt32(number) : number) : number;
         }
 
         internal static object GetValue(JToken selectedToken)
