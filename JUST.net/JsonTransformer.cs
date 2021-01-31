@@ -74,18 +74,18 @@ namespace JUST
                 {
                     throw new NotSupportedException($"Transformer of type '{transformer.Type}' not supported!");
                 }
-                Transform(transformer as JObject, input);
+                Transform(transformer, input);
                 result.Add(transformer);
             }
             return result;
         }
 
-        public JObject Transform(JObject transformer, string input)
+        public JToken Transform(JToken transformer, string input)
         {
             return Transform(transformer, JsonConvert.DeserializeObject<JToken>(input));
         }
 
-        public JObject Transform(JObject transformer, JToken input)
+        public JToken Transform(JToken transformer, JToken input)
         {
             Context.Input = input;
             RecursiveEvaluate(transformer, null, null);
@@ -368,16 +368,9 @@ namespace JUST
                         {
                             arr.Add(item);
                         }
-                        if (!parentToken.HasValues)
-                        {
-                            var tmp = parentToken;
-                            parentToken = arr;
-                            tmp.Remove();
-                        }
                     }
                     else
                     {
-                        //parentToken.Parent.AddAfterSelf(arrayToForm);
                         parentToken.Replace(arrayToForm);
                     }
                 }
