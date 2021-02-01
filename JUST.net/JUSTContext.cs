@@ -31,7 +31,8 @@ namespace JUST
     {
         FallbackToDefault = 1,
         AddOrReplaceProperties = 2,
-        Strict = 4
+        Strict = 4,
+        JoinArrays = 8
     }
 
     public class JUSTContext
@@ -66,6 +67,11 @@ namespace JUST
         internal JUSTContext(string inputJson)
         {
             Input = JToken.Parse(inputJson);
+        }
+
+        internal bool IsJoinArraysMode()
+        {
+            return (EvaluationMode & EvaluationMode.JoinArrays) == EvaluationMode.JoinArrays;
         }
 
         internal bool IsStrictMode()
