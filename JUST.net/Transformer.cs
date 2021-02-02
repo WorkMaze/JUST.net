@@ -181,7 +181,20 @@ namespace JUST
             return stringRef.LastIndexOf(searchString);
         }
 
-        public static string concatall(JArray parsedArray, JUSTContext context)
+        public static string concatall(object obj, JUSTContext context)
+        {
+            JToken token = JToken.FromObject(obj);
+            if (obj is string path && path.StartsWith(context.Resolve<T>(token).RootReference))
+            {
+                return Concatall(JToken.FromObject(valueof(path, context)), context);
+            }
+            else
+            {
+                return Concatall(token, context);
+            }
+        }
+
+        private static string Concatall(JToken parsedArray, JUSTContext context)
         {
             string result = null;
 
@@ -251,7 +264,20 @@ namespace JUST
         #endregion
 
         #region aggregate functions
-        public static object sum(JArray parsedArray, JUSTContext context)
+        public static object sum(object obj, JUSTContext context)
+        {
+            JToken token = JToken.FromObject(obj);
+            if (obj is string path && path.StartsWith(context.Resolve<T>(token).RootReference))
+            {
+                return Sum(JToken.FromObject(valueof(path, context)), context);
+            }
+            else
+            {
+                return Sum(token, context);
+            }
+        }
+
+        private static object Sum(JToken parsedArray, JUSTContext context)
         {
             decimal result = 0;
             if (parsedArray != null)
@@ -281,14 +307,28 @@ namespace JUST
             return TypedNumber(result);
         }
 
-        public static object average(JArray parsedArray, JUSTContext context)
+        public static object average(object obj, JUSTContext context)
+        {
+            JToken token = JToken.FromObject(obj);
+            if (obj is string path && path.StartsWith(context.Resolve<T>(token).RootReference))
+            {
+                return Average(JToken.FromObject(valueof(path, context)), context);
+            }
+            else
+            {
+                return Average(token, context);
+            }
+        }
+
+        private static object Average(JToken token, JUSTContext context)
         {
             decimal result = 0;
-            if (parsedArray != null)
+            JArray parsedArray = token as JArray;
+            if (token != null)
             {
-                foreach (JToken token in parsedArray.Children())
+                foreach (JToken child in token.Children())
                 {
-                    result += Convert.ToDecimal(token.ToString());
+                    result += Convert.ToDecimal(child.ToString());
                 }
             }
 
@@ -312,14 +352,27 @@ namespace JUST
             return TypedNumber(result / parsedArray.Count);
         }
 
-        public static object max(JArray parsedArray, JUSTContext context)
+        public static object max(object obj, JUSTContext context)
+        {
+            JToken token = JToken.FromObject(obj);
+            if (obj is string path && path.StartsWith(context.Resolve<T>(token).RootReference))
+            {
+                return Max(JToken.FromObject(valueof(path, context)), context);
+            }
+            else
+            {
+                return Max(token, context);
+            }
+        }
+
+        private static object Max(JToken token, JUSTContext context)
         {
             decimal result = 0;
-            if (parsedArray != null)
+            if (token != null)
             {
-                foreach (JToken token in parsedArray.Children())
+                foreach (JToken child in token.Children())
                 {
-                    decimal thisValue = Convert.ToDecimal(token.ToString());
+                    decimal thisValue = Convert.ToDecimal(child.ToString());
                     result = Math.Max(result, thisValue);
                 }
             }
@@ -344,14 +397,27 @@ namespace JUST
             return TypedNumber(result);
         }
 
-        public static object min(JArray parsedArray, JUSTContext context)
+        public static object min(object obj, JUSTContext context)
+        {
+            JToken token = JToken.FromObject(obj);
+            if (obj is string path && path.StartsWith(context.Resolve<T>(token).RootReference))
+            {
+                return Min(JToken.FromObject(valueof(path, context)), context);
+            }
+            else
+            {
+                return Min(token, context);
+            }
+        }
+
+        private static object Min(JToken token, JUSTContext context)
         {
             decimal result = decimal.MaxValue;
-            if (parsedArray != null)
+            if (token != null)
             {
-                foreach (JToken token in parsedArray.Children())
+                foreach (JToken child in token.Children())
                 {
-                    decimal thisValue = Convert.ToDecimal(token.ToString());
+                    decimal thisValue = Convert.ToDecimal(child.ToString());
                     result = Math.Min(result, thisValue);
                 }
             }
