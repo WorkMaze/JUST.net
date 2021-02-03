@@ -54,7 +54,7 @@ namespace JUST.UnitTests
         public void AggregateFunctions()
         {
             const string input = "{ \"d\": [ \"one\", \"two\", \"three\" ], \"numbers\": [ 1, 2, 3, 4, 5 ] }";
-            const string transformer = "{ \"conacted\": \"#concatall(#valueof($.d))\", \"sum\": \"#sum(#valueof($.numbers))\", \"avg\": \"#average(#valueof($.numbers))\", \"min\": \"#min(#valueof($.numbers))\", \"max\": \"#max(#valueof($.numbers))\" }";
+            const string transformer = "{ \"conacted\": \"#concatall(#valueof($.d))\", \"sum\": \"#sum($.numbers)\", \"avg\": \"#average(#valueof($.numbers))\", \"min\": \"#min($.numbers)\", \"max\": \"#max(#valueof($.numbers))\" }";
 
             var result = new JsonTransformer().Transform(transformer, input);
 
