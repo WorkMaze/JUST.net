@@ -714,12 +714,12 @@ namespace JUST
 
                     if (new[] { "currentvalue", "currentindex", "lastindex", "lastvalue" }.Contains(functionName))
                     {
-                        var alias = ParseLoopAlias(listParameters, 1);
+                        var alias = ParseLoopAlias(listParameters, 1, array.Last().Key);
                         output = ReflectionHelper.Caller<T>(null, "JUST.Transformer`1", functionName, new object[] { array[alias], currentArrayElement[alias] }, convertParameters, Context);
                     }
                     else if (new[] { "currentvalueatpath", "lastvalueatpath" }.Contains(functionName))
                     {
-                        var alias = ParseLoopAlias(listParameters, 2);
+                        var alias = ParseLoopAlias(listParameters, 2, array.Last().Key);
                         output = ReflectionHelper.Caller<T>(
                             null,
                             "JUST.Transformer`1",
@@ -730,7 +730,7 @@ namespace JUST
                     }
                     else if (functionName == "currentproperty")
                     {
-                        var alias = ParseLoopAlias(listParameters, 1);
+                        var alias = ParseLoopAlias(listParameters, 1, array.Last().Key);
                         output = ReflectionHelper.Caller<T>(null, "JUST.Transformer`1", functionName,
                             new object[] { array[alias], currentArrayElement[alias], Context },
                             convertParameters, Context);
@@ -787,7 +787,7 @@ namespace JUST
             }
         }
 
-        private string ParseLoopAlias(List<object> listParameters, int index)
+        private string ParseLoopAlias(List<object> listParameters, int index, string defaultValue)
         {
             string alias;
             if (listParameters.Count > index)
@@ -797,7 +797,7 @@ namespace JUST
             }
             else
             {
-                alias = $"loop{_loopCounter}";
+                alias = defaultValue; //$"loop{_loopCounter}";
             }
             return alias;
         }

@@ -301,5 +301,16 @@ namespace JUST.UnitTests.Arrays
 
             Assert.AreEqual("{\"id\":\"8b8b9d6e-4574-466b-b2c3-0062ad0642fe\",\"description\":\"test1\",\"maintypes\":[{\"id\":\"3ac89bbd-0de2-4692-a077-1d5d41efab69\",\"name\":\"MainType1\",\"order\":1,\"subTypes\":[{\"name\":\"SubType1\"}]}]}", result);
         }
+
+        [Test]
+        public void FunctionWithoutAlias()
+        {
+            const string transformer = "{ \"result\": { \"#loop($.NestedLoop.Organization.Employee, employee)\": { \"Name\": \"#currentvalueatpath($.Name)\"} } }";
+
+            var result = new JsonTransformer().Transform(transformer, ExampleInputs.NestedArrays);
+
+            Assert.AreEqual("{\"result\":[{\"Name\":\"E2\"},{\"Name\":\"E1\"}]}", result);
+
+        }
     }
 }
