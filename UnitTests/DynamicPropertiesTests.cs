@@ -1,5 +1,4 @@
 ﻿using NUnit.Framework;
-using System.Globalization;
 
 namespace JUST.UnitTests
 {
