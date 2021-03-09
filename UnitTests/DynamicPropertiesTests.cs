@@ -42,5 +42,20 @@ namespace JUST.UnitTests
 
             Assert.AreEqual("{\"root\":[{\"name1\":\"Jim\",\"number1\":\"0123-4567-8888\"},{\"name2\":\"John\",\"number2\":\"0134523-4567-8910\"}]}", result);
         }
+
+        [Test]
+        public void TypedValuesInsideEval()
+        {
+            const string input = "{ \"a\": [{ \"name\": \"prop1\", \"val\": 1 }, { \"name\": \"prop2\", \"val\": 2 }] }";
+            string transformer = "{ \"a\": { \"#loop($.a)\": { \"#eval(#currentvalueatpath($.name))\": \"#currentvalueatpath($.val)\" } } }";
+
+            var context = new JUSTContext
+            {
+                EvaluationMode = EvaluationMode.Strict
+            };
+            var result = new JsonTransformer(context).Transform(transformer, input);
+
+            Assert.AreEqual("{\"a\":[{\"prop1\":1},{\"prop2\":2}]}", result);
+        }
     }
 }
