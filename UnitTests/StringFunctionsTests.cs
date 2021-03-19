@@ -75,6 +75,16 @@ namespace JUST.UnitTests
         }
 
         [Test]
+        public void EqualsOnNull()
+        {
+            var transformer = "{ \"stringresult\": { \"stringequals\": \"#stringequals(#valueof($.not_there),one)\" }}";
+
+            var result = new JsonTransformer().Transform(transformer, ExampleInputs.StringsArray);
+
+            Assert.AreEqual("{\"stringresult\":{\"stringequals\":false}}", result);
+        }
+
+        [Test]
         public void Contains()
         {
             var transformer = "{ \"stringresult\": { \"stringcontains\": \"#stringcontains(#valueof($.d[0]),n)\" }}";
@@ -82,6 +92,16 @@ namespace JUST.UnitTests
             var result = new JsonTransformer().Transform(transformer, ExampleInputs.StringsArray);
 
             Assert.AreEqual("{\"stringresult\":{\"stringcontains\":true}}", result);
+        }
+
+        [Test]
+        public void ContainsOnNull()
+        {
+            var transformer = "{ \"stringresult\": { \"stringcontains\": \"#stringcontains(#valueof($.not_there),n)\" }}";
+
+            var result = new JsonTransformer().Transform(transformer, ExampleInputs.StringsArray);
+
+            Assert.AreEqual("{\"stringresult\":{\"stringcontains\":false}}", result);
         }
     }
 }

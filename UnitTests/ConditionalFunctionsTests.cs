@@ -29,6 +29,17 @@ namespace JUST.UnitTests
         }
 
         [Test, Category("IfCondition")]
+        public void FnFirstNullConditionStringResult()
+        {
+            const string input = "{ \"string\": \"some words\", \"integer\": 123, \"boolean\": true }";
+            const string transformer = "{ \"result\": \"#ifcondition(#valueof($.not_there),true,truevalue,falsevalue)\" }";
+
+            var result = new JsonTransformer().Transform(transformer, input);
+
+            Assert.AreEqual("{\"result\":\"falsevalue\"}", result);
+        }
+
+        [Test, Category("IfCondition")]
         public void FnFirstTrueConditionStringResult()
         {
             const string input = "{ \"string\": \"some words\", \"integer\": 123, \"boolean\": true }";
