@@ -135,6 +135,8 @@ namespace JUST
                     }
                     else
                     {
+                        isBulk = false;
+
                         if (ExpressionHelper.TryParseFunctionNameAndArguments(property.Name, out string functionName, out string arguments))
                         {
                             switch(functionName)
