@@ -75,6 +75,16 @@ namespace JUST.UnitTests
         }
 
         [Test]
+        public void EqualsWithDifferentCase()
+        {
+            var transformer = "{ \"stringresult\": { \"stringequals\": \"#stringequals(#valueof($.d[0]),ONE)\" }}";
+
+            var result = new JsonTransformer().Transform(transformer, ExampleInputs.StringsArray);
+
+            Assert.AreEqual("{\"stringresult\":{\"stringequals\":true}}", result);
+        }
+
+        [Test]
         public void EqualsOnNull()
         {
             var transformer = "{ \"stringresult\": { \"stringequals\": \"#stringequals(#valueof($.not_there),one)\" }}";
@@ -92,6 +102,16 @@ namespace JUST.UnitTests
             var result = new JsonTransformer().Transform(transformer, ExampleInputs.StringsArray);
 
             Assert.AreEqual("{\"stringresult\":{\"stringcontains\":true}}", result);
+        }
+
+        [Test]
+        public void ContainsWithDifferentCase()
+        {
+            var transformer = "{ \"stringresult\": { \"stringcontains\": \"#stringcontains(#valueof($.d[0]),E)\" }}";
+
+            var result = new JsonTransformer().Transform(transformer, ExampleInputs.StringsArray);
+
+            Assert.AreEqual("{\"stringresult\":{\"stringcontains\":false}}", result);
         }
 
         [Test]
