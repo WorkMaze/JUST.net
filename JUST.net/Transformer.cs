@@ -502,7 +502,7 @@ namespace JUST
 
             if (list.Length >= 2)
             {
-                if (string.Equals(list[0]?.ToString(), list[1]?.ToString(), StringComparison.InvariantCultureIgnoreCase))
+                if (list[0].ToString().Equals(list[1].ToString()))
                     result = true;
             }
 
@@ -515,7 +515,7 @@ namespace JUST
 
             if (list.Length >= 2)
             {
-                if ((list[0] != null) && list[0].ToString().Contains(list[1].ToString()))
+                if (list[0].ToString().Contains(list[1].ToString()))
                     result = true;
             }
 
