@@ -83,12 +83,5 @@ namespace JUST.UnitTests
 
             Assert.AreEqual("{\"stringresult\":{\"stringcontains\":true}}", result);
         }
-
-        [Test]
-
-            var result = new JsonTransformer().Transform(transformer, ExampleInputs.StringsArray);
-
-            Assert.AreEqual("{\"stringresult\":{\"stringcontains\":false}}", result);
-        }
     }
 }
