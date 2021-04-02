@@ -693,7 +693,7 @@ namespace JUST
                 {
                     var condition = ParseArgument(array, currentArrayElement, arguments[0]);
                     var value = ParseArgument(array, currentArrayElement, arguments[1]);
-                    var equal = ComparisonHelper.Equals(condition, value, Context);
+                    var equal = ComparisonHelper.Equals(condition, value, Context.EvaluationMode);
                     var index = (equal) ? 2 : 3;
                     output = ParseArgument(array, currentArrayElement, arguments[index]);
                 }

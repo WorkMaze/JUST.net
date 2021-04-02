@@ -506,7 +506,7 @@ namespace JUST
                     ? (JUSTContext)list[2]
                     : new JUSTContext();
 
-                if (ComparisonHelper.Equals(list[0], list[1], context))
+                if (ComparisonHelper.Equals(list[0], list[1], context.EvaluationMode))
                     result = true;
             }
 
@@ -523,7 +523,7 @@ namespace JUST
                     ? (JUSTContext)list[2]
                     : new JUSTContext();
 
-                result = ComparisonHelper.Contains(list[0], list[1], context);
+                result = ComparisonHelper.Contains(list[0], list[1], context.EvaluationMode);
             }
 
             return result;
