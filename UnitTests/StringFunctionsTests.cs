@@ -75,6 +75,17 @@ namespace JUST.UnitTests
         }
 
         [Test]
+        public void EqualsCaseSensitive()
+        {
+            var transformer = "{ \"stringresult\": { \"stringequals\": \"#stringequals(#valueof($.d[0]),oNe)\" }}";
+
+            var context = new JUSTContext() { EvaluationMode = EvaluationMode.Strict };
+            var result = new JsonTransformer(context).Transform(transformer, ExampleInputs.StringsArray);
+
+            Assert.AreEqual("{\"stringresult\":{\"stringequals\":false}}", result);
+        }
+
+        [Test]
         public void EqualsOnNull()
         {
             var transformer = "{ \"stringresult\": { \"stringequals\": \"#stringequals(#valueof($.not_there),one)\" }}";
@@ -92,6 +103,17 @@ namespace JUST.UnitTests
             var result = new JsonTransformer().Transform(transformer, ExampleInputs.StringsArray);
 
             Assert.AreEqual("{\"stringresult\":{\"stringcontains\":true}}", result);
+        }
+
+        [Test]
+        public void ContainsCaseSensitive()
+        {
+            var transformer = "{ \"stringresult\": { \"stringcontains\": \"#stringcontains(#valueof($.d[0]),N)\" }}";
+
+            var context = new JUSTContext() { EvaluationMode = EvaluationMode.Strict };
+            var result = new JsonTransformer(context).Transform(transformer, ExampleInputs.StringsArray);
+
+            Assert.AreEqual("{\"stringresult\":{\"stringcontains\":false}}", result);
         }
 
         [Test]
