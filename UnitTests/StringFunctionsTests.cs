@@ -75,13 +75,14 @@ namespace JUST.UnitTests
         }
 
         [Test]
-        public void EqualsWithDifferentCase()
+        public void EqualsCaseSensitive()
         {
-            var transformer = "{ \"stringresult\": { \"stringequals\": \"#stringequals(#valueof($.d[0]),ONE)\" }}";
+            var transformer = "{ \"stringresult\": { \"stringequals\": \"#stringequals(#valueof($.d[0]),oNe)\" }}";
 
-            var result = new JsonTransformer().Transform(transformer, ExampleInputs.StringsArray);
+            var context = new JUSTContext() { EvaluationMode = EvaluationMode.Strict };
+            var result = new JsonTransformer(context).Transform(transformer, ExampleInputs.StringsArray);
 
-            Assert.AreEqual("{\"stringresult\":{\"stringequals\":true}}", result);
+            Assert.AreEqual("{\"stringresult\":{\"stringequals\":false}}", result);
         }
 
         [Test]
@@ -105,11 +106,12 @@ namespace JUST.UnitTests
         }
 
         [Test]
-        public void ContainsWithDifferentCase()
+        public void ContainsCaseSensitive()
         {
-            var transformer = "{ \"stringresult\": { \"stringcontains\": \"#stringcontains(#valueof($.d[0]),E)\" }}";
+            var transformer = "{ \"stringresult\": { \"stringcontains\": \"#stringcontains(#valueof($.d[0]),N)\" }}";
 
-            var result = new JsonTransformer().Transform(transformer, ExampleInputs.StringsArray);
+            var context = new JUSTContext() { EvaluationMode = EvaluationMode.Strict };
+            var result = new JsonTransformer(context).Transform(transformer, ExampleInputs.StringsArray);
 
             Assert.AreEqual("{\"stringresult\":{\"stringcontains\":false}}", result);
         }
