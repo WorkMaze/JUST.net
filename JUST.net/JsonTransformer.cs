@@ -500,16 +500,10 @@ namespace JUST
         {
             object functionResult = ParseFunction(arguments, parentArray, currentArrayToken);
 
-            JProperty clonedProperty = new JProperty(functionResult.ToString(),
-                property.Value.Type != JTokenType.Null ?
-                    ReflectionHelper.GetTypedValue(
-                        property.Value.Type,
-                        ParseFunction(
-                            property.Value.Value<string>(),
-                            parentArray,
-                            currentArrayToken),
-                        Context.EvaluationMode) :
-                    null);
+            object val = property.Value.Type == JTokenType.String ? 
+                ParseFunction(property.Value.Value<string>(), parentArray, currentArrayToken) : 
+                property.Value;
+            JProperty clonedProperty = new JProperty(functionResult.ToString(), val);
 
             if (loopProperties == null)
                 loopProperties = new List<string>();

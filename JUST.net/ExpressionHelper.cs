@@ -68,7 +68,7 @@ namespace JUST
 
             arguments.Add(index > 0 ?
                 Unescape(functionString.Substring(index + 1, functionString.Length - index - 1)) :
-                functionString);
+                Unescape(functionString));
 
             return arguments.ToArray();
         }
