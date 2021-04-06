@@ -506,7 +506,11 @@ namespace JUST
 
             if (list.Length >= 2)
             {
-                if (list[0].ToString().Equals(list[1].ToString()))
+                var context = (list.Length > 2)
+                    ? (JUSTContext)list[2]
+                    : new JUSTContext();
+
+                if (ComparisonHelper.Equals(list[0], list[1], context.EvaluationMode))
                     result = true;
             }
 
@@ -519,8 +523,11 @@ namespace JUST
 
             if (list.Length >= 2)
             {
-                if (list[0].ToString().Contains(list[1].ToString()))
-                    result = true;
+                var context = (list.Length > 2)
+                    ? (JUSTContext)list[2]
+                    : new JUSTContext();
+
+                result = ComparisonHelper.Contains(list[0], list[1], context.EvaluationMode);
             }
 
             return result;
