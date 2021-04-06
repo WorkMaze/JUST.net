@@ -161,7 +161,7 @@ namespace JUST
                     || functionName == "lastvalue")
                     output = caller("JUST.Transformer`1", functionName, new object[] { array, currentArrayElement });
                 else if (functionName == "currentvalueatpath" || functionName == "lastvalueatpath")
-                    output = caller("JUST.Transformer`1", functionName, new object[] { array, currentArrayElement, arguments[0] });
+                    output = caller("JUST.Transformer`1", functionName, new object[] { array, currentArrayElement, arguments[0], new JUSTContext() });
                 else if (functionName == "customfunction")
                     output = CallCustomFunction(parameters);
                 else if (functionName == "xconcat" || functionName == "xadd" || functionName == "mathequals" || functionName == "mathgreaterthan" || functionName == "mathlessthan"

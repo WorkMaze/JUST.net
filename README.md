@@ -1,5 +1,5 @@
 [![Build Status](https://courela.visualstudio.com/JUST.net/_apis/build/status/Truphone.JUST.net?branchName=develop)](https://courela.visualstudio.com/JUST.net/_build/latest?definitionId=1&branchName=develop)
-
+[![Downloads](https://img.shields.io/nuget/dt/JUST.net.svg)](https://img.shields.io/nuget/dt/JUST.net.svg)
 # JUST
 
 JUST Stands for **JSON Under Simple Transformation**
@@ -226,7 +226,8 @@ Transformer:
     "substring": "#substring(#valueof($.stringref),9,11)",
     "concat": "#concat(#valueof($.menu.id.file),#valueof($.menu.value.Window))",
 	"length_string": "#length(#valueof($.stringref))",
-	"length_array": "#length(#valueof($.numbers))"
+	"length_array": "#length(#valueof($.numbers))",
+	"length_path": "#length($.numbers)"
   },
   "mathresult": {
     "add": "#add(#valueof($.numbers[0]),3)",
@@ -248,7 +249,8 @@ Output:
     "substring": "veryunuasua",
     "concat":"",
 	"length_string": 34,
-	"length_array": 5
+	"length_array": 5,
+	"length_path": 5
   },
   "mathresult": {
     "add": 4,

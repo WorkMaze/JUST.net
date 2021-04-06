@@ -29,6 +29,39 @@ namespace JUST.UnitTests
         }
 
         [Test, Category("IfCondition")]
+        public void PrimitiveFirstDifferentCaseTrueConditionStringResult()
+        {
+            const string input = "{ \"string\": \"some words\", \"integer\": 123, \"boolean\": true }";
+            const string transformer = "{ \"result\": \"#ifcondition(SOME WORDS,#valueof($.string),truevalue,falsevalue)\" }";
+
+            var result = new JsonTransformer().Transform(transformer, input);
+
+            Assert.AreEqual("{\"result\":\"truevalue\"}", result);
+        }
+
+        [Test, Category("IfCondition")]
+        public void PrimitiveSecondDifferentCaseTrueConditionStringResult()
+        {
+            const string input = "{ \"string\": \"SOME WORDS\", \"integer\": 123, \"boolean\": true }";
+            const string transformer = "{ \"result\": \"#ifcondition(some words,#valueof($.string),truevalue,falsevalue)\" }";
+
+            var result = new JsonTransformer().Transform(transformer, input);
+
+            Assert.AreEqual("{\"result\":\"truevalue\"}", result);
+        }
+
+        [Test, Category("IfCondition")]
+        public void FnFirstNullConditionStringResult()
+        {
+            const string input = "{ \"string\": \"some words\", \"integer\": 123, \"boolean\": true }";
+            const string transformer = "{ \"result\": \"#ifcondition(#valueof($.not_there),true,truevalue,falsevalue)\" }";
+
+            var result = new JsonTransformer().Transform(transformer, input);
+
+            Assert.AreEqual("{\"result\":\"falsevalue\"}", result);
+        }
+
+        [Test, Category("IfCondition")]
         public void FnFirstTrueConditionStringResult()
         {
             const string input = "{ \"string\": \"some words\", \"integer\": 123, \"boolean\": true }";
@@ -44,6 +77,17 @@ namespace JUST.UnitTests
         {
             const string input = "{ \"string\": \"some words\", \"integer\": 123, \"boolean\": true }";
             const string transformer = "{ \"result\": \"#ifcondition(#valueof($.integer),555,truevalue,falsevalue)\" }";
+
+            var result = new JsonTransformer().Transform(transformer, input);
+
+            Assert.AreEqual("{\"result\":\"falsevalue\"}", result);
+        }
+
+        [Test, Category("IfCondition")]
+        public void FnSecondNullConditionStringResult()
+        {
+            const string input = "{ \"string\": \"some words\", \"integer\": 123, \"boolean\": true }";
+            const string transformer = "{ \"result\": \"#ifcondition(true,#valueof($.not_there),truevalue,falsevalue)\" }";
 
             var result = new JsonTransformer().Transform(transformer, input);
 
@@ -177,6 +221,48 @@ namespace JUST.UnitTests
             var result = new JsonTransformer().Transform(transformer, ExampleInputs.ObjectArray);
 
             Assert.AreEqual("{\"iteration\":[{},{\"current_value_at_path\":\"UK\"},{}]}", result);
+        }
+
+        [Test, Category("IfGroup"), Category("Loops")]
+        public void ConditionalGroupTrueWithLoopInside()
+        {
+            var input = "{ \"errors\": { \"account\": [ \"error1\", \"error2\" ] } }";
+            var transformer = "{ \"Result\": { \"#ifgroup(#exists($.errors.account))\": { \"#loop($.errors.account)\": { \"ValidationMessage\": \"#currentvalueatpath($)\" } } }, \"Other\": \"property\" }";
+            var context = new JUSTContext
+            {
+                EvaluationMode = EvaluationMode.FallbackToDefault
+            };
+            var result = new JsonTransformer(context).Transform(transformer, input);
+
+            Assert.AreEqual("{\"Result\":[{\"ValidationMessage\":\"error1\"},{\"ValidationMessage\":\"error2\"}],\"Other\":\"property\"}", result);
+        }
+
+        [Test, Category("IfGroup"), Category("Loops")]
+        public void ConditionalGroupFalseWithLoopInside()
+        {
+            var input = "{ \"errors\": { \"account\": [ ] } }";
+            var transformer = "{ \"Result\": { \"#ifgroup(#exists($.errors.account))\": { \"#loop($.errors.account)\": { \"ValidationMessage\": \"#currentvalueatpath($)\" } } }, \"Other\": \"property\" }";
+            var context = new JUSTContext
+            {
+                EvaluationMode = EvaluationMode.FallbackToDefault
+            };
+            var result = new JsonTransformer(context).Transform(transformer, input);
+
+            Assert.AreEqual("{\"Result\":{},\"Other\":\"property\"}", result);
+        }
+
+        [Test, Category("IfGroup"), Category("Loops")]
+        public void ConditionalGroupNonExistingWithLoopInside()
+        {
+            var input = "{ }";
+            var transformer = "{ \"Result\": { \"#ifgroup(#exists($.errors.account))\": { \"#loop($.errors.account)\": { \"ValidationMessage\": \"#currentvalueatpath($)\" } } }, \"Other\": \"property\" }";
+            var context = new JUSTContext
+            {
+                EvaluationMode = EvaluationMode.FallbackToDefault
+            };
+            var result = new JsonTransformer(context).Transform(transformer, input);
+
+            Assert.AreEqual("{\"Result\":{},\"Other\":\"property\"}", result);
         }
     }
 }
