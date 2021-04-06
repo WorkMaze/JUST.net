@@ -209,8 +209,24 @@ namespace JUST
             {
                 foreach (JToken token in tokenToForm)
                 {
-                    foreach (JProperty childToken in token.Children())
-                        (parentToken as JObject).Add(childToken.Name, childToken.Value);
+                    foreach (JToken childToken in token.Children())
+                    {
+                        if (childToken is JProperty child)
+                        {
+                            (parentToken as JObject).Add(child.Name, child.Value);
+                        }
+                        else if (token is JArray arr && parentToken.Parent != null)
+                        {
+                            (parentToken.Parent as JProperty).Value = arr;
+                        }
+                        else
+                        {
+                            if (Context.EvaluationMode == EvaluationMode.Strict)
+                            {
+                                throw new Exception($"found {parentToken.Type} without parent!");
+                            }
+                        }
+                    }
                 }
             }
             if (parentToken is JObject jObject)
@@ -264,24 +280,32 @@ namespace JUST
         {
             if (loopProperties != null)
             {
-                foreach (string propertyToDelete in loopProperties)
+                JObject obj = parentToken as JObject;
+                if (obj != null)
                 {
-                    if (dictToForm == null && arrayToForm == null && parentToken.Count() <= 1)
+                    foreach (string propertyToDelete in loopProperties)
                     {
-                        parentToken.Replace(JValue.CreateNull());
-                    }
-                    else
-                    {
-                        (parentToken as JObject).Remove(propertyToDelete);
+                        if (dictToForm == null && arrayToForm == null && parentToken.Count() <= 1)
+                        {
+                            obj.Replace(JValue.CreateNull());
+                        }
+                        else
+                        {
+                            obj.Remove(propertyToDelete);
+                        }
                     }
                 }
             }
 
             if (condProps != null)
             {
-                foreach (string propertyToDelete in condProps)
+                JObject obj = parentToken as JObject;
+                if (obj != null)
                 {
-                    (parentToken as JObject).Remove(propertyToDelete);
+                    foreach (string propertyToDelete in condProps)
+                    {
+                        obj.Remove(propertyToDelete);
+                    }
                 }
             }
 
