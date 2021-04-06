@@ -38,7 +38,7 @@ namespace JUST.UnitTests
 
             {
                 // read the file and release it immediately (do not keep handle)
-                using var stream = new FileStream(assemblyFilePath, FileMode.Open, FileAccess.Read, FileShare.Read);
+                var stream = new FileStream(assemblyFilePath, FileMode.Open, FileAccess.Read, FileShare.Read);
                 // alternatively can be used the line below:
                 //using var stream = new MemoryStream(File.ReadAllBytes(assemblyFilePath));
                 var loadedAssembly = loadContext.LoadFromStream(stream);
