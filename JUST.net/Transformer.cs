@@ -10,7 +10,7 @@ namespace JUST
     {
         protected static object TypedNumber(decimal number)
         {
-            return number * 10 % 10 == 0 ? (object)Convert.ToInt32(number) : number;
+            return number * 10 % 10 == 0 ? (number <= int.MaxValue ? (object)Convert.ToInt32(number) : number) : number;
         }
 
         internal static object GetValue(JToken selectedToken)
@@ -372,12 +372,17 @@ namespace JUST
             {
                 foreach (JToken child in token.Children())
                 {
-                    decimal thisValue = Convert.ToDecimal(child.ToString());
-                    result = Math.Max(result, thisValue);
+                    result = Max(result, child);
                 }
             }
 
             return TypedNumber(result);
+        }
+
+        private static decimal Max(decimal d1, JToken token)
+        {
+            decimal thisValue = Convert.ToDecimal(token.ToString());
+            return Math.Max(d1, thisValue);
         }
 
         public static object maxatpath(JArray parsedArray, string path, JUSTContext context)
@@ -389,8 +394,7 @@ namespace JUST
                 {
                     var selector = context.Resolve<T>(token);
                     JToken selectedToken = selector.Select(path);
-                    decimal thisValue = Convert.ToDecimal(selectedToken.ToString());
-                    result = Math.Max(result, thisValue);
+                    result = Max(result, selectedToken);
                 }
             }
 
@@ -568,7 +572,11 @@ namespace JUST
 
             if (list.Length >= 2)
             {
-                if (list[0].ToString().Equals(list[1].ToString()))
+                var context = (list.Length > 2)
+                    ? (JUSTContext)list[2]
+                    : new JUSTContext();
+
+                if (ComparisonHelper.Equals(list[0], list[1], context.EvaluationMode))
                     result = true;
             }
 
@@ -581,8 +589,11 @@ namespace JUST
 
             if (list.Length >= 2)
             {
-                if (list[0].ToString().Contains(list[1].ToString()))
-                    result = true;
+                var context = (list.Length > 2)
+                    ? (JUSTContext)list[2]
+                    : new JUSTContext();
+
+                result = ComparisonHelper.Contains(list[0], list[1], context.EvaluationMode);
             }
 
             return result;
@@ -688,7 +699,11 @@ namespace JUST
         public static int length(object val, JUSTContext context)
         {
             int result = 0;
-            if (val is IEnumerable enumerable)
+            if (val is string path && path.StartsWith(context.Resolve<T>(null).RootReference))
+            {
+                result = length(valueof(path, context), context);
+            }
+            else if (val is IEnumerable enumerable)
             {
                 var enumerator = enumerable.GetEnumerator();
                 while (enumerator.MoveNext())

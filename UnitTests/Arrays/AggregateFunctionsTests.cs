@@ -169,6 +169,17 @@ namespace JUST.UnitTests.Arrays
         }
 
         [Test]
+        public void MaxLargeNumbers()
+        {
+            const string input = "[ 1612260328, 1612260332, 1612260185 ]";
+            const string transformer = "{ \"max\": \"#max(#valueof($))\" }";
+
+            var result = new JsonTransformer(new JUSTContext { EvaluationMode = EvaluationMode.Strict }).Transform(transformer, input);
+
+            Assert.AreEqual("{\"max\":1612260332}", result);
+        }
+
+        [Test]
         public void MaxAtPath()
         {
             const string transformer = "{ \"max_at_path\": \"#maxatpath(#valueof($.x),$.v.b)\" }";
