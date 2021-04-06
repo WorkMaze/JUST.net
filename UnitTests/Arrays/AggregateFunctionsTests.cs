@@ -3,7 +3,7 @@ using System;
 
 namespace JUST.UnitTests.Arrays
 {
-    [TestFixture]
+    [TestFixture, Category("AgregateFunctions")]
     public class AggregateFunctionsTests
     {
         [Test]
@@ -116,6 +116,17 @@ namespace JUST.UnitTests.Arrays
             var result = new JsonTransformer().Transform(transformer, ExampleInputs.NumbersArray);
 
             Assert.AreEqual("{\"max\":5}", result);
+        }
+
+        [Test]
+        public void MaxLargeNumbers()
+        {
+            const string input = "[ 1612260328, 1612260332, 1612260185 ]";
+            const string transformer = "{ \"max\": \"#max(#valueof($))\" }";
+
+            var result = new JsonTransformer(new JUSTContext { EvaluationMode = EvaluationMode.Strict }).Transform(transformer, input);
+
+            Assert.AreEqual("{\"max\":1612260332}", result);
         }
 
         [Test]

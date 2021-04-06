@@ -2,7 +2,7 @@
 
 namespace JUST.UnitTests
 {
-    [TestFixture]
+    [TestFixture, Category("EscapedChars")]
     public class ArgumentsEscapeTests
     {
         private const string EscapeChar = "/";
@@ -97,6 +97,21 @@ namespace JUST.UnitTests
             const string transformer = "{ \"result\": \"#xconcat(//,_end)\" }";
             var result = new JsonTransformer().Transform(transformer, "{}");
             Assert.AreEqual("{\"result\":\"/_end\"}", result);
+        }
+
+        [Test]
+        public void OneArgumentFunctionWithEscapedChars()
+        {
+            const string input = "{ \"creditsDebits\": [{ \"ratingModifierValue\": null, \"name\": \"Qualifications\", \"id\": \"3d4f2273-edb3-4959-b232-e7386e8dca1e\", \"factorValue\": null, \"factorMin\": null, \"factorMax\": null, \"defaultValue\": null, \"code\": \"ECC002\" }, { \"ratingModifierValue\": \"Need this value\", \"name\": \"Loss Experience\", \"id\": \"af0324f3-6676-4faf-a9e9-c14f1eaa2fee\", \"factorValue\": null, \"factorMin\": null, \"factorMax\": null, \"defaultValue\": null, \"code\": \"ECC100\" }] }";
+            string transformer = "{ \"someNewNode\": \"#valueof($.creditsDebits[?/(@.code == 'ECC100'/)].ratingModifierValue)\" }";
+
+            var context = new JUSTContext
+            {
+                EvaluationMode = EvaluationMode.Strict
+            };
+            var result = new JsonTransformer(context).Transform(transformer, input);
+
+            Assert.AreEqual("{\"someNewNode\":\"Need this value\"}", result);
         }
     }
 }

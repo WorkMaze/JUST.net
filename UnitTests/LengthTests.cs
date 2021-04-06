@@ -1,9 +1,10 @@
-﻿using NUnit.Framework;
+﻿using JUST.net.Selectables;
+using NUnit.Framework;
 using System;
 
 namespace JUST.UnitTests
 {
-    [TestFixture]
+    [TestFixture, Category("Length")]
     public class LengthTests
     {
         [Test]
@@ -22,6 +23,36 @@ namespace JUST.UnitTests
             const string transformer = "{ \"length\": \"#length(#valueof($.numbers))\" }";
 
             var result = new JsonTransformer().Transform(transformer, ExampleInputs.NumbersArray);
+
+            Assert.AreEqual("{\"length\":5}", result);
+        }
+
+        [Test]
+        public void LengthPath()
+        {
+            const string transformer = "{ \"length\": \"#length($.numbers)\" }";
+
+            var result = new JsonTransformer().Transform(transformer, ExampleInputs.NumbersArray);
+
+            Assert.AreEqual("{\"length\":5}", result);
+        }
+
+        [Test]
+        public void LengthJmesPath()
+        {
+            const string transformer = "{ \"length\": \"#length(numbers)\" }";
+
+            var result = new JsonTransformer<JmesPathSelectable>().Transform(transformer, ExampleInputs.NumbersArray);
+
+            Assert.AreEqual("{\"length\":5}", result);
+        }
+
+        [Test]
+        public void LengthJmesPathArray()
+        {
+            const string transformer = "{ \"length\": \"#length(#valueof(numbers))\" }";
+
+            var result = new JsonTransformer<JmesPathSelectable>().Transform(transformer, ExampleInputs.NumbersArray);
 
             Assert.AreEqual("{\"length\":5}", result);
         }
