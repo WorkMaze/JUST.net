@@ -16,6 +16,8 @@ This C# project has working examples of the transformations.
 Also a new enum field called `EvaluationMode` was added to `JUSTContext`, which lets you select how type mismatches are handled:
 - option `Strict` mode will throw an exception on error;
 - option `FallbackToDefault` will return the default value for the return type of the function/expression being evaluated
+There's also an option to tell how #copy will behave:
+- option `AddOrReplaceProperties` will add or replace any property that may be present both in #copy and transformer.
 
 **New query languages accepted** besides [JsonPath](https://goessner.net/articles/JsonPath/). All you have to do is create a class that implements `ISelectableToken` and call generic `Transform` method with your type.
 [JmesPath](http://jmespath.org/) is included as an alternative ([example here](#jmesexample)).
@@ -88,7 +90,8 @@ Consider the input:
           "value": "Close",
           "onclick": "CloseDoc()"
         }
-      ]
+      ],
+	  "submenuitem": "CloseSession()"
     }
   }
 }
@@ -316,11 +319,11 @@ Output:
 
 The following aggregate functions are provided for single dimensional arrays:
 
-1. concatall(array)
-2. sum(array)
-3. average(array)
-4. min(array)
-5. max(array)
+1. concatall(path or array)
+2. sum(path or array)
+3. average(path or array)
+4. min(path or array)
+5. max(path or array)
 
 Consider the input:
  
@@ -336,9 +339,9 @@ Transformer:
 ```JSON
 {
   "conacted": "#concatall(#valueof($.d))",
-  "sum": "#sum(#valueof($.numbers))",
+  "sum": "#sum($.numbers)",
   "avg": "#average(#valueof($.numbers))",
-  "min": "#min(#valueof($.numbers))",
+  "min": "#min($.numbers)",
   "max": "#max(#valueof($.numbers))"
 }
 ```
