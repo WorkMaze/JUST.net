@@ -319,11 +319,11 @@ Output:
 
 The following aggregate functions are provided for single dimensional arrays:
 
-1. concatall(array)
-2. sum(array)
-3. average(array)
-4. min(array)
-5. max(array)
+1. concatall(path or array)
+2. sum(path or array)
+3. average(path or array)
+4. min(path or array)
+5. max(path or array)
 
 Consider the input:
  
@@ -339,9 +339,9 @@ Transformer:
 ```JSON
 {
   "conacted": "#concatall(#valueof($.d))",
-  "sum": "#sum(#valueof($.numbers))",
+  "sum": "#sum($.numbers)",
   "avg": "#average(#valueof($.numbers))",
-  "min": "#min(#valueof($.numbers))",
+  "min": "#min($.numbers)",
   "max": "#max(#valueof($.numbers))"
 }
 ```

@@ -2,7 +2,7 @@
 
 namespace JUST.UnitTests.Arrays
 {
-    [TestFixture]
+    [TestFixture, Category("ArrayInput")]
     public class ConcatenationTests
     {
         [TestCase("null", "null", "null")]

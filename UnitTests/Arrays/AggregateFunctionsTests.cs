@@ -3,15 +3,25 @@ using System;
 
 namespace JUST.UnitTests.Arrays
 {
-    [TestFixture, Category("AgregateFunctions")]
+    [TestFixture, Category("AggregateFunctions")]
     public class AggregateFunctionsTests
     {
-        [Test]
-        public void ConcatAll()
+        [Test, Category("ArrayInput")]
+        public void ConcatAllWithArray()
         {
             const string transformer = "{ \"concat_all\": \"#concatall(#valueof($.d))\" }";
 
             var result = new JsonTransformer().Transform(transformer, ExampleInputs.StringsArray);
+
+            Assert.AreEqual("{\"concat_all\":\"onetwothree\"}", result);
+        }
+
+        [Test]
+        public void ConcatAll()
+        {
+            const string transformer = "{ \"concat_all\": \"#concatall($.d)\" }";
+
+            var result = new JsonTransformer(new JUSTContext { EvaluationMode = EvaluationMode.Strict }).Transform(transformer, ExampleInputs.StringsArray);
 
             Assert.AreEqual("{\"concat_all\":\"onetwothree\"}", result);
         }
@@ -48,10 +58,20 @@ namespace JUST.UnitTests.Arrays
             Assert.AreEqual("Error while calling function : #concatallatpath(#valueof($.arr),$.str) - Invalid value in array to concatenate: 0", result.Message);
         }
 
+        [Test, Category("ArrayInput")]
+        public void SumWithArray()
+        {
+            const string transformer = "{ \"sum\": \"#sum(#valueof($.numbers))\" }";
+
+            var result = new JsonTransformer().Transform(transformer, ExampleInputs.NumbersArray);
+
+            Assert.AreEqual("{\"sum\":15}", result);
+        }
+
         [Test]
         public void Sum()
         {
-            const string transformer = "{ \"sum\": \"#sum(#valueof($.numbers))\" }";
+            const string transformer = "{ \"sum\": \"#sum($.numbers)\" }";
 
             var result = new JsonTransformer().Transform(transformer, ExampleInputs.NumbersArray);
 
@@ -68,10 +88,20 @@ namespace JUST.UnitTests.Arrays
             Assert.AreEqual("{\"sum_at_path\":60}", result);
         }
 
+        [Test, Category("ArrayInput")]
+        public void AverageWithArray()
+        {
+            const string transformer = "{ \"avg\": \"#average(#valueof($.numbers))\" }";
+
+            var result = new JsonTransformer().Transform(transformer, ExampleInputs.NumbersArray);
+
+            Assert.AreEqual("{\"avg\":3}", result);
+        }
+
         [Test]
         public void Average()
         {
-            const string transformer = "{ \"avg\": \"#average(#valueof($.numbers))\" }";
+            const string transformer = "{ \"avg\": \"#average($.numbers)\" }";
 
             var result = new JsonTransformer().Transform(transformer, ExampleInputs.NumbersArray);
 
@@ -88,10 +118,20 @@ namespace JUST.UnitTests.Arrays
             Assert.AreEqual("{\"avg_at_path\":20}", result);
         }
 
+        [Test, Category("ArrayInput")]
+        public void MinWithArray()
+        {
+            const string transformer = "{ \"min\": \"#min(#valueof($.numbers))\" }";
+
+            var result = new JsonTransformer().Transform(transformer, ExampleInputs.NumbersArray);
+
+            Assert.AreEqual("{\"min\":1}", result);
+        }
+
         [Test]
         public void Min()
         {
-            const string transformer = "{ \"min\": \"#min(#valueof($.numbers))\" }";
+            const string transformer = "{ \"min\": \"#min($.numbers)\" }";
 
             var result = new JsonTransformer().Transform(transformer, ExampleInputs.NumbersArray);
 
@@ -108,10 +148,20 @@ namespace JUST.UnitTests.Arrays
             Assert.AreEqual("{\"min_at_path\":1}", result);
         }
 
+        [Test, Category("ArrayInput")]
+        public void MaxWithArray()
+        {
+            const string transformer = "{ \"max\": \"#max(#valueof($.numbers))\" }";
+
+            var result = new JsonTransformer().Transform(transformer, ExampleInputs.NumbersArray);
+
+            Assert.AreEqual("{\"max\":5}", result);
+        }
+
         [Test]
         public void Max()
         {
-            const string transformer = "{ \"max\": \"#max(#valueof($.numbers))\" }";
+            const string transformer = "{ \"max\": \"#max($.numbers)\" }";
 
             var result = new JsonTransformer().Transform(transformer, ExampleInputs.NumbersArray);
 
