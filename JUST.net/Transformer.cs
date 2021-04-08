@@ -193,7 +193,7 @@ namespace JUST
                 }
                 foreach (JToken token in parsedArray.Children())
                 {
-                    if (context.EvaluationMode == EvaluationMode.Strict && token.Type != JTokenType.String)
+                    if (context.IsStrictMode() && token.Type != JTokenType.String)
                     {
                         throw new Exception($"Invalid value in array to concatenate: {token.ToString()}");
                     }
@@ -215,7 +215,7 @@ namespace JUST
                 {
                     var selector = context.Resolve<T>(token);
                     JToken selectedToken = selector.Select(path);
-                    if (context.EvaluationMode == EvaluationMode.Strict && selectedToken.Type != JTokenType.String)
+                    if (context.IsStrictMode() && selectedToken.Type != JTokenType.String)
                     {
                         throw new Exception($"Invalid value in array to concatenate: {selectedToken.ToString()}");
                     }
@@ -420,7 +420,7 @@ namespace JUST
         public static object currentproperty(JArray array, JToken currentElement, JUSTContext context)
         {
             var prop = (currentElement.First as JProperty);
-            if (prop == null && context.EvaluationMode == EvaluationMode.Strict)
+            if (prop == null && context.IsStrictMode())
             {
                 throw new InvalidOperationException("Element is not a property: " + prop.ToString());
             }
@@ -539,8 +539,12 @@ namespace JUST
 
             if (list.Length >= 2)
             {
-                decimal lshDecimal = (decimal)ReflectionHelper.GetTypedValue(typeof(decimal), list[0], EvaluationMode.Strict);
-                decimal rhsDecimal = (decimal)ReflectionHelper.GetTypedValue(typeof(decimal), list[1], EvaluationMode.Strict);
+                decimal lshDecimal = (decimal)ReflectionHelper.GetTypedValue(typeof(decimal), 
+                    list[0], 
+                    list.Length >= 3 ? ((JUSTContext)list[2]).EvaluationMode : EvaluationMode.Strict);
+                decimal rhsDecimal = (decimal)ReflectionHelper.GetTypedValue(typeof(decimal), 
+                    list[1],
+                    list.Length >= 3 ? ((JUSTContext)list[2]).EvaluationMode : EvaluationMode.Strict);
 
                 result = lshDecimal == rhsDecimal;
             }
@@ -553,8 +557,12 @@ namespace JUST
             bool result = false;
             if (list.Length >= 2)
             {
-                decimal lshDecimal = (decimal)ReflectionHelper.GetTypedValue(typeof(decimal), list[0], EvaluationMode.Strict);
-                decimal rhsDecimal = (decimal)ReflectionHelper.GetTypedValue(typeof(decimal), list[1], EvaluationMode.Strict);
+                decimal lshDecimal = (decimal)ReflectionHelper.GetTypedValue(typeof(decimal),
+                    list[0],
+                    list.Length >= 3 ? ((JUSTContext)list[2]).EvaluationMode : EvaluationMode.Strict);
+                decimal rhsDecimal = (decimal)ReflectionHelper.GetTypedValue(typeof(decimal), 
+                    list[1],
+                    list.Length >= 3 ? ((JUSTContext)list[2]).EvaluationMode : EvaluationMode.Strict);
 
                 result = lshDecimal > rhsDecimal;
             }
@@ -567,8 +575,12 @@ namespace JUST
             bool result = false;
             if (list.Length >= 2)
             {
-                decimal lshDecimal = (decimal)ReflectionHelper.GetTypedValue(typeof(decimal), list[0], EvaluationMode.Strict);
-                decimal rhsDecimal = (decimal)ReflectionHelper.GetTypedValue(typeof(decimal), list[1], EvaluationMode.Strict);
+                decimal lshDecimal = (decimal)ReflectionHelper.GetTypedValue(typeof(decimal), 
+                    list[0],
+                    list.Length >= 3 ? ((JUSTContext)list[2]).EvaluationMode : EvaluationMode.Strict);
+                decimal rhsDecimal = (decimal)ReflectionHelper.GetTypedValue(typeof(decimal), 
+                    list[1],
+                    list.Length >= 3 ? ((JUSTContext)list[2]).EvaluationMode : EvaluationMode.Strict);
 
                 result = lshDecimal < rhsDecimal;
             }
@@ -581,8 +593,12 @@ namespace JUST
             bool result = false;
             if (list.Length >= 2)
             {
-                decimal lshDecimal = (decimal)ReflectionHelper.GetTypedValue(typeof(decimal), list[0], EvaluationMode.Strict);
-                decimal rhsDecimal = (decimal)ReflectionHelper.GetTypedValue(typeof(decimal), list[1], EvaluationMode.Strict);
+                decimal lshDecimal = (decimal)ReflectionHelper.GetTypedValue(typeof(decimal), 
+                    list[0],
+                    list.Length >= 3 ? ((JUSTContext)list[2]).EvaluationMode : EvaluationMode.Strict);
+                decimal rhsDecimal = (decimal)ReflectionHelper.GetTypedValue(typeof(decimal), 
+                    list[1],
+                    list.Length >= 3 ? ((JUSTContext)list[2]).EvaluationMode : EvaluationMode.Strict);
 
                 result = lshDecimal >= rhsDecimal;
             }
@@ -595,8 +611,12 @@ namespace JUST
             bool result = false;
             if (list.Length >= 2)
             {
-                decimal lshDecimal = (decimal)ReflectionHelper.GetTypedValue(typeof(decimal), list[0], EvaluationMode.Strict);
-                decimal rhsDecimal = (decimal)ReflectionHelper.GetTypedValue(typeof(decimal), list[1], EvaluationMode.Strict);
+                decimal lshDecimal = (decimal)ReflectionHelper.GetTypedValue(typeof(decimal), 
+                    list[0],
+                    list.Length >= 3 ? ((JUSTContext)list[2]).EvaluationMode : EvaluationMode.Strict);
+                decimal rhsDecimal = (decimal)ReflectionHelper.GetTypedValue(typeof(decimal), 
+                    list[1],
+                    list.Length >= 3 ? ((JUSTContext)list[2]).EvaluationMode : EvaluationMode.Strict);
 
                 result = lshDecimal <= rhsDecimal;
             }
@@ -647,7 +667,7 @@ namespace JUST
             }
             else
             {
-                if (context.EvaluationMode == EvaluationMode.Strict)
+                if (context.IsStrictMode())
                 {
                     throw new ArgumentException($"Argument not elegible for #length: {val}");
                 }
