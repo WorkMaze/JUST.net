@@ -312,5 +312,16 @@ namespace JUST.UnitTests.Arrays
             Assert.AreEqual("{\"result\":[{\"Name\":\"E2\"},{\"Name\":\"E1\"}]}", result);
 
         }
+
+        [Test]
+        public void TwoLoopsSingleProperty()
+        {
+            var input = "{ \"ComponentA\": [ { \"ComponentAId\": 1, \"ComponentAType\": \"T1\", \"ComponentAKind\": \"K1\" } ], \"ComponentB\": [ { \"ComponentBId\": 2, \"ComponentBType\": \"T2\", \"ComponentBKind\": \"K2\" } ]}";
+            var transformer = "{ \"GenericComponent\": { \"#loop($.ComponentA)\": { \"GenericComponentId\": \"#currentvalueatpath($.ComponentAId)\", \"GenericComponentType\": \"#currentvalueatpath($.ComponentAType)\", \"GenericComponentKind\": \"#currentvalueatpath($.ComponentAKind)\" }, \"#loop($.ComponentB)\": { \"GenericComponentId\": \"#currentvalueatpath($.ComponentBId)\", \"GenericComponentType\": \"#currentvalueatpath($.ComponentBType)\", \"GenericComponentKind\": \"#currentvalueatpath($.ComponentBKind)\" } }}";
+
+            var result = new JsonTransformer().Transform(transformer, input);
+
+            Assert.AreEqual("{\"GenericComponent\":[{\"GenericComponentId\":1,\"GenericComponentType\":\"T1\",\"GenericComponentKind\":\"K1\"},{\"GenericComponentId\":2,\"GenericComponentType\":\"T2\",\"GenericComponentKind\":\"K2\"}]}", result);
+        }
     }
 }
