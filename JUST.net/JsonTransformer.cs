@@ -15,16 +15,10 @@ namespace JUST
         }
     }
 
-    public class JsonTransformer<T> where T: ISelectableToken
+    public class JsonTransformer<T> : Transformer<T> where T: ISelectableToken
     {
-        private int _loopCounter = 0;
-
-        private readonly JUSTContext Context;
-
-        public JsonTransformer(JUSTContext context = null)
+        public JsonTransformer(JUSTContext context = null) : base(context)
         {
-            Context = context ?? new JUSTContext();
-
             if (JsonConvert.DefaultSettings == null)
             {
                 JsonConvert.DefaultSettings = () => new JsonSerializerSettings
@@ -446,7 +440,10 @@ namespace JUST
                             parentArray = new Dictionary<string, JArray> { { alias, array } };
                         }
 
-                        arrayToForm = new JArray();
+                        if (arrayToForm == null)
+                        {
+                            arrayToForm = new JArray();
+                        }
                         if (!isDictionary)
                         {
                             while (elements.MoveNext())
@@ -802,11 +799,6 @@ namespace JUST
                     else if (functionName == "customfunction")
                         output = CallCustomFunction(listParameters.ToArray());
                     else if (Context?.IsRegisteredCustomFunction(functionName) ?? false)
-                    {
-                        var methodInfo = Context.GetCustomMethod(functionName);
-                        output = ReflectionHelper.InvokeCustomMethod<T>(methodInfo, parameters, convertParameters, Context);
-                    }
-                    else if (Context.IsRegisteredCustomFunction(functionName))
                     {
                         var methodInfo = Context.GetCustomMethod(functionName);
                         output = ReflectionHelper.InvokeCustomMethod<T>(methodInfo, parameters, convertParameters, Context);

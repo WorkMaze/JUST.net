@@ -117,7 +117,18 @@ namespace JUST.UnitTests
         }
 
         [Test]
-        public void CopyAddProperty()
+        public void CopyAddUnknownProperty()
+        {
+            const string input = "{ \"unknown-property\": \"value\", \"known-property\": { \"unknown-sub-property1\": \"value1\", \"unknown-sub-property2\": \"value2\", \"unknown-sub-propertyN\": \"valueN\" } }";
+            const string transformer = "{ \"#\": [ \"#copy($)\" ], \"added-property\": 1 }";
+
+            var result = new JsonTransformer().Transform(transformer, input);
+
+            Assert.AreEqual("{\"added-property\":1,\"unknown-property\":\"value\",\"known-property\":{\"unknown-sub-property1\":\"value1\",\"unknown-sub-property2\":\"value2\",\"unknown-sub-propertyN\":\"valueN\"}}", result);
+        }
+
+        [Test]
+        public void CopyAddKnownProperty()
         {
             const string input = "{ \"unknown-property\": \"value\", \"known-property\": { \"unknown-sub-property1\": \"value1\", \"unknown-sub-property2\": \"value2\", \"unknown-sub-propertyN\": \"valueN\" } }";
             const string transformer = "{ \"#\": [ \"#copy($)\" ], \"known-property\": { \"additional-sub-property\": \"value\" } }";

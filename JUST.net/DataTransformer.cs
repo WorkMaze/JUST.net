@@ -11,16 +11,23 @@ namespace JUST
 {
     public class DataTransformer : DataTransformer<JsonPathSelectable>
     {
+        public DataTransformer(JUSTContext context = null) : base(context)
+        {
+        }
     }
 
-    public class DataTransformer<T> where T: ISelectableToken
+    public class DataTransformer<T> : Transformer<T> where T: ISelectableToken
     {
-        public static string Transform(string transformer, string inputJson)
+        public DataTransformer(JUSTContext context) : base(context)
+        {
+        }
+
+        public string Transform(string transformer, string inputJson)
         {
             return Parse(transformer, inputJson, null, null);
         }
 
-        private static string Parse(string transformer, string inputJson, JArray array, JToken currentArrayElement)
+        private string Parse(string transformer, string inputJson, JArray array, JToken currentArrayElement)
         {
             int startIndex = 0, index = 0;
 
@@ -111,7 +118,7 @@ namespace JUST
             return loopArgs;
         }
 
-        private static object EvaluateFunction(string functionString, string inputJson, JArray array, JToken currentArrayElement,
+        private object EvaluateFunction(string functionString, string inputJson, JArray array, JToken currentArrayElement,
                     string loopArgumentString)
         {
             object output = null;
@@ -152,6 +159,11 @@ namespace JUST
 
                 listParameters.Add(new JUSTContext(inputJson));
                 var parameters = listParameters.ToArray();
+                var convertParameters = true;
+                if (new[] { "concat", "xconcat", "currentproperty" }.Contains(functionName))
+                {
+                    convertParameters = false;
+                }
 
                 if (functionName == "loop")
                 {
@@ -159,11 +171,16 @@ namespace JUST
                 }
                 else if (functionName == "currentvalue" || functionName == "currentindex" || functionName == "lastindex"
                     || functionName == "lastvalue")
-                    output = caller("JUST.Transformer`1", functionName, new object[] { array, currentArrayElement });
+                    output = Caller("JUST.Transformer`1", functionName, new object[] { array, currentArrayElement });
                 else if (functionName == "currentvalueatpath" || functionName == "lastvalueatpath")
-                    output = caller("JUST.Transformer`1", functionName, new object[] { array, currentArrayElement, arguments[0], new JUSTContext() });
+                    output = Caller("JUST.Transformer`1", functionName, new object[] { array, currentArrayElement, arguments[0], new JUSTContext() });
                 else if (functionName == "customfunction")
                     output = CallCustomFunction(parameters);
+                else if (Context?.IsRegisteredCustomFunction(functionName) ?? false)
+                {
+                    var methodInfo = Context.GetCustomMethod(functionName);
+                    output = ReflectionHelper.InvokeCustomMethod<T>(methodInfo, parameters, convertParameters, Context);
+                }
                 else if (functionName == "xconcat" || functionName == "xadd" || functionName == "mathequals" || functionName == "mathgreaterthan" || functionName == "mathlessthan"
                     || functionName == "mathgreaterthanorequalto"
                     || functionName == "mathlessthanorequalto" || functionName == "stringcontains" ||
@@ -171,28 +188,15 @@ namespace JUST
                 {
                     object[] oParams = new object[1];
                     oParams[0] = parameters;
-                    output = caller("JUST.Transformer`1", functionName, oParams);
+                    output = Caller("JUST.Transformer`1", functionName, oParams);
                 }
                 else
-                    output = caller("JUST.Transformer`1", functionName, parameters);
+                    output = Caller("JUST.Transformer`1", functionName, parameters);
             }
             return output;
         }
 
-        private static string GetStringValue(object o)
-        {
-            if (o is JToken token)
-            {
-                return token.ToString(Formatting.None);
-            }
-            if (o is IEnumerable<object> list)
-            {
-                return string.Join(",", list.Select(el => el.ToString()));
-            }
-            return o.ToString();
-        }
-
-        private static string GetLoopResult(object[] parameters,string loopArgumentString)
+        private string GetLoopResult(object[] parameters,string loopArgumentString)
         {
             string returnString = string.Empty;
 
@@ -250,7 +254,7 @@ namespace JUST
             return functionString;
         }
 
-        private static object CallCustomFunction(object[] parameters)
+        private object CallCustomFunction(object[] parameters)
         {
             object[] customParameters = new object[parameters.Length - 3];
             string functionString = string.Empty;
@@ -276,13 +280,13 @@ namespace JUST
 
             className = className + "," + dllName;
 
-            return caller(className, functionName, customParameters);
+            return Caller(className, functionName, customParameters);
         }
 
-        private static object caller(string myclass, string mymethod, object[] parameters)
+        private object Caller(string myclass, string mymethod, object[] parameters)
         {
             Assembly assembly = null;
-            return ReflectionHelper.Caller<T>(assembly, myclass, mymethod, parameters, true, new JUSTContext());
+            return ReflectionHelper.Caller<T>(assembly, myclass, mymethod, parameters, true, Context);
         }        
     }
 }
