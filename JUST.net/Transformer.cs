@@ -6,8 +6,17 @@ using System.Linq;
 
 namespace JUST
 {
-    internal class Transformer
+    public abstract class Transformer
     {
+        protected int _loopCounter = 0;
+
+        protected readonly JUSTContext Context;
+
+        public Transformer(JUSTContext context)
+        {
+            Context = context ?? new JUSTContext();
+        }
+
         protected static object TypedNumber(decimal number)
         {
             return number * 10 % 10 == 0 ? (number <= int.MaxValue ? (object)Convert.ToInt32(number) : number) : number;
@@ -69,8 +78,12 @@ namespace JUST
         }
     }
 
-    internal class Transformer<T> : Transformer where T : ISelectableToken
+    public abstract class Transformer<T> : Transformer where T : ISelectableToken
     {
+        public Transformer(JUSTContext context) : base(context)
+        {
+        }
+
         public static object valueof(string path, JUSTContext context)
         {
             var selector = context.Resolve<T>(context.Input);
