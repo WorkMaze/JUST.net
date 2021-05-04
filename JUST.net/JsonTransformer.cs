@@ -446,7 +446,10 @@ namespace JUST
                             parentArray = new Dictionary<string, JArray> { { alias, array } };
                         }
 
-                        arrayToForm = new JArray();
+                        if (arrayToForm == null)
+                        {
+                            arrayToForm = new JArray();
+                        }
                         if (!isDictionary)
                         {
                             while (elements.MoveNext())
