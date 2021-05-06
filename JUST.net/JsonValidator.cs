@@ -19,7 +19,7 @@ namespace JUST
 
         public void AddSchema(string prefix,string schemaJson)
         {
-            if (prefix == string.Empty)
+            if (string.IsNullOrEmpty(prefix))
                 schemaNoPrefix = schemaJson;
             else
             {
@@ -29,7 +29,7 @@ namespace JUST
             }
         }
 
-        public async void Validate()
+        public async Task Validate()
         {
             List<string> errors = null;
 
