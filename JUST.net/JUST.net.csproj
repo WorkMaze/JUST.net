@@ -14,8 +14,8 @@ This will repace the JUST and JUST.NETCore packages.</Description>
     <RepositoryUrl>https://github.com/WorkMaze/JUST.net</RepositoryUrl>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
-    <PackageReleaseNotes>Looping within context</PackageReleaseNotes>
-    <Version>4.0.2</Version>
+    <PackageReleaseNotes>DataTransformer non static/with JUSTContext</PackageReleaseNotes>
+    <Version>4.1.1</Version>
     <AssemblyVersion>4.0.0.0</AssemblyVersion>
     <FileVersion>4.0.0.0</FileVersion>
   </PropertyGroup>
@@ -23,7 +23,7 @@ This will repace the JUST and JUST.NETCore packages.</Description>
   <ItemGroup>
     <PackageReference Include="JmesPath.Net" Version="1.0.125" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.1" />
-    <PackageReference Include="Newtonsoft.Json.Schema" Version="3.0.10" />
+    <PackageReference Include="NJsonSchema" Version="10.4.1" />
     <PackageReference Include="System.Reflection" Version="4.3.0" />
     <PackageReference Include="System.Reflection.Primitives" Version="4.3.0" />
   </ItemGroup>

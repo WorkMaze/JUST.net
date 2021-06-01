@@ -32,11 +32,11 @@ namespace JUST.UnitTests
         public void StringMathFunctions()
         {
             const string input = "{ \"stringref\": \"thisisandveryunuasualandlongstring\", \"numbers\": [ 1, 2, 3, 4, 5 ] }";
-            const string transformer = "{ \"stringresult\": { \"lastindexofand\": \"#lastindexof(#valueof($.stringref),and)\", \"firstindexofand\": \"#firstindexof(#valueof($.stringref),and)\", \"substring\": \"#substring(#valueof($.stringref),9,11)\", \"concat\": \"#concat(#valueof($.menu.id.file),#valueof($.menu.value.Window))\", \"length_string\": \"#length(#valueof($.stringref))\", \"length_array\": \"#length(#valueof($.numbers))\" }, \"mathresult\": { \"add\": \"#add(#valueof($.numbers[0]),3)\", \"subtract\": \"#subtract(#valueof($.numbers[4]),#valueof($.numbers[0]))\", \"multiply\": \"#multiply(2,#valueof($.numbers[2]))\", \"divide\": \"#divide(9,3)\", \"round\": \"#round(10.005,2)\" } }";
+            const string transformer = "{ \"stringresult\": { \"lastindexofand\": \"#lastindexof(#valueof($.stringref),and)\", \"firstindexofand\": \"#firstindexof(#valueof($.stringref),and)\", \"substring\": \"#substring(#valueof($.stringref),9,11)\", \"concat\": \"#concat(#valueof($.menu.id.file),#valueof($.menu.value.Window))\", \"length_string\": \"#length(#valueof($.stringref))\", \"length_array\": \"#length(#valueof($.numbers))\", \"length_path\": \"#length($.numbers)\" }, \"mathresult\": { \"add\": \"#add(#valueof($.numbers[0]),3)\", \"subtract\": \"#subtract(#valueof($.numbers[4]),#valueof($.numbers[0]))\", \"multiply\": \"#multiply(2,#valueof($.numbers[2]))\", \"divide\": \"#divide(9,3)\", \"round\": \"#round(10.005,2)\" } }";
 
             var result = new JsonTransformer().Transform(transformer, input);
 
-            Assert.AreEqual("{\"stringresult\":{\"lastindexofand\":21,\"firstindexofand\":6,\"substring\":\"veryunuasua\",\"concat\":null,\"length_string\":34,\"length_array\":5},\"mathresult\":{\"add\":4,\"subtract\":4,\"multiply\":6,\"divide\":3,\"round\":10.01}}", result);
+            Assert.AreEqual("{\"stringresult\":{\"lastindexofand\":21,\"firstindexofand\":6,\"substring\":\"veryunuasua\",\"concat\":null,\"length_string\":34,\"length_array\":5,\"length_path\":5},\"mathresult\":{\"add\":4,\"subtract\":4,\"multiply\":6,\"divide\":3,\"round\":10.01}}", result);
         }
 
         [Test]
@@ -54,7 +54,7 @@ namespace JUST.UnitTests
         public void AggregateFunctions()
         {
             const string input = "{ \"d\": [ \"one\", \"two\", \"three\" ], \"numbers\": [ 1, 2, 3, 4, 5 ] }";
-            const string transformer = "{ \"conacted\": \"#concatall(#valueof($.d))\", \"sum\": \"#sum(#valueof($.numbers))\", \"avg\": \"#average(#valueof($.numbers))\", \"min\": \"#min(#valueof($.numbers))\", \"max\": \"#max(#valueof($.numbers))\" }";
+            const string transformer = "{ \"conacted\": \"#concatall(#valueof($.d))\", \"sum\": \"#sum($.numbers)\", \"avg\": \"#average(#valueof($.numbers))\", \"min\": \"#min($.numbers)\", \"max\": \"#max(#valueof($.numbers))\" }";
 
             var result = new JsonTransformer().Transform(transformer, input);
 
@@ -192,7 +192,7 @@ namespace JUST.UnitTests
         public void ApplyOver()
         {
             var input = "{\"d\": [ \"one\", \"two\", \"three\" ], \"values\": [ \"z\", \"c\", \"n\" ]}";
-            var transformer = "{ \"result\": \"#applyover({ 'condition': { '#loop($.values)': { 'test': '#ifcondition(#stringcontains(#valueof($.d[0]),#currentvalue()),true,yes,no)' } } }, '#exists($.condition[?(@.test=='yes')])')\" }";
+            var transformer = "{ \"result\": \"#applyover({ 'condition': { '#loop($.values)': { 'test': '#ifcondition(#stringcontains(#valueof($.d[0]),#currentvalue()),True,yes,no)' } } }, '#exists($.condition[?(@.test=='yes')])')\" }";
             var context = new JUSTContext
             {
                 EvaluationMode = EvaluationMode.Strict

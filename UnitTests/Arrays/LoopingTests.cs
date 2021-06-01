@@ -301,5 +301,27 @@ namespace JUST.UnitTests.Arrays
 
             Assert.AreEqual("{\"id\":\"8b8b9d6e-4574-466b-b2c3-0062ad0642fe\",\"description\":\"test1\",\"maintypes\":[{\"id\":\"3ac89bbd-0de2-4692-a077-1d5d41efab69\",\"name\":\"MainType1\",\"order\":1,\"subTypes\":[{\"name\":\"SubType1\"}]}]}", result);
         }
+
+        [Test]
+        public void FunctionWithoutAlias()
+        {
+            const string transformer = "{ \"result\": { \"#loop($.NestedLoop.Organization.Employee, employee)\": { \"Name\": \"#currentvalueatpath($.Name)\"} } }";
+
+            var result = new JsonTransformer().Transform(transformer, ExampleInputs.NestedArrays);
+
+            Assert.AreEqual("{\"result\":[{\"Name\":\"E2\"},{\"Name\":\"E1\"}]}", result);
+
+        }
+
+        [Test]
+        public void TwoLoopsSingleProperty()
+        {
+            var input = "{ \"ComponentA\": [ { \"ComponentAId\": 1, \"ComponentAType\": \"T1\", \"ComponentAKind\": \"K1\" } ], \"ComponentB\": [ { \"ComponentBId\": 2, \"ComponentBType\": \"T2\", \"ComponentBKind\": \"K2\" } ]}";
+            var transformer = "{ \"GenericComponent\": { \"#loop($.ComponentA)\": { \"GenericComponentId\": \"#currentvalueatpath($.ComponentAId)\", \"GenericComponentType\": \"#currentvalueatpath($.ComponentAType)\", \"GenericComponentKind\": \"#currentvalueatpath($.ComponentAKind)\" }, \"#loop($.ComponentB)\": { \"GenericComponentId\": \"#currentvalueatpath($.ComponentBId)\", \"GenericComponentType\": \"#currentvalueatpath($.ComponentBType)\", \"GenericComponentKind\": \"#currentvalueatpath($.ComponentBKind)\" } }}";
+
+            var result = new JsonTransformer().Transform(transformer, input);
+
+            Assert.AreEqual("{\"GenericComponent\":[{\"GenericComponentId\":1,\"GenericComponentType\":\"T1\",\"GenericComponentKind\":\"K1\"},{\"GenericComponentId\":2,\"GenericComponentType\":\"T2\",\"GenericComponentKind\":\"K2\"}]}", result);
+        }
     }
 }

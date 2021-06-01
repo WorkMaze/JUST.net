@@ -3,7 +3,7 @@ using System;
 
 namespace JUST.UnitTests
 {
-    [TestFixture]
+    [TestFixture, Category("Bulk")]
     public class BulkFunctionsTests
     {
         [Test]
@@ -23,7 +23,7 @@ namespace JUST.UnitTests
 
             var result = new JsonTransformer().Transform(transformer, ExampleInputs.Menu);
 
-            Assert.AreEqual("{\"menu\":{\"id\":\"popup\",\"value\":{\"Window\":\"popup\"},\"popup\":{\"menuitem\":[{\"value\":\"New\",\"onclick\":{\"action\":\"CreateNewDoc()\"}},{\"value\":\"Open\",\"onclick\":\"OpenDoc()\"},{\"value\":\"Close\",\"onclick\":\"CloseDoc()\"}]}}}", result);
+            Assert.AreEqual("{\"menu\":{\"id\":\"popup\",\"value\":{\"Window\":\"popup\"},\"popup\":{\"menuitem\":[{\"value\":\"New\",\"onclick\":{\"action\":\"CreateNewDoc()\"}},{\"value\":\"Open\",\"onclick\":\"OpenDoc()\"},{\"value\":\"Close\",\"onclick\":\"CloseDoc()\"}],\"submenuitem\":\"CloseSession()\"}}}", result);
         }
 
         [Test]
@@ -33,7 +33,7 @@ namespace JUST.UnitTests
 
             var result = new JsonTransformer().Transform(transformer, ExampleInputs.Menu);
 
-            Assert.AreEqual("{\"menu\":{\"id\":{\"Window\":\"popup\"},\"value\":{\"Window\":\"popup\"},\"popup\":{\"menuitem\":[{\"value\":\"New\",\"onclick\":{\"action\":\"CreateNewDoc()\"}},{\"value\":\"Open\",\"onclick\":\"OpenDoc()\"},{\"value\":\"Close\",\"onclick\":\"CloseDoc()\"}]}}}", result);
+            Assert.AreEqual("{\"menu\":{\"id\":{\"Window\":\"popup\"},\"value\":{\"Window\":\"popup\"},\"popup\":{\"menuitem\":[{\"value\":\"New\",\"onclick\":{\"action\":\"CreateNewDoc()\"}},{\"value\":\"Open\",\"onclick\":\"OpenDoc()\"},{\"value\":\"Close\",\"onclick\":\"CloseDoc()\"}],\"submenuitem\":\"CloseSession()\"}}}", result);
         }
 
         [Test]
@@ -114,6 +114,48 @@ namespace JUST.UnitTests
             var result = Assert.Throws<ArgumentException>(() => new JsonTransformer().Transform(transformer, ExampleInputs.Menu));
 
             Assert.AreEqual("Invalid path for #delete: '#valueof($.boolean)' resolved to null!", result.Message);
+        }
+
+        [Test]
+        public void CopyAddUnknownProperty()
+        {
+            const string input = "{ \"unknown-property\": \"value\", \"known-property\": { \"unknown-sub-property1\": \"value1\", \"unknown-sub-property2\": \"value2\", \"unknown-sub-propertyN\": \"valueN\" } }";
+            const string transformer = "{ \"#\": [ \"#copy($)\" ], \"added-property\": 1 }";
+
+            var result = new JsonTransformer().Transform(transformer, input);
+
+            Assert.AreEqual("{\"added-property\":1,\"unknown-property\":\"value\",\"known-property\":{\"unknown-sub-property1\":\"value1\",\"unknown-sub-property2\":\"value2\",\"unknown-sub-propertyN\":\"valueN\"}}", result);
+        }
+
+        [Test]
+        public void CopyAddKnownProperty()
+        {
+            const string input = "{ \"unknown-property\": \"value\", \"known-property\": { \"unknown-sub-property1\": \"value1\", \"unknown-sub-property2\": \"value2\", \"unknown-sub-propertyN\": \"valueN\" } }";
+            const string transformer = "{ \"#\": [ \"#copy($)\" ], \"known-property\": { \"additional-sub-property\": \"value\" } }";
+
+            var result = new JsonTransformer(new JUSTContext { EvaluationMode = EvaluationMode.AddOrReplaceProperties }).Transform(transformer, input);
+
+            Assert.AreEqual("{\"known-property\":{\"additional-sub-property\":\"value\",\"unknown-sub-property1\":\"value1\",\"unknown-sub-property2\":\"value2\",\"unknown-sub-propertyN\":\"valueN\"},\"unknown-property\":\"value\"}", result);
+        }
+
+        [Test]
+        public void CopyReplaceProperty()
+        {
+            const string transformer = "{ \"#\": [ \"#copy($.menu)\" ], \"id\": 1 }";
+
+            var result = new JsonTransformer(new JUSTContext { EvaluationMode = EvaluationMode.AddOrReplaceProperties }).Transform(transformer, ExampleInputs.Menu);
+
+            Assert.AreEqual("{\"id\":1,\"value\":{\"Window\":\"popup\"},\"popup\":{\"menuitem\":[{\"value\":\"New\",\"onclick\":{\"action\":\"CreateNewDoc()\"}},{\"value\":\"Open\",\"onclick\":\"OpenDoc()\"},{\"value\":\"Close\",\"onclick\":\"CloseDoc()\"}],\"submenuitem\":\"CloseSession()\"}}", result);
+        }
+
+        [Test]
+        public void CopyReplaceSubProperty()
+        {
+            const string transformer = "{ \"#\": [ \"#copy($.menu)\" ], \"popup\": { \"menuitem\": [] } }";
+
+            var result = new JsonTransformer(new JUSTContext { EvaluationMode = EvaluationMode.AddOrReplaceProperties }).Transform(transformer, ExampleInputs.Menu);
+
+            Assert.AreEqual("{\"popup\":{\"menuitem\":[],\"submenuitem\":\"CloseSession()\"},\"id\":{\"file\":\"csv\"},\"value\":{\"Window\":\"popup\"}}", result);
         }
     }
 }
