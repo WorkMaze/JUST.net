@@ -449,7 +449,6 @@ namespace JUST
                             while (elements.MoveNext())
                             {
                                 JToken clonedToken = childToken.DeepClone();
-
                                 if (currentArrayToken.ContainsKey(alias))
                                 {
                                     currentArrayToken[alias] = elements.Current;
@@ -459,7 +458,6 @@ namespace JUST
                                     currentArrayToken.Add(alias, elements.Current);
                                 }
                                 RecursiveEvaluate(clonedToken, parentArray, currentArrayToken);
-
                                 foreach (JToken replacedProperty in clonedToken.Children())
                                 {
                                     arrayToForm.Add(replacedProperty.Type != JTokenType.Null ? replacedProperty : new JObject());
@@ -472,7 +470,15 @@ namespace JUST
                             while (elements.MoveNext())
                             {
                                 JToken clonedToken = childToken.DeepClone();
-                                RecursiveEvaluate(clonedToken, new Dictionary<string, JArray> { { alias, array } }, new Dictionary<string, JToken> { { alias, elements.Current } });
+                                if (currentArrayToken.ContainsKey(alias))
+                                {
+                                    currentArrayToken[alias] = elements.Current;
+                                }
+                                else
+                                {
+                                    currentArrayToken.Add(alias, elements.Current);
+                                }
+                                RecursiveEvaluate(clonedToken, parentArray, currentArrayToken);
                                 foreach (JToken replacedProperty in clonedToken.Children().Select(t => t.First))
                                 {
                                     dictToForm.Add(replacedProperty);
