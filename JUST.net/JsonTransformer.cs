@@ -606,7 +606,10 @@ namespace JUST
                 }
                 else
                 {
-                    arrayToken.Add(JToken.FromObject(itemToAdd));
+                    if (itemToAdd != null)
+                    {
+                        arrayToken.Add(JToken.FromObject(itemToAdd));
+                    }
                 }
             }
         }

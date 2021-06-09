@@ -323,5 +323,19 @@ namespace JUST.UnitTests.Arrays
 
             Assert.AreEqual("{\"GenericComponent\":[{\"GenericComponentId\":1,\"GenericComponentType\":\"T1\",\"GenericComponentKind\":\"K1\"},{\"GenericComponentId\":2,\"GenericComponentType\":\"T2\",\"GenericComponentKind\":\"K2\"}]}", result);
         }
+
+        [Test]
+        public void ArrayWithNullValue()
+        {
+            var input = "{ \"Systems\": [ ] }";
+            var transformer = "{ \"systemIds\": [ \"#valueof($.Systems[:].Id)\" ] }";
+            var context = new JUSTContext
+            {
+                EvaluationMode = EvaluationMode.Strict
+            };
+            var result = new JsonTransformer(context).Transform(transformer, input);
+
+            Assert.AreEqual("{\"systemIds\":[]}", result);
+        }
     }
 }
