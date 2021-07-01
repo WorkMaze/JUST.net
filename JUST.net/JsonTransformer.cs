@@ -129,6 +129,8 @@ namespace JUST
                     }
                     else
                     {
+                        isBulk = false;
+
                         if (ExpressionHelper.TryParseFunctionNameAndArguments(property.Name, out string functionName, out string arguments))
                         {
                             switch(functionName)
@@ -449,7 +451,6 @@ namespace JUST
                             while (elements.MoveNext())
                             {
                                 JToken clonedToken = childToken.DeepClone();
-
                                 if (currentArrayToken.ContainsKey(alias))
                                 {
                                     currentArrayToken[alias] = elements.Current;
@@ -459,7 +460,6 @@ namespace JUST
                                     currentArrayToken.Add(alias, elements.Current);
                                 }
                                 RecursiveEvaluate(clonedToken, parentArray, currentArrayToken);
-
                                 foreach (JToken replacedProperty in clonedToken.Children())
                                 {
                                     arrayToForm.Add(replacedProperty.Type != JTokenType.Null ? replacedProperty : new JObject());
@@ -472,7 +472,15 @@ namespace JUST
                             while (elements.MoveNext())
                             {
                                 JToken clonedToken = childToken.DeepClone();
-                                RecursiveEvaluate(clonedToken, new Dictionary<string, JArray> { { alias, array } }, new Dictionary<string, JToken> { { alias, elements.Current } });
+                                if (currentArrayToken.ContainsKey(alias))
+                                {
+                                    currentArrayToken[alias] = elements.Current;
+                                }
+                                else
+                                {
+                                    currentArrayToken.Add(alias, elements.Current);
+                                }
+                                RecursiveEvaluate(clonedToken, parentArray, currentArrayToken);
                                 foreach (JToken replacedProperty in clonedToken.Children().Select(t => t.First))
                                 {
                                     dictToForm.Add(replacedProperty);
@@ -758,6 +766,7 @@ namespace JUST
                     var value = ParseArgument(array, currentArrayElement, arguments[1]);
                     var equal = ComparisonHelper.Equals(condition, value, Context.EvaluationMode);
                     var index = (equal) ? 2 : 3;
+
                     output = ParseArgument(array, currentArrayElement, arguments[index]);
                 }
                 else
