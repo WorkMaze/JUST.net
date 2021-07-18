@@ -243,5 +243,16 @@ namespace JUST.UnitTests
 
             Assert.AreEqual("{\"concat\":[{\"code\":\"001\",\"display\":\"Drug1\"},{\"code\":\"002\",\"display\":\"Drug2\"},{\"code\":\"pa1\",\"display\":\"PA1\"},{\"code\":\"pa2\",\"display\":\"PA2\"}],\"multipleConcat\":[{\"code\":\"001\",\"display\":\"Drug1\"},{\"code\":\"002\",\"display\":\"Drug2\"},{\"code\":\"pa1\",\"display\":\"PA1\"},{\"code\":\"pa2\",\"display\":\"PA2\"},{\"code\":\"sa1\",\"display\":\"SA1\"},{\"code\":\"sa2\",\"display\":\"SA2\"}],\"xconcat\":[{\"code\":\"001\",\"display\":\"Drug1\"},{\"code\":\"002\",\"display\":\"Drug2\"},{\"code\":\"pa1\",\"display\":\"PA1\"},{\"code\":\"pa2\",\"display\":\"PA2\"},{\"code\":\"sa1\",\"display\":\"SA1\"},{\"code\":\"sa2\",\"display\":\"SA2\"}]}", result);
         }
+
+        [Test]
+        public void TypeCheck()
+        {
+            const string input = "{ \"integer\": 0, \"decimal\": 1.23, \"boolean\": true, \"string\": \"abc\", \"array\": [ \"abc\", \"xyz\" ] }";
+            const string transformer = "{ \"isNumberTrue1\": \"#isnumber(#valueof($.integer))\", \"isNumberTrue2\": \"#isnumber(#valueof($.decimal))\", \"isNumberFalse\": \"#isnumber(#valueof($.boolean))\", \"isBooleanTrue\": \"#isboolean(#valueof($.boolean))\", \"isBooleanFalse\": \"#isboolean(#valueof($.integer))\", \"isStringTrue\": \"#isstring(#valueof($.string))\", \"isStringFalse\": \"#isstring(#valueof($.array))\", \"isArrayTrue\": \"#isarray(#valueof($.array))\", \"isArrayFalse\": \"#isarray(#valueof($.decimal))\" }";
+
+            var result = new JsonTransformer().Transform(transformer, input);
+
+            Assert.AreEqual("{\"isNumberTrue1\":true,\"isNumberTrue2\":true,\"isNumberFalse\":false,\"isBooleanTrue\":true,\"isBooleanFalse\":false,\"isStringTrue\":true,\"isStringFalse\":false,\"isArrayTrue\":true,\"isArrayFalse\":false}", result);
+        }
     }
 }
