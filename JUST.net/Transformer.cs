@@ -753,5 +753,33 @@ namespace JUST
             }
             return result;
         }
+
+        public static bool isnumber(object val, JUSTContext context)
+        {
+            try 
+            { 
+                object r = ReflectionHelper.GetTypedValue(typeof(decimal), val, context.EvaluationMode);
+                return r is decimal;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public static bool isboolean(object val, JUSTContext context)
+        {
+            return val.GetType() == typeof(bool);
+        }
+
+        public static bool isstring(object val, JUSTContext context)
+        {
+            return val.GetType() == typeof(string);
+        }
+
+        public static bool isarray(object val, JUSTContext context)
+        {
+            return val.GetType().IsArray;
+        }
     }
 }
