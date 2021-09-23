@@ -301,5 +301,57 @@ namespace JUST.UnitTests.Arrays
 
             Assert.AreEqual("{\"id\":\"8b8b9d6e-4574-466b-b2c3-0062ad0642fe\",\"description\":\"test1\",\"maintypes\":[{\"id\":\"3ac89bbd-0de2-4692-a077-1d5d41efab69\",\"name\":\"MainType1\",\"order\":1,\"subTypes\":[{\"name\":\"SubType1\"}]}]}", result);
         }
+
+        [Test]
+        public void FunctionWithoutAlias()
+        {
+            const string transformer = "{ \"result\": { \"#loop($.NestedLoop.Organization.Employee, employee)\": { \"Name\": \"#currentvalueatpath($.Name)\"} } }";
+
+            var result = new JsonTransformer().Transform(transformer, ExampleInputs.NestedArrays);
+
+            Assert.AreEqual("{\"result\":[{\"Name\":\"E2\"},{\"Name\":\"E1\"}]}", result);
+
+        }
+
+        [Test]
+        public void TwoLoopsSingleProperty()
+        {
+            var input = "{ \"ComponentA\": [ { \"ComponentAId\": 1, \"ComponentAType\": \"T1\", \"ComponentAKind\": \"K1\" } ], \"ComponentB\": [ { \"ComponentBId\": 2, \"ComponentBType\": \"T2\", \"ComponentBKind\": \"K2\" } ]}";
+            var transformer = "{ \"GenericComponent\": { \"#loop($.ComponentA)\": { \"GenericComponentId\": \"#currentvalueatpath($.ComponentAId)\", \"GenericComponentType\": \"#currentvalueatpath($.ComponentAType)\", \"GenericComponentKind\": \"#currentvalueatpath($.ComponentAKind)\" }, \"#loop($.ComponentB)\": { \"GenericComponentId\": \"#currentvalueatpath($.ComponentBId)\", \"GenericComponentType\": \"#currentvalueatpath($.ComponentBType)\", \"GenericComponentKind\": \"#currentvalueatpath($.ComponentBKind)\" } }}";
+
+            var result = new JsonTransformer().Transform(transformer, input);
+
+            Assert.AreEqual("{\"GenericComponent\":[{\"GenericComponentId\":1,\"GenericComponentType\":\"T1\",\"GenericComponentKind\":\"K1\"},{\"GenericComponentId\":2,\"GenericComponentType\":\"T2\",\"GenericComponentKind\":\"K2\"}]}", result);
+        }
+
+        [Test]
+        public void LoopOverPropertiesInsideLoop()
+        {
+            var input = "{ \"Systems\": [ { \"Id\": \"SystemId1\", \"Name\": \"Name of system 1\", \"Components\": [ { \"Id\": \"CompId1\", \"Name\": \"comp 1\", \"Properties\": { \"PropA\": \"valueA\", \"Prop2\": 2.2 } }, { \"Id\": \"CompId2\", \"Name\": \"comp 2\", \"Properties\": { \"PropC\": \"valuec\", \"Prop2\": 222.222 } } ] }, { \"Id\": \"SystemId2\", \"Name\": \"Name of system 2\", \"Components\": [ { \"Id\": \"CompId3\", \"Name\": \"comp 3\", \"Properties\": { \"PropD\": \"valueD\" } }, { \"Id\": \"CompId4\", \"Name\": \"comp 4\", \"Properties\": { \"Prop1\": 11, \"Prop2\": 22.22 } } ] } ]}";
+            var transformer = "{ \"result\": { \"#loop($.Systems,outer)\": { \"#eval(#xconcat(System.,#currentvalueatpath($.Id),.Name))\": \"#currentvalueatpath($.Name)\", \"components\": { \"#loop($.Components,inner)\": { \"#eval(#xconcat(System.,#currentvalueatpath($.Id,outer),.Componets.,#currentvalueatpath($.Id,inner)))\": \"#currentvalueatpath($.Name,inner)\", \"properties\": { \"#loop($.Properties)\": { \"#eval(#xconcat(System.,#currentvalueatpath($.Id,outer),.Components.,#currentvalueatpath($.Id,inner),.,#currentproperty()))\": \"#currentvalueatpath(#xconcat($.,#currentproperty()))\" } } } } } } }";
+
+            var context = new JUSTContext
+            {
+                EvaluationMode = EvaluationMode.Strict
+            };
+            var result = new JsonTransformer(context).Transform(transformer, input);
+
+            Assert.AreEqual("{\"result\":[{\"components\":[{\"properties\":{\"System.SystemId1.Components.CompId1.PropA\":\"valueA\",\"System.SystemId1.Components.CompId1.Prop2\":2.2},\"System.SystemId1.Componets.CompId1\":\"comp 1\"},{\"properties\":{\"System.SystemId1.Components.CompId2.PropC\":\"valuec\",\"System.SystemId1.Components.CompId2.Prop2\":222.222},\"System.SystemId1.Componets.CompId2\":\"comp 2\"}],\"System.SystemId1.Name\":\"Name of system 1\"},{\"components\":[{\"properties\":{\"System.SystemId2.Components.CompId3.PropD\":\"valueD\"},\"System.SystemId2.Componets.CompId3\":\"comp 3\"},{\"properties\":{\"System.SystemId2.Components.CompId4.Prop1\":11,\"System.SystemId2.Components.CompId4.Prop2\":22.22},\"System.SystemId2.Componets.CompId4\":\"comp 4\"}],\"System.SystemId2.Name\":\"Name of system 2\"}]}", result);
+        }
+
+        [Test]
+        public void ArrayWithNullValue()
+        {
+            var input = "{ \"Systems\": [ ] }";
+            var transformer = "{ \"systemIds\": [ \"#valueof($.Systems[:].Id)\" ] }";
+
+            var context = new JUSTContext
+            {
+                EvaluationMode = EvaluationMode.Strict
+            };
+            var result = new JsonTransformer(context).Transform(transformer, input);
+
+            Assert.AreEqual("{\"systemIds\":[]}", result);
+        }
     }
 }

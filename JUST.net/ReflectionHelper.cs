@@ -98,9 +98,22 @@ namespace JUST
             {
                 var assemblyFileName = !assemblyName.EndsWith(".dll") ? $"{assemblyName}.dll" : assemblyName;
 
+                string GetName(Assembly a)
+                {
+                    var name = a.ManifestModule.Name;
+                    //https://docs.microsoft.com/en-us/dotnet/api/system.reflection.module.fullyqualifiedname?view=net-5.0
+                    //If the assembly for this module was loaded from a byte array then
+                    //the FullyQualifiedName and Name for the module will be: <Unknown>.
+                    if (name == "<Unknown>")
+                    {
+                        return a.ManifestModule.ScopeName;
+                    }
+
+                    return name;
+                }
                 //SingleOrDefault fails, dll registrated twice????
                 //Possible alternative to AppDomain: https://github.com/dotnet/coreclr/issues/14680
-                var assembly = assemblies.FirstOrDefault(a => a.ManifestModule.Name == assemblyFileName);
+                var assembly = assemblies.FirstOrDefault(a => GetName(a) == assemblyFileName);
                 if (assembly == null)
                 {
                     var assemblyLocation = Path.Combine(Directory.GetCurrentDirectory(), assemblyFileName);

@@ -1,9 +1,7 @@
-﻿using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using Newtonsoft.Json.Schema;
+﻿using NJsonSchema;
+using NJsonSchema.Validation;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace JUST
@@ -12,7 +10,7 @@ namespace JUST
     {
         private Dictionary<string, string> schemaCollection;
         private string schemaNoPrefix;
-        private string inputJsonString;
+        private readonly string inputJsonString;
 
         public JsonValidator(string inputJson)
         {
@@ -21,7 +19,7 @@ namespace JUST
 
         public void AddSchema(string prefix,string schemaJson)
         {
-            if (prefix == string.Empty)
+            if (string.IsNullOrEmpty(prefix))
                 schemaNoPrefix = schemaJson;
             else
             {
@@ -31,46 +29,19 @@ namespace JUST
             }
         }
 
-        public void Validate()
+        public async Task Validate()
         {
             List<string> errors = null;
 
-            SchemaValidationEventHandler handler = new SchemaValidationEventHandler(HandleEvent);
             if (!string.IsNullOrEmpty(schemaNoPrefix))
             {
-                JObject xSchemaToken = JsonConvert.DeserializeObject<JObject>(schemaNoPrefix);
-                JSchema schema = JSchema.Parse(JsonConvert.SerializeObject(xSchemaToken));
-                JObject json = JsonConvert.DeserializeObject<JObject>(inputJsonString);
-                try
-                {
-                    json.Validate(schema, handler);
-                }
-                catch(Exception e)
-                {
-                    if (errors == null)
-                        errors = new List<string>();
-                    errors.Add(e.Message);
-                }
+                errors = await Validate(schemaNoPrefix, inputJsonString);
             }
-            if(schemaCollection != null)
+            if (schemaCollection != null)
             {
-                foreach(KeyValuePair<string,string> schemaPair in schemaCollection)
+                foreach (KeyValuePair<string, string> schemaPair in schemaCollection)
                 {
-
-                    JObject xSchemaToken = JsonConvert.DeserializeObject<JObject>(schemaPair.Value);
-                    PrefixKey(xSchemaToken, schemaPair.Key);
-                    JSchema schema = JSchema.Parse(JsonConvert.SerializeObject(xSchemaToken));
-                    JObject json = JsonConvert.DeserializeObject<JObject>(inputJsonString);
-                    try
-                    {
-                        json.Validate(schema, handler);
-                    }
-                    catch (Exception e)
-                    {
-                        if (errors == null)
-                            errors = new List<string>();
-                        errors.Add(e.Message);
-                    }
+                    errors.AddRange(await Validate(schemaPair.Value, inputJsonString));
                 }
             }
 
@@ -78,47 +49,18 @@ namespace JUST
             {
                 throw new Exception(string.Join(" AND ", errors.ToArray()));
             }
-
-
         }
 
-        private static void PrefixKey(JObject jo, string prefix)
+        private async Task<List<string>> Validate(string schemaJson, string inputJson)
         {
-            foreach (JProperty jp in jo.Properties().ToList())
+            List<string> result = new List<string>();
+            JsonSchema xSchemaToken = await JsonSchema.FromJsonAsync(schemaJson);
+            ICollection<ValidationError> schemaErrors = xSchemaToken.Validate(inputJson);
+            foreach (var error in schemaErrors)
             {
-                if (jp.Value.Type == JTokenType.Object)
-                {
-                    PrefixKey((JObject)jp.Value, prefix);
-                }
-                else if (jp.Value.Type == JTokenType.Array)
-                {
-                    foreach (JToken child in jp.Value)
-                    {
-                        if (child.Type == JTokenType.Object)
-                        {
-                            PrefixKey((JObject)child, prefix);
-                        }
-                    }
-                }
-
-                if (jp.Name.ToLower() != "type" && jp.Name.ToLower() != "title"
-                    && jp.Name.ToLower() != "description" && jp.Name.ToLower() != "default"
-                    && jp.Name.ToLower() != "enum" && jp.Name.ToLower() != "properties"
-                    && jp.Name.ToLower() != "additionalproperties")
-                {
-                    string name = prefix + "." + jp.Name;
-                    jp.Replace(new JProperty(name, jp.Value));
-                }
-
+                result.Add(error.ToString());
             }
+            return result;
         }
-
-
-        private static void HandleEvent(object sender, SchemaValidationEventArgs args)
-        {
-            throw new Exception( args.Message);
-           
-        }
-
     }
 }
