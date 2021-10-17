@@ -33,7 +33,7 @@ namespace JUST.UnitTests
         public void LoopingRoot()
         {
             var input = "[{\"Id\":1,\"Fields\":{\"Email\":{\"Name\":\"Email\",\"FieldType\":3,\"Value\":\"test1@test.com\"}},\"CreatedAt\":\"2021-10-07T13:40:14.813Z\"},{\"Id\":2,\"Fields\":{\"Email\":{\"Name\":\"Email\",\"FieldType\":3,\"Value\":\"test2@test.com\"}},\"CreatedAt\":\"2021-10-07T13:44:24.48Z\"},{\"Id\":3,\"Fields\":{\"Email\":{\"Name\":\"Email\",\"FieldType\":3,\"Value\":\"test3@test.com\"}},\"CreatedAt\":\"2021-10-07T13:45:09.417Z\"}]";
-            var transformer = "[{\"#loop($)\":{\"#eval(#currentvalueatpath($.Id))\":\"#currentvalueatpath($.Fields['Email'].Value)\"}}]";
+            var transformer = "{\"#loop($)\":{\"#eval(#currentvalueatpath($.Id))\":\"#currentvalueatpath($.Fields['Email'].Value)\"}}";
 
             var context = new JUSTContext
             {
