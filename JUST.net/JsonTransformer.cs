@@ -348,8 +348,7 @@ namespace JUST
         {
             if (loopProperties != null)
             {
-                JObject obj = parentToken as JObject;
-                if (obj != null)
+                if (parentToken is JObject obj)
                 {
                     foreach (string propertyToDelete in loopProperties)
                     {
@@ -367,8 +366,7 @@ namespace JUST
 
             if (condProps != null)
             {
-                JObject obj = parentToken as JObject;
-                if (obj != null)
+                if (parentToken is JObject obj)
                 {
                     foreach (string propertyToDelete in condProps)
                     {
@@ -455,8 +453,7 @@ namespace JUST
                     arrayToken = arr;
                 }
 
-                JArray array = arrayToken as JArray;
-                if (array != null)
+                if (arrayToken is JArray array)
                 {
                     using (IEnumerator<JToken> elements = array.GetEnumerator())
                     {
@@ -531,8 +528,7 @@ namespace JUST
         private void ConditionalGroupOperation(string propertyName, string arguments, IDictionary<string, JArray> parentArray, IDictionary<string, JToken> currentArrayToken, ref List<string> condProps, ref List<JToken> tokenToForm, JToken childToken)
         {
             object functionResult = ParseFunction(arguments, parentArray, currentArrayToken);
-            bool result = false;
-
+            bool result;
             try
             {
                 result = (bool)ReflectionHelper.GetTypedValue(typeof(bool), functionResult, Context.EvaluationMode);
@@ -701,13 +697,10 @@ namespace JUST
             foreach (JToken arrEl in children)
             {
                 object itemToAdd = arrEl.Value<JToken>();
-
                 if (arrEl.Type == JTokenType.String && arrEl.ToString().Trim().StartsWith("#"))
                 {
-                    object value = ParseFunction(arrEl.ToString(), parentArray, currentArrayToken);
-                    itemToAdd = value;
+                    itemToAdd = ParseFunction(arrEl.ToString(), parentArray, currentArrayToken);
                 }
-
                 result.Add(itemToAdd);
             }
 
@@ -777,9 +770,7 @@ namespace JUST
             try
             {
                 object output = null;
-
-                string functionName, argumentString;
-                if (!ExpressionHelper.TryParseFunctionNameAndArguments(functionString, out functionName, out argumentString))
+                if (!ExpressionHelper.TryParseFunctionNameAndArguments(functionString, out string functionName, out string argumentString))
                 {
                     return functionName;
                 }
