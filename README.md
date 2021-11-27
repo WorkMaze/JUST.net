@@ -1318,7 +1318,9 @@ Output:
 
 ## Escaping reserved characters
 
-Characters like '(' and ')' (round brackets), and ',' (comma) are considered reserved characters when used within a function (not on a regular string). Also '#' (sharp) is a reserved character when used at the start of a statement (value of property or argument of a function). To avoid parsing these characters as reserved characters you may "escape" them, adding a '/' (slash) before the reserved character. For '#', it is only necessary to escape when it occurs at the start of a statement.
+Characters like '(' and ')' (round brackets), and ',' (comma) are considered reserved characters when used within a function (not on a regular string). Also '#' (sharp) is a reserved character when used at the start of a statement (value of property or argument of a function).
+To avoid parsing these characters as reserved characters you may "escape" them, adding a character before the reserved character. By default the escape character is a '/' (slash), but one can change it in `JUSTContext` class, property `EscapeChar`. For '#', it is only necessary to escape when it occurs at the start of a statement. Don't forget to escape the 'EscapeChar' also.
+One note, it is not advisable to choose '\' (backslash) as an escape char, as it is already the escape char for JSON, it can make expressions cumbersome!
 This is especially useful when creating dynamic expressions.
 
 Consider the following input:
