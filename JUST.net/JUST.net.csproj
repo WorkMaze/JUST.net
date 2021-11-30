@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <Title>JUST - JSON Under Simple Transformation</Title>
-    <TargetFrameworks>netstandard2.0;net461</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0;net45;net461;net48</TargetFrameworks>
     <Description>This a cool .NET Standard library which enables you to transform a JSON document into another JSON document using JSON transformations using JSON path. This is the JSON equivalent of XSLT. 
 This will repace the JUST and JUST.NETCore packages.</Description>
     <Summary>This is the JSON equivalent of XSLT</Summary>
@@ -21,9 +21,9 @@ This will repace the JUST and JUST.NETCore packages.</Description>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="JmesPath.Net" Version="1.0.125" />
+    <PackageReference Include="JmesPath.Net" Version="1.0.153" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
-    <PackageReference Include="NJsonSchema" Version="10.4.1" />
+    <PackageReference Include="NJsonSchema" Version="10.5.2" />
     <PackageReference Include="System.Reflection" Version="4.3.0" />
     <PackageReference Include="System.Reflection.Primitives" Version="4.3.0" />
   </ItemGroup>
