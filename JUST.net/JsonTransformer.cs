@@ -863,11 +863,17 @@ namespace JUST
                     }
                     else if (functionName == "applyover")
                     {
-                        var contextInput = Context.Input;
+                        JToken tmpContext = Context.Input, contextInput = Context.Input;
+                        if (array != null)
+                        {
+                            var alias = ParseLoopAlias(listParameters, 3, array.Last().Key);
+                            contextInput = currentArrayElement[alias];
+                        }
+
                         var input = JToken.Parse(Transform(parameters[0].ToString(), contextInput.ToString()));
                         Context.Input = input;
                         output = ParseFunction(parameters[1].ToString().Trim().Trim('\''), array, currentArrayElement);
-                        Context.Input = contextInput;
+                        Context.Input = tmpContext;
                     }
                     else
                     {
