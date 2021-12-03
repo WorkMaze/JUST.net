@@ -577,9 +577,16 @@ namespace JUST
         {
             object functionResult = ParseFunction(arguments, parentArray, currentArrayToken);
 
-            object val = property.Value.Type == JTokenType.String ? 
-                ParseFunction(property.Value.Value<string>(), parentArray, currentArrayToken) : 
-                property.Value;
+            object val;
+            if (property.Value.Type == JTokenType.String)
+            {
+                val = ParseFunction(property.Value.Value<string>(), parentArray, currentArrayToken);
+            }
+            else
+            {
+                RecursiveEvaluate(property.Value, parentArray, currentArrayToken);
+                val = property.Value;
+            }
             JProperty clonedProperty = new JProperty(functionResult.ToString(), val);
 
             if (loopProperties == null)
