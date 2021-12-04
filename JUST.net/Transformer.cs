@@ -753,5 +753,10 @@ namespace JUST
             }
             return result;
         }
+
+        public static string stringempty()
+        {
+            return string.Empty;
+        }
     }
 }
