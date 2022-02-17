@@ -1467,7 +1467,7 @@ Output:
 
 Conditional transformation can be achieved using the *ifgroup* function.
 
-The function takes an expression as argument which should evaluate to a boolean value.
+The function can be used to include (or not) an object or a value. If it is used as property key, it takes a single argument and it will include everything inside the following scope. If it used as property value, it will include the value passed as second argument. First argument should always evaluate to a boolean value.
 
 Consider the following input:
 
@@ -1491,7 +1491,8 @@ Transformer:
         "Value1": "#valueof($.Tree.Branch)",
         "Value2": "#valueof($.Tree.Flower)"
       }
-    }
+    },
+	"Shrubs": [ "#ifgroup(#ifcondition(#valueof($.Tree.Flower),Rose,True,False),#valueof($.Tree.Flower))" ]
   }
 }
 ```
@@ -1504,7 +1505,8 @@ Output:
     "State": {
       "Value1": "leaf",
       "Value2": "Rose"
-    }
+    },
+	"Shrubs": [ "Rose" ]
   }
 }
 ```
@@ -1522,7 +1524,8 @@ Transformer:
         "Value1": "#valueof($.Tree.Branch)",
         "Value2": "#valueof($.Tree.Flower)"
       }
-    }
+    },
+	"Shrubs": [ "#ifgroup(#ifcondition(#valueof($.Tree.Flower),Olive,True,False),#valueof($.Tree.Flower))" ]
   }
 }
 ```
@@ -1531,7 +1534,8 @@ Output:
 ```JSON
 {  
   "Result":{  
-    "Header": "JsonTransform"
+    "Header": "JsonTransform",
+	"Shrubs": [ ]
   }
 }
 ```
