@@ -102,7 +102,10 @@ namespace JUST
         {
             var selector = context.Resolve<T>(context.Input);
             JToken selectedToken = selector.Select(path);
-            return selectedToken != null && selectedToken.ToString().Trim() != string.Empty;
+            return selectedToken != null && (
+                (selectedToken.Type == JTokenType.String && selectedToken.ToString().Trim() != string.Empty) || 
+                (selectedToken.Type == JTokenType.Array && selectedToken.Children().Count() > 0)
+            );
         }
 
         public static object ifcondition(object condition, object value, object trueResult, object falseResult, JUSTContext context)
@@ -752,6 +755,33 @@ namespace JUST
                 }
             }
             return result;
+        }
+        public static bool isnumber(object val, JUSTContext context)
+        {
+            try 
+            { 
+                object r = ReflectionHelper.GetTypedValue(typeof(decimal), val, context.EvaluationMode);
+                return r is decimal;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public static bool isboolean(object val, JUSTContext context)
+        {
+            return val.GetType() == typeof(bool);
+        }
+
+        public static bool isstring(object val, JUSTContext context)
+        {
+            return val.GetType() == typeof(string);
+        }
+
+        public static bool isarray(object val, JUSTContext context)
+        {
+            return val.GetType().IsArray;
         }
 
         public static string stringempty()
