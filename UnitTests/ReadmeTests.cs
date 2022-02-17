@@ -141,12 +141,12 @@ namespace JUST.UnitTests
         [Test]
         public void MultipleArgumentConstantFunctions()
         {
-            const string input = "{ \"Name\": \"Kari\", \"Surname\": \"Nordmann\", \"MiddleName\": \"Inger\", \"ContactInformation\": \"Karl johans gate:Oslo:88880000\" , \"PersonalInformation\": \"45:Married:Norwegian\",\"AgeOfMother\": 67,\"AgeOfFather\": 70 }";
-            const string transformer = "{ \"FullName\": \"#xconcat(#valueof($.Name),#constant_comma(),#valueof($.MiddleName),#constant_comma(),#valueof($.Surname))\", \"AgeOfParents\": \"#xadd(#valueof($.AgeOfMother),#valueof($.AgeOfFather))\" }";
+            const string input = "{ \"Name\": \"Kari\", \"Surname\": \"Nordmann\", \"MiddleName\": \"Inger\", \"ContactInformation\": \"Karl johans gate:Oslo:88880000\" , \"PersonalInformation\": \"45:Married:Norwegian\",\"AgeOfMother\": 67,\"AgeOfFather\": 70, \"Empty\": \"\" }";
+            const string transformer = "{ \"FullName\": \"#xconcat(#valueof($.Name),#constant_comma(),#valueof($.MiddleName),#constant_comma(),#valueof($.Surname))\", \"AgeOfParents\": \"#xadd(#valueof($.AgeOfMother),#valueof($.AgeOfFather))\", \"TestSomeEmptyString\": \"#ifcondition(#valueof($.Empty),#stringempty(),String is empty,String is not empty)\", \"TestSomeOtherString\": \"#ifcondition(#valueof($.Name),#stringempty(),String is empty,String is not empty)\" }";
 
             var result = new JsonTransformer().Transform(transformer, input);
 
-            Assert.AreEqual("{\"FullName\":\"Kari,Inger,Nordmann\",\"AgeOfParents\":137}", result);
+            Assert.AreEqual("{\"FullName\":\"Kari,Inger,Nordmann\",\"AgeOfParents\":137,\"TestSomeEmptyString\":\"String is empty\",\"TestSomeOtherString\":\"String is not empty\"}", result);
         }
 
         [Test]
