@@ -753,5 +753,10 @@ namespace JUST
             }
             return result;
         }
+
+        public static object arrayempty(JUSTContext context)
+        {
+            return new object[0];
+        }
     }
 }
