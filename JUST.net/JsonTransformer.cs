@@ -598,7 +598,8 @@ namespace JUST
             }
             else
             {
-                RecursiveEvaluate(property.Value, parentArray, currentArrayToken);
+                var propVal = property.Value;
+                RecursiveEvaluate(ref propVal, parentArray, currentArrayToken);
                 val = property.Value;
             }
 
