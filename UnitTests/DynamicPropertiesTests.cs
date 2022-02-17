@@ -57,5 +57,19 @@ namespace JUST.UnitTests
 
             Assert.AreEqual("{\"a\":[{\"prop1\":1},{\"prop2\":2}]}", result);
         }
+
+        [Test]
+        public void EvalWithObjectInside()
+        {
+            var input = "{ \"sections\": [ { \"id\": \"first\", \"label\": \"First section\" }, { \"id\": \"second\", \"label\": \"Second section\" } ] }";
+            var transformer = "{ \"areas\": { \"#loop($.sections)\": { \"#eval(#currentvalueatpath($.id))\": { \"description\": \"#currentvalueatpath($.label)\" } } } }";
+            var context = new JUSTContext
+            {
+                EvaluationMode = EvaluationMode.Strict
+            };
+            var result = new JsonTransformer(context).Transform(transformer, input);
+
+            Assert.AreEqual("{\"areas\":[{\"first\":{\"description\":\"First section\"}},{\"second\":{\"description\":\"Second section\"}}]}", result);
+        }
     }
 }

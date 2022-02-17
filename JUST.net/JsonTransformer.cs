@@ -363,8 +363,7 @@ namespace JUST
         {
             if (loopProperties != null)
             {
-                JObject obj = parentToken as JObject;
-                if (obj != null)
+                if (parentToken is JObject obj)
                 {
                     foreach (string propertyToDelete in loopProperties)
                     {
@@ -382,8 +381,7 @@ namespace JUST
 
             if (condProps != null)
             {
-                JObject obj = parentToken as JObject;
-                if (obj != null)
+                if (parentToken is JObject obj)
                 {
                     foreach (string propertyToDelete in condProps)
                     {
@@ -473,8 +471,7 @@ namespace JUST
                     arrayToken = arr;
                 }
 
-                JArray array = arrayToken as JArray;
-                if (array != null)
+                if (arrayToken is JArray array)
                 {
                     using (IEnumerator<JToken> elements = array.GetEnumerator())
                     {
@@ -594,9 +591,17 @@ namespace JUST
         {
             object functionResult = ParseFunction(arguments, parentArray, currentArrayToken);
 
-            object val = property.Value.Type == JTokenType.String ?
-                ParseFunction(property.Value.Value<string>(), parentArray, currentArrayToken) :
-                property.Value;
+            object val;
+            if (property.Value.Type == JTokenType.String)
+            {
+                val = ParseFunction(property.Value.Value<string>(), parentArray, currentArrayToken);
+            }
+            else
+            {
+                RecursiveEvaluate(property.Value, parentArray, currentArrayToken);
+                val = property.Value;
+            }
+
             JProperty clonedProperty = new JProperty(functionResult.ToString(), val);
 
             if (loopProperties == null)
@@ -718,13 +723,10 @@ namespace JUST
             foreach (JToken arrEl in children)
             {
                 object itemToAdd = arrEl.Value<JToken>();
-
                 if (arrEl.Type == JTokenType.String && arrEl.ToString().Trim().StartsWith("#"))
                 {
-                    object value = ParseFunction(arrEl.ToString(), parentArray, currentArrayToken);
-                    itemToAdd = value;
+                    itemToAdd = ParseFunction(arrEl.ToString(), parentArray, currentArrayToken);
                 }
-
                 result.Add(itemToAdd);
             }
 
@@ -794,9 +796,7 @@ namespace JUST
             try
             {
                 object output = null;
-
-                string functionName, argumentString;
-                if (!ExpressionHelper.TryParseFunctionNameAndArguments(functionString, out functionName, out argumentString))
+                if (!ExpressionHelper.TryParseFunctionNameAndArguments(functionString, out string functionName, out string argumentString))
                 {
                     return functionName;
                 }

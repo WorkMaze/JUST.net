@@ -1331,14 +1331,16 @@ Output:
 
 ## <a name="multiargsconstants"></a> Multiple argument & constant functions
 
-The transformation in the above scenario looks quite complex. And it could get quite messy when the string becomes longer. Also, since comma(,) is a reserved keyword, it is not possible to concatenate a comma to a string.
+The transformation in the above scenario looks quite complex. And it could get quite messy when the string becomes longer.
+Some reserved keywords, like comma (,) and hash (#), have a proper function. Also empty string has a proper function so it can be represented.
 
-Hence, the following 4 functions have been introduced:
+Hence, the following 5 functions have been introduced:
 
 1. xconcat(string1,string2......stringx) - Concatenates multiple strings.
 2. xadd(int1,int2......intx) - Adds multiples integers.
 3. constant_comma() - Returns comma(,)
 4. constant_hash() - Returns hash(#)
+5. stringempty() - Returns ""
 
 Consider the following input:
 
@@ -1350,7 +1352,8 @@ Consider the following input:
   "ContactInformation": "Karl johans gate:Oslo:88880000",
   "PersonalInformation": "45:Married:Norwegian",
   "AgeOfMother": 67,
-  "AgeOfFather": 70
+  "AgeOfFather": 70,
+  "Empty": ""
 }
 ```
 
@@ -1359,7 +1362,9 @@ Transformer:
 ```JSON
 {
   "FullName": "#xconcat(#valueof($.Name),#constant_comma(),#valueof($.MiddleName),#constant_comma(),#valueof($.Surname))",
-  "AgeOfParents": "#xadd(#valueof($.AgeOfMother),#valueof($.AgeOfFather))"
+  "AgeOfParents": "#xadd(#valueof($.AgeOfMother),#valueof($.AgeOfFather))",
+  "TestSomeEmptyString": "#ifcondition(#valueof($.Empty),#stringempty(),String is empty,String is not empty)",
+  "TestSomeOtherString": "#ifcondition(#valueof($.Name),#stringempty(),String is empty,String is not empty)"
 }
 ```
 
@@ -1368,7 +1373,9 @@ Output:
 ```JSON
 {
   "FullName":"Kari,Inger,Nordmann",
-  "AgeOfParents": 137
+  "AgeOfParents": 137,
+  "TestSomeEmptyString": "String is empty",
+  "TestSomeOtherString": "String is not empty"
 }
 ```
 
@@ -1467,7 +1474,7 @@ Output:
 
 Conditional transformation can be achieved using the *ifgroup* function.
 
-The function takes an expression as argument which should evaluate to a boolean value.
+The function can be used to include (or not) an object or a value. If it is used as property key, it takes a single argument and it will include everything inside the following scope. If it used as property value, it will include the value passed as second argument. First argument should always evaluate to a boolean value.
 
 Consider the following input:
 
@@ -1491,7 +1498,8 @@ Transformer:
         "Value1": "#valueof($.Tree.Branch)",
         "Value2": "#valueof($.Tree.Flower)"
       }
-    }
+    },
+	"Shrubs": [ "#ifgroup(#ifcondition(#valueof($.Tree.Flower),Rose,True,False),#valueof($.Tree.Flower))" ]
   }
 }
 ```
@@ -1504,7 +1512,8 @@ Output:
     "State": {
       "Value1": "leaf",
       "Value2": "Rose"
-    }
+    },
+	"Shrubs": [ "Rose" ]
   }
 }
 ```
@@ -1522,7 +1531,8 @@ Transformer:
         "Value1": "#valueof($.Tree.Branch)",
         "Value2": "#valueof($.Tree.Flower)"
       }
-    }
+    },
+	"Shrubs": [ "#ifgroup(#ifcondition(#valueof($.Tree.Flower),Olive,True,False),#valueof($.Tree.Flower))" ]
   }
 }
 ```
@@ -1531,7 +1541,8 @@ Output:
 ```JSON
 {  
   "Result":{  
-    "Header": "JsonTransform"
+    "Header": "JsonTransform",
+	"Shrubs": [ ]
   }
 }
 ```
