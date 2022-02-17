@@ -2,6 +2,7 @@
 using NJsonSchema.Validation;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace JUST
@@ -31,7 +32,7 @@ namespace JUST
 
         public async Task Validate()
         {
-            List<string> errors = null;
+            List<string> errors = new List<string>();
 
             if (!string.IsNullOrEmpty(schemaNoPrefix))
             {
@@ -45,7 +46,7 @@ namespace JUST
                 }
             }
 
-            if (errors != null)
+            if (errors.Count > 0)
             {
                 throw new Exception(string.Join(" AND ", errors.ToArray()));
             }

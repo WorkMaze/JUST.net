@@ -16,13 +16,19 @@ This C# project has working examples of the transformations.
 Also a new enum field called `EvaluationMode` was added to `JUSTContext`, which lets you select how type mismatches are handled:
 - option `Strict` mode will throw an exception on error;
 - option `FallbackToDefault` will return the default value for the return type of the function/expression being evaluated
+
 There's also an option to tell how #copy will behave:
 - option `AddOrReplaceProperties` will add or replace any property that may be present both in #copy and transformer.
 
 **New query languages accepted** besides [JsonPath](https://goessner.net/articles/JsonPath/). All you have to do is create a class that implements `ISelectableToken` and call generic `Transform` method with your type.
 [JmesPath](http://jmespath.org/) is included as an alternative ([example here](#jmesexample)).
 
-# JUST.NET Library
+```C#
+string transformedString = new JsonTransformer<JmesPathSelectable>.Transform(transformer, input);
+```
+
+
+# <a name="install"></a> JUST.NET Library
 
 Pull the latest JUST.NET from https://www.nuget.org
 ``Install-Package JUST.NET``
@@ -34,7 +40,7 @@ Older versions not updated anymore:
 - .Net Framework version ``Install-Package JUST``
 
 
-# Write a simple C# code snippet to transform your JSON
+# <a name="example"></a> Write a simple C# code snippet to transform your JSON
 
 This is demonstrated with various examples in the source code. Once you install the nuget to your project you need to import the following namespace:
 
@@ -66,13 +72,13 @@ string transformedString = new JsonTransformer(context).Transform(transformer, i
 string transformedString = new JsonTransformer<JmesPathSelectable>.Transform(transformer, input);
 ```
 
-# Using JUST to transform JSON
+# <a name="using"></a> Using JUST to transform JSON
 
 JUST is a transformation language just like XSLT. It includes functions which are used inside the transformer JSON to transform the input JSON in a desired output JSON. This section describes the various functions present in JUST and how they can be used to transform your JSON.
 
 Every JUST function starts with "#" character.
 
-## valueof
+## <a name="valueof"></a> valueof
 
 This function is used to extract the value of a given property. The value is extracted using JSON path of the property. For more information on how to use JSON path refer to : 
 http://www.newtonsoft.com/json/help/html/QueryJsonSelectTokenJsonPath.htm
@@ -153,7 +159,7 @@ Output:
 }
 ```
 
-## ifcondition
+## <a name="ifcondition"></a> ifcondition
 
 This condition is used to evaluate and if-else condition.
 
@@ -192,7 +198,7 @@ Output:
 }
 ```
 
-## string and math functions
+## <a name="stringmath"></a> string and math functions
 
 At the moment only the basic and often used string and math functions are provided in the library.
 
@@ -262,7 +268,7 @@ Output:
 }
 ```
 
-## Operators
+## <a name="operators"></a> Operators
 
 The following operators have been added to compare strings and numbers :
 
@@ -288,13 +294,13 @@ Transformer:
 ```JSON
 {
   "mathresult": {
-    "third_element_equals_3": "#ifcondition(#mathequals(#valueof($.numbers[2]),3),true,yes,no)",
-    "third_element_greaterthan_2": "#ifcondition(#mathgreaterthan(#valueof($.numbers[2]),2),true,yes,no)",
-    "third_element_lessthan_4": "#ifcondition(#mathlessthan(#valueof($.numbers[2]),4),true,yes,no)",
-    "third_element_greaterthanorequals_4": "#ifcondition(#mathgreaterthanorequalto(#valueof($.numbers[2]),4),true,yes,no)",
-    "third_element_lessthanoreuals_2": "#ifcondition(#mathlessthanorequalto(#valueof($.numbers[2]),2),true,yes,no)",
-    "one_stringequals": "#ifcondition(#stringequals(#valueof($.d[0]),one),true,yes,no)",
-    "one_stringcontains": "#ifcondition(#stringcontains(#valueof($.d[0]),n),true,yes,no)"
+    "third_element_equals_3": "#ifcondition(#mathequals(#valueof($.numbers[2]),3),True,yes,no)",
+    "third_element_greaterthan_2": "#ifcondition(#mathgreaterthan(#valueof($.numbers[2]),2),True,yes,no)",
+    "third_element_lessthan_4": "#ifcondition(#mathlessthan(#valueof($.numbers[2]),4),True,yes,no)",
+    "third_element_greaterthanorequals_4": "#ifcondition(#mathgreaterthanorequalto(#valueof($.numbers[2]),4),True,yes,no)",
+    "third_element_lessthanoreuals_2": "#ifcondition(#mathlessthanorequalto(#valueof($.numbers[2]),2),True,yes,no)",
+    "one_stringequals": "#ifcondition(#stringequals(#valueof($.d[0]),one),True,yes,no)",
+    "one_stringcontains": "#ifcondition(#stringcontains(#valueof($.d[0]),n),True,yes,no)"
   }
 }
 ```
@@ -315,7 +321,7 @@ Output:
 }
 ```
 
-## Aggregate functions
+## <a name="aggregate"></a> Aggregate functions
 
 The following aggregate functions are provided for single dimensional arrays:
 
@@ -358,7 +364,7 @@ Output:
 }
 ```
 
-## Aggregate functions for multidimensional arrays:
+## <a name="multiarrays"></a> Aggregate functions for multidimensional arrays:
 
 These functions are essentially the same as the above ones, the only difference being that you can also provide a path to point to particluar element inside the array.
 1. concatallatpath(array,path)
@@ -432,7 +438,7 @@ The following functions are available:
 *Note*: some convertions will make use of application's CultureInfo to define output formats 
 (ex: comma or dot for decimal separator when converting to string)!
 
-Cosider the input:
+Consider the input:
 
 ```JSON
 {
@@ -517,8 +523,59 @@ Output:
 }
 ```
 
+## <a name="typecheck"></a> Type check
 
-## Bulk functions
+Functions to check the type of a value:
+
+1. isnumber
+2. isboolean
+3. isstring
+4. isarray
+
+Consider the input:
+
+```JSON
+{
+  "integer": 0,
+  "decimal": 1.23,
+  "boolean": true,
+  "string": "abc",
+  "array": [ "abc", "xyz" ]
+}
+```
+
+Transformer:
+```JSON
+{
+  "isNumberTrue1": "#isnumber(#valueof($.integer))",
+  "isNumberTrue2": "#isnumber(#valueof($.decimal))",
+  "isNumberFalse": "#isnumber(#valueof($.boolean))",
+  "isBooleanTrue": "#isboolean(#valueof($.boolean))",
+  "isBooleanFalse": "#isboolean(#valueof($.integer))",
+  "isStringTrue": "#isstring(#valueof($.string))",
+  "isStringFalse": "#isstring(#valueof($.array))",
+  "isArrayTrue": "#isarray(#valueof($.array))",
+  "isArrayFalse": "#isarray(#valueof($.decimal))"
+}
+```
+
+Output:
+```JSON
+{
+  "isNumberTrue1": true,
+  "isNumberTrue2": true,
+  "isNumberFalse": false,
+  "isBooleanTrue": true,
+  "isBooleanFalse": false,
+  "isStringTrue": true,
+  "isStringFalse": false,
+  "isArrayTrue": true,
+  "isArrayFalse": false
+}
+```
+
+
+## <a name="bulk"></a> Bulk functions
 
 All the above functions set property values to predefined properties in the output JSON. However, in some cases we don't know what our output will look like as it depends on the input.
 Bulk functions are provided for this purpose. They correspond with the template-match functions in XSLT.
@@ -576,7 +633,7 @@ Output:
 }
 ```
 
-## Array looping
+## <a name="arrays"></a> Array looping
 
 In some cases we don't want to copy the entire array to the destination JSON. We might want to transform the array into a different format, or have some special logic for each element while setting the destination JSON. 
 Also we might want to traverse all properties of an object, just like in JavaScript, and perform some tranformation over values. When applying JsonPath over looped properties beware that each property/value will be considered an object (note the two dots in the example below \[$..sounds\]).
@@ -741,7 +798,7 @@ Output:
 }
 ```
 
-## Array concatenation
+## <a name="arraysconcat"></a> Array concatenation
 When a concatenation is needed, one can use #concat or #xconcat to join two arrays
 1. concat(object1, object2)
 2. xconcat(object1,object2......objectx)
@@ -814,7 +871,7 @@ When a concatenation is needed, one can use #concat or #xconcat to join two arra
 }
 ```
 
-## Nested array looping
+## <a name="nestedarrays"></a> Nested array looping
 It is possible to loop over more than one array at once. By default, the last array is used, but one can use properties from other arrays by using alias for array looping.
 One side note: loops must be last property, any properties after that will be ignored.
 
@@ -904,7 +961,7 @@ Output:
 }
 ```
 
-## Array grouping
+## <a name="arraysgrouping"></a> Array grouping
 
 A function similar to SQL GROUP BY clause has been introduced to group an array based on the value of an element.
 
@@ -1074,7 +1131,7 @@ Output:
 }
 ```
 
-## Calling Custom functions
+## <a name="customfunc"></a> Calling Custom functions
 
 You can make your own custom functions in C# and call them from your transformer JSON.
 A custom function has to reside inside a public class and has to be a public static method.
@@ -1125,7 +1182,7 @@ Output:
 }
 ```
 
-## Calling User Defined methods by name
+## <a name="userdefined"></a> Calling User Defined methods by name
 
 You can also call your methods by name, by providing the full path (namespace including class name, method name, assembly if necessary).
 The assembly file doesn't need to be referenced in your program, it only has to exist in the same directory. It will load the assembly into
@@ -1163,7 +1220,7 @@ Output:
 }
 ```
 
-## Register User Defined methods for seamless use
+## <a name="registercustom"></a> Register User Defined methods for seamless use
 
 To reduce the fuzz of calling custom methods, there's this class `JUSTContext`, where you can register your custom functions, and then pass it as a parameter to `JsonTransformer` constructor. All calls of `Transform` methods will use the supplied `JUSTContext`.
 There's also this class `CustomFunction` that as all the necessary properties to register a custom function. One can create a list of there classes and pass it to `JUSTContext` constructor.
@@ -1220,7 +1277,7 @@ Output:
 ```
 
 
-## Complex nested functions
+## <a name="complexnestedfunc"></a> Complex nested functions
 
 You can easily nest functions to do complex transformations. An example of such a transformation would be:
 
@@ -1272,7 +1329,7 @@ Output:
 }
 ```
 
-## Multiple argument & constant functions
+## <a name="multiargsconstants"></a> Multiple argument & constant functions
 
 The transformation in the above scenario looks quite complex. And it could get quite messy when the string becomes longer. Also, since comma(,) is a reserved keyword, it is not possible to concatenate a comma to a string.
 
@@ -1316,9 +1373,11 @@ Output:
 ```
 
 
-## Escaping reserved characters
+## <a name="escaping"></a> Escaping reserved characters
 
-Characters like '(' and ')' (round brackets), and ',' (comma) are considered reserved characters when used within a function (not on a regular string). Also '#' (sharp) is a reserved character when used at the start of a statement (value of property or argument of a function). To avoid parsing these characters as reserved characters you may "escape" them, adding a '/' (slash) before the reserved character. For '#', it is only necessary to escape when it occurs at the start of a statement.
+Characters like '(' and ')' (round brackets), and ',' (comma) are considered reserved characters when used within a function (not on a regular string). Also '#' (sharp) is a reserved character when used at the start of a statement (value of property or argument of a function).
+To avoid parsing these characters as reserved characters you may "escape" them, adding a character before the reserved character. By default the escape character is a '/' (slash), but one can change it in `JUSTContext` class, property `EscapeChar`. For '#', it is only necessary to escape when it occurs at the start of a statement. Don't forget to escape the 'EscapeChar' also.
+One note, it is not advisable to choose '\' (backslash) as an escape char, as it is already the escape char for JSON, it can make expressions cumbersome!
 This is especially useful when creating dynamic expressions.
 
 Consider the following input:
@@ -1362,7 +1421,7 @@ Output:
 
 
 
-## Check for existance 
+## <a name="existance"></a> Check for existance 
 
 The following two functions have been added to check for existance:
 
@@ -1382,12 +1441,12 @@ Transformer:
 
 ```JSON
 {
-  "BuyDateString": "#ifcondition(#exists($.BuyDate),true,#concat(Buy Date : ,#valueof($.BuyDate)),NotExists)",
-  "BuyDateString2": "#ifcondition(#existsandnotempty($.BuyDate),true,#concat(Buy Date : ,#valueof($.BuyDate)),EmptyOrNotExists)",
-  "ExpireDateString": "#ifcondition(#exists($.ExpireDate),true,#concat(Expire Date : ,#valueof($.ExpireDate)),NotExists)",
-  "ExpireDateString2": "#ifcondition(#existsandnotempty($.ExpireDate),true,#concat(Expire Date : ,#valueof($.ExpireDate)),EmptyOrNotExists)",
-  "SellDateString": "#ifcondition(#exists($.SellDate),true,#concat(Sell Date : ,#valueof($.SellDate)),NotExists)",
-  "SellDateString2": "#ifcondition(#existsandnotempty($.SellDate),true,#concat(Sell Date : ,#valueof($.SellDate)),EmptyOrNotExists)"
+  "BuyDateString": "#ifcondition(#exists($.BuyDate),True,#concat(Buy Date : ,#valueof($.BuyDate)),NotExists)",
+  "BuyDateString2": "#ifcondition(#existsandnotempty($.BuyDate),True,#concat(Buy Date : ,#valueof($.BuyDate)),EmptyOrNotExists)",
+  "ExpireDateString": "#ifcondition(#exists($.ExpireDate),True,#concat(Expire Date : ,#valueof($.ExpireDate)),NotExists)",
+  "ExpireDateString2": "#ifcondition(#existsandnotempty($.ExpireDate),True,#concat(Expire Date : ,#valueof($.ExpireDate)),EmptyOrNotExists)",
+  "SellDateString": "#ifcondition(#exists($.SellDate),True,#concat(Sell Date : ,#valueof($.SellDate)),NotExists)",
+  "SellDateString2": "#ifcondition(#existsandnotempty($.SellDate),True,#concat(Sell Date : ,#valueof($.SellDate)),EmptyOrNotExists)"
 }
 ```
 
@@ -1404,7 +1463,7 @@ Output:
 
 ```
 
-## Conditional transformation
+## <a name="condtrans"></a> Conditional transformation
 
 Conditional transformation can be achieved using the *ifgroup* function.
 
@@ -1478,7 +1537,7 @@ Output:
 ```
 
 
-## Dynamic Properties
+## <a name="dynamicprop"></a> Dynamic Properties
 
 We can now create dynamic properties using the *eval* function. The function takes an expression as an argument.
 
@@ -1513,7 +1572,7 @@ Output:
 ```
 
 
-## Apply function over transformation
+## <a name="applyover"></a> Apply function over transformation
 
 Sometimes you cannnot achieve what you want directly from a single function (or composition). To overcome this you may want to apply a function over a previous transformation. That's what #applyover does.
 
@@ -1530,7 +1589,7 @@ Transformer:
 
 ```JSON
 {
-  "result": "#applyover({ 'condition': { '#loop($.values)': { 'test': '#ifcondition(#stringcontains(#valueof($.d[0]),#currentvalue()),true,yes,no)' } } }, '#exists($.condition[?(@.test=='yes')])')" 
+  "result": "#applyover({ 'condition': { '#loop($.values)': { 'test': '#ifcondition(#stringcontains(#valueof($.d[0]),#currentvalue()),True,yes,no)' } } }, '#exists($.condition[?(@.test=='yes')])')" 
 }
 ```
 
@@ -1542,7 +1601,7 @@ Output:
 ```
 
 
-## Schema Validation against multiple schemas using prefixes
+## <a name="schemavalidation"></a> Schema Validation against multiple schemas using prefixes
 
 A new feature to validate a JSON against multiple schemas has been introduced in the new Nuget 2.0.xxx. This is to enable namespace based validation using prefixes like in XSD.
 
@@ -1624,7 +1683,7 @@ The exception message thrown in the above case would be:
 
 ``Unhandled Exception: System.Exception: Invalid type. Expected String but got Integer. Path '['x.child']', line 3, position 14. AND Invalid type. Expected String but got Integer. Path '['y.animal']', line 4, position 15.``
 
-## Splitting JSON into multiple JSON(s) based upon an array token
+## <a name="splitjson"></a> Splitting JSON into multiple JSON(s) based upon an array token
 
 A JSON file containing an array can now be split into multiple JSON files, each representing a file for every array element.
 
@@ -1687,7 +1746,7 @@ The output will contain 4 JSON files:
 {"cars":{"Ford":{"model":"Bronco","doors":5},"firstName":"John","lastName":"Smith"}}
 ```
 
-## Transforming JSON to other data formats
+## <a name="otherformats"></a> Transforming JSON to other data formats
 
 JUST.NET can now transform JSON data into other generic formats too. All functions except the BULK FUNCTIONS are supported in this feature.
 The #loop functions excepts an extra argument which defines the seperator between the individual records.
