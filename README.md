@@ -294,13 +294,13 @@ Transformer:
 ```JSON
 {
   "mathresult": {
-    "third_element_equals_3": "#ifcondition(#mathequals(#valueof($.numbers[2]),3),true,yes,no)",
-    "third_element_greaterthan_2": "#ifcondition(#mathgreaterthan(#valueof($.numbers[2]),2),true,yes,no)",
-    "third_element_lessthan_4": "#ifcondition(#mathlessthan(#valueof($.numbers[2]),4),true,yes,no)",
-    "third_element_greaterthanorequals_4": "#ifcondition(#mathgreaterthanorequalto(#valueof($.numbers[2]),4),true,yes,no)",
-    "third_element_lessthanoreuals_2": "#ifcondition(#mathlessthanorequalto(#valueof($.numbers[2]),2),true,yes,no)",
-    "one_stringequals": "#ifcondition(#stringequals(#valueof($.d[0]),one),true,yes,no)",
-    "one_stringcontains": "#ifcondition(#stringcontains(#valueof($.d[0]),n),true,yes,no)"
+    "third_element_equals_3": "#ifcondition(#mathequals(#valueof($.numbers[2]),3),True,yes,no)",
+    "third_element_greaterthan_2": "#ifcondition(#mathgreaterthan(#valueof($.numbers[2]),2),True,yes,no)",
+    "third_element_lessthan_4": "#ifcondition(#mathlessthan(#valueof($.numbers[2]),4),True,yes,no)",
+    "third_element_greaterthanorequals_4": "#ifcondition(#mathgreaterthanorequalto(#valueof($.numbers[2]),4),True,yes,no)",
+    "third_element_lessthanoreuals_2": "#ifcondition(#mathlessthanorequalto(#valueof($.numbers[2]),2),True,yes,no)",
+    "one_stringequals": "#ifcondition(#stringequals(#valueof($.d[0]),one),True,yes,no)",
+    "one_stringcontains": "#ifcondition(#stringcontains(#valueof($.d[0]),n),True,yes,no)"
   }
 }
 ```
@@ -1439,12 +1439,12 @@ Transformer:
 
 ```JSON
 {
-  "BuyDateString": "#ifcondition(#exists($.BuyDate),true,#concat(Buy Date : ,#valueof($.BuyDate)),NotExists)",
-  "BuyDateString2": "#ifcondition(#existsandnotempty($.BuyDate),true,#concat(Buy Date : ,#valueof($.BuyDate)),EmptyOrNotExists)",
-  "ExpireDateString": "#ifcondition(#exists($.ExpireDate),true,#concat(Expire Date : ,#valueof($.ExpireDate)),NotExists)",
-  "ExpireDateString2": "#ifcondition(#existsandnotempty($.ExpireDate),true,#concat(Expire Date : ,#valueof($.ExpireDate)),EmptyOrNotExists)",
-  "SellDateString": "#ifcondition(#exists($.SellDate),true,#concat(Sell Date : ,#valueof($.SellDate)),NotExists)",
-  "SellDateString2": "#ifcondition(#existsandnotempty($.SellDate),true,#concat(Sell Date : ,#valueof($.SellDate)),EmptyOrNotExists)"
+  "BuyDateString": "#ifcondition(#exists($.BuyDate),True,#concat(Buy Date : ,#valueof($.BuyDate)),NotExists)",
+  "BuyDateString2": "#ifcondition(#existsandnotempty($.BuyDate),True,#concat(Buy Date : ,#valueof($.BuyDate)),EmptyOrNotExists)",
+  "ExpireDateString": "#ifcondition(#exists($.ExpireDate),True,#concat(Expire Date : ,#valueof($.ExpireDate)),NotExists)",
+  "ExpireDateString2": "#ifcondition(#existsandnotempty($.ExpireDate),True,#concat(Expire Date : ,#valueof($.ExpireDate)),EmptyOrNotExists)",
+  "SellDateString": "#ifcondition(#exists($.SellDate),True,#concat(Sell Date : ,#valueof($.SellDate)),NotExists)",
+  "SellDateString2": "#ifcondition(#existsandnotempty($.SellDate),True,#concat(Sell Date : ,#valueof($.SellDate)),EmptyOrNotExists)"
 }
 ```
 
@@ -1587,7 +1587,7 @@ Transformer:
 
 ```JSON
 {
-  "result": "#applyover({ 'condition': { '#loop($.values)': { 'test': '#ifcondition(#stringcontains(#valueof($.d[0]),#currentvalue()),true,yes,no)' } } }, '#exists($.condition[?(@.test=='yes')])')" 
+  "result": "#applyover({ 'condition': { '#loop($.values)': { 'test': '#ifcondition(#stringcontains(#valueof($.d[0]),#currentvalue()),True,yes,no)' } } }, '#exists($.condition[?(@.test=='yes')])')" 
 }
 ```
 
