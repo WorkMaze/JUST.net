@@ -5,7 +5,6 @@ namespace JUST.UnitTests
     [TestFixture, Category("EscapedChars")]
     public class ArgumentsEscapeTests
     {
-        private const string EscapeChar = "/";
         [Test]
         public void NoEscapedCharacters()
         {
@@ -19,7 +18,8 @@ namespace JUST.UnitTests
         [Test]
         public void EscapedBrackets()
         {
-            var args = $"{EscapeChar}({EscapeChar})";
+            const char escapeChar = '/';
+            var args = $"{escapeChar}({escapeChar})";
             var transformer = "{ \"result\": \"#xconcat(" + args + ",#constant_hash())\" }";
             var result = new JsonTransformer().Transform(transformer, "{}");
 
@@ -29,7 +29,8 @@ namespace JUST.UnitTests
         [Test]
         public void EscapedComma()
         {
-            var args = $"{EscapeChar},";
+            const char escapeChar = '/';
+            var args = $"{escapeChar},";
             var transformer = "{ \"result\": \"#xconcat(" + args + ",#constant_hash())\" }";
             var result = new JsonTransformer().Transform(transformer, "{}");
 
@@ -39,7 +40,8 @@ namespace JUST.UnitTests
         [Test]
         public void EscapedSharpValue()
         {
-            var args = $"{EscapeChar}#";
+            const char escapeChar = '/';
+            var args = $"{escapeChar}#";
             var transformer = "{ \"result\": \"" + args + "\" }";
             var result = new JsonTransformer().Transform(transformer, "{}");
 
@@ -49,7 +51,8 @@ namespace JUST.UnitTests
         [Test]
         public void EscapedSharpArgument()
         {
-            var args = $"{EscapeChar}#";
+            const char escapeChar = '/';
+            var args = $"{escapeChar}#";
             var transformer = "{ \"result\": \"#xconcat(" + args + ",#constant_hash())\" }";
             var result = new JsonTransformer().Transform(transformer, "{}");
 
@@ -59,10 +62,11 @@ namespace JUST.UnitTests
         [Test]
         public void NestedFunctionEscapedArguments()
         {
-            const string args = "#arg1,#xconcat(/#notfunc/(/), #constant_comma(),#xconcat(/,arg2.3.1,#constant_hash(),'arg2.3.3),/,,#add(3,2))";
-            const string input = "{ \"test\": \"" + args + "\" }";
-
-            const string transformer = "{ \"result\": \"#xconcat(" + args + ",#constant_hash())\" }";
+            const char escapeChar = '/';
+            string args = $"#arg1,#xconcat({escapeChar}#notfunc{escapeChar}({escapeChar}), #constant_comma(),#xconcat({escapeChar},arg2.3.1,#constant_hash(),'arg2.3.3),{escapeChar},,#add(3,2))";
+            string input = "{ \"test\": \"" + args + "\" }";
+            string transformer = "{ \"result\": \"#xconcat(" + args + ",#constant_hash())\" }";
+            
             var result = new JsonTransformer().Transform(transformer, input);
 
             Assert.AreEqual("{\"result\":\"#arg1#notfunc(),,arg2.3.1#'arg2.3.3,5#\"}", result);
@@ -112,6 +116,20 @@ namespace JUST.UnitTests
             var result = new JsonTransformer(context).Transform(transformer, input);
 
             Assert.AreEqual("{\"someNewNode\":\"Need this value\"}", result);
+        }
+
+        [Test]
+        public void OtherEscapeChar()
+        {
+            const char escapeChar = '§';
+            string args = $"#arg1,#xconcat({escapeChar}#notfunc{escapeChar}({escapeChar}), #constant_comma(),#xconcat({escapeChar},arg2.3.1,#constant_hash(),'arg2.3.3),{escapeChar},,#add(3,2))";
+            string input = "{ \"test\": \"" + args + "\" }";
+            string transformer = "{ \"result\": \"#xconcat(" + args + ",#constant_hash())\" }";
+            var context = new JUSTContext { EscapeChar = '§' };
+
+            var result = new JsonTransformer(context).Transform(transformer, input);
+
+            Assert.AreEqual("{\"result\":\"#arg1#notfunc(),,arg2.3.1#'arg2.3.3,5#\"}", result);
         }
     }
 }
