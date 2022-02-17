@@ -195,7 +195,7 @@ namespace JUST
                     }
                 }
 
-                if (property.Name != null && property.Value.ToString().StartsWith($"{ExpressionHelper.EscapeChar}#"))
+                if (property.Name != null && property.Value.ToString().StartsWith($"{Context.EscapeChar}#"))
                 {
                     var clone = property.Value as JValue;
                     clone.Value = clone.Value.ToString().Substring(1);
@@ -427,7 +427,7 @@ namespace JUST
 
         private void LoopOperation(string propertyName, string arguments, IDictionary<string, JArray> parentArray, IDictionary<string, JToken> currentArrayToken, ref List<string> loopProperties, ref JArray arrayToForm, ref JObject dictToForm, JToken childToken)
         {
-            var args = ExpressionHelper.SplitArguments(arguments);
+            var args = ExpressionHelper.SplitArguments(arguments, Context.EscapeChar);
             var previousAlias = "root";
             args[0] = (string)ParseFunction(args[0], parentArray, currentArrayToken);
             string alias = args.Length > 1 ? (string)ParseFunction(args[1].Trim(), parentArray, currentArrayToken) : $"loop{++_loopCounter}";
@@ -734,7 +734,7 @@ namespace JUST
         #region Copy
         private JToken Copy(string arguments, IDictionary<string, JArray> parentArray, IDictionary<string, JToken> currentArrayElement)
         {
-            string[] argumentArr = ExpressionHelper.SplitArguments(arguments);
+            string[] argumentArr = ExpressionHelper.SplitArguments(arguments, Context.EscapeChar);
             string path = argumentArr[0];
             if (!(ParseArgument(parentArray, currentArrayElement, path) is string jsonPath))
             {
@@ -760,7 +760,7 @@ namespace JUST
         #region Replace
         private KeyValuePair<string, JToken> Replace(string arguments, IDictionary<string, JArray> parentArray, IDictionary<string, JToken> currentArrayElement)
         {
-            string[] argumentArr = ExpressionHelper.SplitArguments(arguments);
+            string[] argumentArr = ExpressionHelper.SplitArguments(arguments, Context.EscapeChar);
             if (argumentArr.Length < 2)
             {
                 throw new Exception("Function #replace needs at least two arguments - 1. path to be replaced, 2. token to replace with.");
@@ -801,7 +801,7 @@ namespace JUST
                     return functionName;
                 }
 
-                string[] arguments = ExpressionHelper.SplitArguments(argumentString);
+                string[] arguments = ExpressionHelper.SplitArguments(argumentString, Context.EscapeChar);
                 var listParameters = new List<object>();
 
                 if (functionName == "ifcondition")
@@ -921,9 +921,9 @@ namespace JUST
             {
                 return ParseFunction(trimmedArgument, array, currentArrayElement);
             }
-            if (trimmedArgument.StartsWith($"{ExpressionHelper.EscapeChar}#"))
+            if (trimmedArgument.StartsWith($"{Context.EscapeChar}#"))
             {
-                return ExpressionHelper.UnescapeSharp(argument);
+                return ExpressionHelper.UnescapeSharp(argument, Context.EscapeChar);
             }
             return argument;
         }

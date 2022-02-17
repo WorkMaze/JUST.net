@@ -5,7 +5,6 @@ namespace JUST
 {
     internal class ExpressionHelper
     {
-        internal const char EscapeChar = '/'; //do not use backslash, it is already the escape char in JSON
         private const string FunctionAndArgumentsRegex = "^\\s*#(.+?)[(](.*)[)]\\s*$";
 
         internal static bool TryParseFunctionNameAndArguments(string input, out string functionName, out string arguments)
@@ -16,14 +15,12 @@ namespace JUST
             return match.Success;
         }
 
-        internal static string[] SplitArguments(string functionString)
+        internal static string[] SplitArguments(string functionString, char escapeChar)
         {
             if (string.IsNullOrEmpty(functionString))
             {
                 return new string[0]; 
             }
-
-            bool brackettOpen = false;
 
             List<string> arguments = new List<string>();
             int index = 0;
@@ -35,7 +32,7 @@ namespace JUST
             for (int i = 0; i < functionString.Length; i++)
             {
                 char currentChar = functionString[i];
-                if (currentChar == EscapeChar)
+                if (currentChar == escapeChar)
                 {
                     isEscapedChar = !isEscapedChar;
                     continue;
@@ -51,14 +48,14 @@ namespace JUST
                     else { isEscapedChar = !isEscapedChar; }
                 }
 
-                brackettOpen = openBrackettCount != closebrackettCount;
+                bool brackettOpen = openBrackettCount != closebrackettCount;
                 if (currentChar == ',' && !brackettOpen)
                 {
                     if (!isEscapedChar)
                     {
                         arguments.Add(Unescape(index != 0 ?
                             functionString.Substring(index + 1, i - index - 1) :
-                            functionString.Substring(index, i)));
+                            functionString.Substring(index, i), escapeChar));
                         index = i;
                     }
                     else { isEscapedChar = !isEscapedChar; }
@@ -67,16 +64,16 @@ namespace JUST
             }
 
             arguments.Add(index > 0 ?
-                Unescape(functionString.Substring(index + 1, functionString.Length - index - 1)) :
-                Unescape(functionString));
+                Unescape(functionString.Substring(index + 1, functionString.Length - index - 1), escapeChar) :
+                Unescape(functionString, escapeChar));
 
             return arguments.ToArray();
         }
 
-        private static string Unescape(string str)
+        private static string Unescape(string str, char escapeChar)
         {
             return !IsFunction(str) ?
-                Regex.Replace(str, "\\/([\\/(),])", "$1") :
+                Regex.Replace(str, $"\\{escapeChar}([\\{escapeChar}(),])", "$1") :
                 str;
         }
 
@@ -85,9 +82,9 @@ namespace JUST
             return Regex.IsMatch(val, "^\\s*#");
         }
 
-        internal static string UnescapeSharp(string val)
+        internal static string UnescapeSharp(string val, char escapeChar)
         {
-            return Regex.Replace(val, "^(\\s*)\\/(#)", "$1$2");
+            return Regex.Replace(val, $"^(\\s*)\\{escapeChar}(#)", "$1$2");
         }
     }
 }

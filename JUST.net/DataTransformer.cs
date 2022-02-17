@@ -133,7 +133,7 @@ namespace JUST
 
                 string argumentString = functionString.Substring(indexOfStart + 1, functionString.Length - indexOfStart - 2);
 
-                string[] arguments = ExpressionHelper.SplitArguments(argumentString);
+                string[] arguments = ExpressionHelper.SplitArguments(argumentString, Context.EscapeChar);
 
                 List<object> listParameters = new List<object>();
 
