@@ -59,5 +59,16 @@ namespace JUST.UnitTests
 
             Assert.AreEqual("{\"items\":[{\"id\":\"id1\",\"existance\":true},{\"id\":\"id2\",\"existance\":false}]}", result);
         }
+
+        [Test]
+        public void ExistsAndNotEmptyArray()
+        {
+            const string input = "{ \"Arr1\": [], \"Arr2\": [ 1 ] }";
+            const string transformer = "{ \"ArrayEmpty\": \"#existsandnotempty($.Arr1)\", \"ArrayNotEmpty\": \"#existsandnotempty($.Arr2)\" }";
+
+            var result = new JsonTransformer().Transform(transformer, input);
+
+            Assert.AreEqual("{\"ArrayEmpty\":false,\"ArrayNotEmpty\":true}", result);
+        }
     }
 }

@@ -125,5 +125,19 @@ namespace JUST.UnitTests
 
             Assert.AreEqual("{\"stringresult\":{\"stringcontains\":false}}", result);
         }
+
+        [Test]
+        public void StringEmpty()
+        {
+            var input = "{ \"empty\": \"\", \"not_empty\": \"not empty\" }";
+            var transformer = "{ \"test_empty\": \"#ifcondition(#valueof($.empty),#stringempty(),is empty,not empty)\", \"test_not_empty\": \"#ifcondition(#valueof($.not_empty),#stringempty(),empty,is not empty)\" }";
+            var context = new JUSTContext
+            {
+                EvaluationMode = EvaluationMode.Strict
+            };
+            var result = new JsonTransformer(context).Transform(transformer, input);
+
+            Assert.AreEqual("{\"test_empty\":\"is empty\",\"test_not_empty\":\"is not empty\"}", result);
+        }
     }
 }

@@ -138,6 +138,20 @@ namespace JUST.UnitTests
             Assert.AreEqual("{\"Result\":{\"Header\":\"JsonTransform\"}}", result);
         }
 
+        [Test, Category("IfGroup")]
+        public void ConditionalGroupSingleValue()
+        {
+            var input = "{ \"arr\": [\"1234\", \"5678\" ]}";
+            var transformer = "{\"result\": [ \"#ifgroup(False,#valueof($.arr[0]))\", \"#ifgroup(True,#valueof($.arr[1]))\" ] }";
+            var context = new JUSTContext
+            {
+                EvaluationMode = EvaluationMode.Strict
+            };
+            var result = new JsonTransformer(context).Transform(transformer, input);
+
+            Assert.AreEqual("{\"result\":[\"5678\"]}", result);
+        }
+
         [Test, Category("IfGroup"), Category("Strict")]
         public void ConditionalGroupException()
         {
