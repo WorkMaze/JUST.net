@@ -1586,6 +1586,8 @@ Output:
 ## <a name="applyover"></a> Apply function over transformation
 
 Sometimes you cannnot achieve what you want directly from a single function (or composition). To overcome this you may want to apply a function over a previous transformation. That's what #applyover does.
+First argument is the first transformation to apply to input, and the result will serve as input to the second argument/transformation. Second argument can be a simple function or a complex transformation (an object or an array).
+Note that if any of the arguments/transformations of #applyover has commas (,), one has to use #constant_comma to represent them (and use #xconcat to construct the argument/transformation).
 
 Consider the following input:
 
@@ -1600,14 +1602,28 @@ Transformer:
 
 ```JSON
 {
-  "result": "#applyover({ 'condition': { '#loop($.values)': { 'test': '#ifcondition(#stringcontains(#valueof($.d[0]),#currentvalue()),True,yes,no)' } } }, '#exists($.condition[?(@.test=='yes')])')" 
+  "simple_function": "#applyover({ 'condition': { '#loop($.values)': { 'test': '#ifcondition(#stringcontains(#valueof($.d[0]),#currentvalue()),True,yes,no)' } } }, '#exists($.condition[?(@.test=='yes')])')",
+  "object": "#applyover(#xconcat({ 'temp': { '#loop($.values)': { 'index': '#currentindex()', #constant_comma(), 'value': '#currentvalue()' } } }), { 'first_element': '#valueof($.temp[0])' })",
+  "array": "#applyover(#xconcat({ '#loop($.d)': { 'index': '#currentindex()', #constant_comma(), 'value': '#currentvalue()' } }), { 'last_element': '#valueof($[2])' })" }";
 }
 ```
 
 Output:
 ```JSON
 {
-  "result": true
+  "simple_function": true,
+  "object": {
+    "first_element": {
+      "index":0,
+      "value": "z"
+    }
+  },
+  "array": {
+    "last_element": {
+      "index": 2,
+      "value": "three"
+    }
+  }
 }
 ```
 

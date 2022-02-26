@@ -192,14 +192,16 @@ namespace JUST.UnitTests
         public void ApplyOver()
         {
             var input = "{\"d\": [ \"one\", \"two\", \"three\" ], \"values\": [ \"z\", \"c\", \"n\" ]}";
-            var transformer = "{ \"result\": \"#applyover({ 'condition': { '#loop($.values)': { 'test': '#ifcondition(#stringcontains(#valueof($.d[0]),#currentvalue()),True,yes,no)' } } }, '#exists($.condition[?(@.test=='yes')])')\" }";
+            var transformer = "{ \"simple_function\": \"#applyover({ 'condition': { '#loop($.values)': { 'test': '#ifcondition(#stringcontains(#valueof($.d[0]),#currentvalue()),True,yes,no)' } } }, '#exists($.condition[?(@.test=='yes')])')\", " +
+                                "\"object\": \"#applyover(#xconcat({ 'temp': { '#loop($.values)': { 'index': '#currentindex()', #constant_comma(), 'value': '#currentvalue()' } } }), { 'first_element': '#valueof($.temp[0])' })\", " +
+                                "\"array\": \"#applyover(#xconcat({ '#loop($.d)': { 'index': '#currentindex()', #constant_comma(), 'value': '#currentvalue()' } }), { 'last_element': '#valueof($[2])' })\" }";
             var context = new JUSTContext
             {
                 EvaluationMode = EvaluationMode.Strict
             };
             var result = new JsonTransformer(context).Transform(transformer, input);
 
-            Assert.AreEqual("{\"result\":true}", result);
+            Assert.AreEqual("{\"simple_function\":true,\"object\":{\"first_element\":{\"index\":0,\"value\":\"z\"}},\"array\":{\"last_element\":{\"index\":2,\"value\":\"three\"}}}", result);
         }
 
         [Test]
