@@ -1859,7 +1859,7 @@ DataTransformer.xml:
     <stringresult>
       <lastindexofand>#lastindexof(#valueof($.stringref),and)</lastindexofand>
       <firstindexofand>#firstindexof(#valueof($.stringref),and)</firstindexofand>
-      <subsrting>#substring(#valueof($.stringref),8,10)</subsrting>
+      <substring>#substring(#valueof($.stringref),8,10)</substring>
       <concat>#concat(#valueof($.menu.id.file),#valueof($.menu.value.Window))</concat>
     </stringresult>
     <mathresult>
@@ -1882,12 +1882,12 @@ DataTransformer.xml:
   <FullName>#concat(#concat(#concat(#valueof($.Name), ),#concat(#valueof($.MiddleName), )),#valueof($.Surname))</FullName>
   <Contact_Information>
     <City>#substring(#valueof($.ContactInformation),#add(#firstindexof(#valueof($.ContactInformation),:),1),#subtract(#subtract(#lastindexof(#valueof($.ContactInformation),:),#firstindexof(#valueof($.ContactInformation),:)),1))</City>
-    <PhoneNumber>#substring(#valueof($.ContactInformation),#add(#lastindexof(#valueof($.ContactInformation),:),1),#subtract(#lastindexof(#valueof($.ContactInformation),),#lastindexof(#valueof($.ContactInformation),:)))</PhoneNumber>
+    <PhoneNumber>#substring(#valueof($.ContactInformation),#add(#lastindexof(#valueof($.ContactInformation),:),1),#subtract(#subtract(#length(#valueof($.ContactInformation)),1),#lastindexof(#valueof($.ContactInformation),:)))</PhoneNumber>
     <Street_Name>#substring(#valueof($.ContactInformation),0,#firstindexof(#valueof($.ContactInformation),:))</Street_Name>
   </Contact_Information>
   <Personal_Information>
     <Age>#substring(#valueof($.PersonalInformation),0,#firstindexof(#valueof($.PersonalInformation),:))</Age>
-    <Ethnicity>#substring(#valueof($.PersonalInformation),#add(#lastindexof(#valueof($.PersonalInformation),:),1),#subtract(#lastindexof(#valueof($.PersonalInformation),),#lastindexof(#valueof($.PersonalInformation),:)))</Ethnicity>
+    <Ethnicity>#substring(#valueof($.PersonalInformation),#add(#lastindexof(#valueof($.PersonalInformation),:),1),#subtract(#subtract(#length(#valueof($.PersonalInformation)),1),#lastindexof(#valueof($.PersonalInformation),:)))</Ethnicity>
     <LogId>#valueof($.LogId)</LogId>
     <Civil_Status>#substring(#valueof($.PersonalInformation),#add(#firstindexof(#valueof($.PersonalInformation),:),1),#subtract(#subtract(#lastindexof(#valueof($.PersonalInformation),:),#firstindexof(#valueof($.PersonalInformation),:)),1))</Civil_Status>
   </Personal_Information>
@@ -1915,7 +1915,7 @@ Output:
     <stringresult>
       <lastindexofand>21</lastindexofand>
       <firstindexofand>6</firstindexofand>
-      <subsrting>dveryunuas</subsrting>
+      <substring>dveryunuas</substring>
       <concat>csvpopup</concat>
     </stringresult>
     <mathresult>
