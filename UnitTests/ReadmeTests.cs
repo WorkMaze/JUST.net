@@ -254,19 +254,5 @@ namespace JUST.UnitTests
 
             Assert.AreEqual("{\"isNumberTrue1\":true,\"isNumberTrue2\":true,\"isNumberFalse\":false,\"isBooleanTrue\":true,\"isBooleanFalse\":false,\"isStringTrue\":true,\"isStringFalse\":false,\"isArrayTrue\":true,\"isArrayFalse\":false}", result);
         }
-
-        [Test]
-        public void Issue210()
-        {
-            const string input = "{ \"data\": [ { \"saleStatus\": 1, \"priority\": \"normal\", \"other\": \"one\" }, { \"saleStatus\": 2, \"priority\": \"high\", \"other\": \"two\" }, { \"saleStatus\": 1, \"priority\": \"normal\", \"other\": \"three\" } ] }";
-            //const string transformer = "{ \"temp\": \"#grouparrayby($.data,saleStatus:priority,all)\", \"result\": { \"#loop($.temp)\": { \"#\": [ \"#copy($)\" ], \"count\": \"#length($.all)\" } } }";
-            const string transformer = "{ \"result\": \"#applyover({ 'temp': '#grouparrayby($.data,saleStatus:priority,all)' }, { '#loop($.temp)': { 'count': '#length($.all)' } })\" }";
-            //const string transformer = "{ \"result\": \"#applyover({ 'temp': '#grouparrayby($.data,saleStatus:priority,all)' }, '#valueof($.temp[*].all)')\" }";
-
-            var result = new JsonTransformer().Transform(transformer, input);
-            System.Console.WriteLine(result);
-
-            Assert.AreEqual("{}", result);
-        }
     }
 }
