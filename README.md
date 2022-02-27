@@ -1332,15 +1332,16 @@ Output:
 ## <a name="multiargsconstants"></a> Multiple argument & constant functions
 
 The transformation in the above scenario looks quite complex. And it could get quite messy when the string becomes longer.
-Some reserved keywords, like comma (,) and hash (#), have a proper function. Also empty string has a proper function so it can be represented.
+Some reserved keywords, like comma (,) and hash (#), have a proper function. Also empty string and empty array has proper functions so they can be represented.
 
-Hence, the following 5 functions have been introduced:
+Hence, the following 6 functions have been introduced:
 
 1. xconcat(string1,string2......stringx) - Concatenates multiple strings.
 2. xadd(int1,int2......intx) - Adds multiples integers.
 3. constant_comma() - Returns comma(,)
 4. constant_hash() - Returns hash(#)
 5. stringempty() - Returns ""
+6. arrayempty() - Returns []
 
 Consider the following input:
 
@@ -1353,7 +1354,8 @@ Consider the following input:
   "PersonalInformation": "45:Married:Norwegian",
   "AgeOfMother": 67,
   "AgeOfFather": 70,
-  "Empty": ""
+  "EmptyString": "",
+  "EmptyArray": []
 }
 ```
 
@@ -1363,8 +1365,10 @@ Transformer:
 {
   "FullName": "#xconcat(#valueof($.Name),#constant_comma(),#valueof($.MiddleName),#constant_comma(),#valueof($.Surname))",
   "AgeOfParents": "#xadd(#valueof($.AgeOfMother),#valueof($.AgeOfFather))",
-  "TestSomeEmptyString": "#ifcondition(#valueof($.Empty),#stringempty(),String is empty,String is not empty)",
-  "TestSomeOtherString": "#ifcondition(#valueof($.Name),#stringempty(),String is empty,String is not empty)"
+  "TestSomeEmptyString": "#ifcondition(#valueof($.EmptyString),#stringempty(),String is empty,String is not empty)",
+  "TestSomeOtherString": "#ifcondition(#valueof($.Name),#stringempty(),String is empty,String is not empty)",
+  "TestEmptyArray": "#ifcondition(#valueof($.EmptyArray),#arrayempty(),Array is empty,Array is not empty)",
+  "ReturnEmptyArray": "#ifcondition(#valueof($.Name),Kari,#arrayempty(),Name is not Kari)"
 }
 ```
 
@@ -1375,7 +1379,9 @@ Output:
   "FullName":"Kari,Inger,Nordmann",
   "AgeOfParents": 137,
   "TestSomeEmptyString": "String is empty",
-  "TestSomeOtherString": "String is not empty"
+  "TestSomeOtherString": "String is not empty",
+  "TestEmptyArray": "Array is empty",
+  "ReturnEmptyArray": []
 }
 ```
 
