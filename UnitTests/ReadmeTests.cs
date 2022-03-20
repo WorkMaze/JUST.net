@@ -141,12 +141,12 @@ namespace JUST.UnitTests
         [Test]
         public void MultipleArgumentConstantFunctions()
         {
-            const string input = "{ \"Name\": \"Kari\", \"Surname\": \"Nordmann\", \"MiddleName\": \"Inger\", \"ContactInformation\": \"Karl johans gate:Oslo:88880000\" , \"PersonalInformation\": \"45:Married:Norwegian\",\"AgeOfMother\": 67,\"AgeOfFather\": 70 }";
-            const string transformer = "{ \"FullName\": \"#xconcat(#valueof($.Name),#constant_comma(),#valueof($.MiddleName),#constant_comma(),#valueof($.Surname))\", \"AgeOfParents\": \"#xadd(#valueof($.AgeOfMother),#valueof($.AgeOfFather))\" }";
+            const string input = "{ \"Name\": \"Kari\", \"Surname\": \"Nordmann\", \"MiddleName\": \"Inger\", \"ContactInformation\": \"Karl johans gate:Oslo:88880000\" , \"PersonalInformation\": \"45:Married:Norwegian\",\"AgeOfMother\": 67,\"AgeOfFather\": 70, \"Empty\": \"\" }";
+            const string transformer = "{ \"FullName\": \"#xconcat(#valueof($.Name),#constant_comma(),#valueof($.MiddleName),#constant_comma(),#valueof($.Surname))\", \"AgeOfParents\": \"#xadd(#valueof($.AgeOfMother),#valueof($.AgeOfFather))\", \"TestSomeEmptyString\": \"#ifcondition(#valueof($.Empty),#stringempty(),String is empty,String is not empty)\", \"TestSomeOtherString\": \"#ifcondition(#valueof($.Name),#stringempty(),String is empty,String is not empty)\" }";
 
             var result = new JsonTransformer().Transform(transformer, input);
 
-            Assert.AreEqual("{\"FullName\":\"Kari,Inger,Nordmann\",\"AgeOfParents\":137}", result);
+            Assert.AreEqual("{\"FullName\":\"Kari,Inger,Nordmann\",\"AgeOfParents\":137,\"TestSomeEmptyString\":\"String is empty\",\"TestSomeOtherString\":\"String is not empty\"}", result);
         }
 
         [Test]
@@ -164,17 +164,17 @@ namespace JUST.UnitTests
         public void ConditionalTransformation()
         {
             const string input = "{ \"Tree\": { \"Branch\": \"leaf\", \"Flower\": \"Rose\" } }";
-            string transformer = "{ \"Result\": { \"Header\": \"JsonTransform\", \"#ifgroup(#exists($.Tree.Branch))\": { \"State\": { \"Value1\": \"#valueof($.Tree.Branch)\", \"Value2\": \"#valueof($.Tree.Flower)\" } } } }";
+            string transformer = "{ \"Result\": { \"Header\": \"JsonTransform\", \"#ifgroup(#exists($.Tree.Branch))\": { \"State\": { \"Value1\": \"#valueof($.Tree.Branch)\", \"Value2\": \"#valueof($.Tree.Flower)\" } }, \"Shrubs\": [ \"#ifgroup(#ifcondition(#valueof($.Tree.Flower),Rose,True,False),#valueof($.Tree.Flower))\" ] } }";
 
             var result = new JsonTransformer().Transform(transformer, input);
 
-            Assert.AreEqual("{\"Result\":{\"Header\":\"JsonTransform\",\"State\":{\"Value1\":\"leaf\",\"Value2\":\"Rose\"}}}", result);
+            Assert.AreEqual("{\"Result\":{\"Header\":\"JsonTransform\",\"Shrubs\":[\"Rose\"],\"State\":{\"Value1\":\"leaf\",\"Value2\":\"Rose\"}}}", result);
 
-            transformer = "{ \"Result\": { \"Header\": \"JsonTransform\", \"#ifgroup(#exists($.Tree.Root))\": { \"State\": { \"Value1\": \"#valueof($.Tree.Branch)\", \"Value2\": \"#valueof($.Tree.Flower)\" } } } }";
+            transformer = "{ \"Result\": { \"Header\": \"JsonTransform\", \"#ifgroup(#exists($.Tree.Root))\": { \"State\": { \"Value1\": \"#valueof($.Tree.Branch)\", \"Value2\": \"#valueof($.Tree.Flower)\" } }, \"Shrubs\": [ \"#ifgroup(#ifcondition(#valueof($.Tree.Flower),Olive,True,False),#valueof($.Tree.Flower))\" ] } }";
 
             result = new JsonTransformer().Transform(transformer, input);
 
-            Assert.AreEqual("{\"Result\":{\"Header\":\"JsonTransform\"}}", result);
+            Assert.AreEqual("{\"Result\":{\"Header\":\"JsonTransform\",\"Shrubs\":[]}}", result);
         }
 
         [Test]
@@ -242,6 +242,17 @@ namespace JUST.UnitTests
             var result = new JsonTransformer(context).Transform(transformer, input);
 
             Assert.AreEqual("{\"concat\":[{\"code\":\"001\",\"display\":\"Drug1\"},{\"code\":\"002\",\"display\":\"Drug2\"},{\"code\":\"pa1\",\"display\":\"PA1\"},{\"code\":\"pa2\",\"display\":\"PA2\"}],\"multipleConcat\":[{\"code\":\"001\",\"display\":\"Drug1\"},{\"code\":\"002\",\"display\":\"Drug2\"},{\"code\":\"pa1\",\"display\":\"PA1\"},{\"code\":\"pa2\",\"display\":\"PA2\"},{\"code\":\"sa1\",\"display\":\"SA1\"},{\"code\":\"sa2\",\"display\":\"SA2\"}],\"xconcat\":[{\"code\":\"001\",\"display\":\"Drug1\"},{\"code\":\"002\",\"display\":\"Drug2\"},{\"code\":\"pa1\",\"display\":\"PA1\"},{\"code\":\"pa2\",\"display\":\"PA2\"},{\"code\":\"sa1\",\"display\":\"SA1\"},{\"code\":\"sa2\",\"display\":\"SA2\"}]}", result);
+        }
+
+        [Test]
+        public void TypeCheck()
+        {
+            const string input = "{ \"integer\": 0, \"decimal\": 1.23, \"boolean\": true, \"string\": \"abc\", \"array\": [ \"abc\", \"xyz\" ] }";
+            const string transformer = "{ \"isNumberTrue1\": \"#isnumber(#valueof($.integer))\", \"isNumberTrue2\": \"#isnumber(#valueof($.decimal))\", \"isNumberFalse\": \"#isnumber(#valueof($.boolean))\", \"isBooleanTrue\": \"#isboolean(#valueof($.boolean))\", \"isBooleanFalse\": \"#isboolean(#valueof($.integer))\", \"isStringTrue\": \"#isstring(#valueof($.string))\", \"isStringFalse\": \"#isstring(#valueof($.array))\", \"isArrayTrue\": \"#isarray(#valueof($.array))\", \"isArrayFalse\": \"#isarray(#valueof($.decimal))\" }";
+
+            var result = new JsonTransformer().Transform(transformer, input);
+
+            Assert.AreEqual("{\"isNumberTrue1\":true,\"isNumberTrue2\":true,\"isNumberFalse\":false,\"isBooleanTrue\":true,\"isBooleanFalse\":false,\"isStringTrue\":true,\"isStringFalse\":false,\"isArrayTrue\":true,\"isArrayFalse\":false}", result);
         }
     }
 }

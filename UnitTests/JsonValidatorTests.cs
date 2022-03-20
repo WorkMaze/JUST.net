@@ -1,5 +1,6 @@
 ﻿using NUnit.Framework;
 using System;
+using System.Threading.Tasks;
 
 namespace JUST.UnitTests
 {
@@ -7,14 +8,14 @@ namespace JUST.UnitTests
     public class JsonValidatorTests
     {
         [Test]
-        public void SchemaOk()
+        public async Task SchemaOk()
         {
             const string input = "{ \"id\": 1, \"name\": \"Person 1\", \"gender\": \"M\" }";
             const string schema = "{ \"$schema\": \"https://json-schema.org/draft/2020-12/schema\", \"$id\": \"https://just.net\", \"title\": \"JUST Test\", \"description\": \"JUST test schema\", \"type\": \"object\", \"properties\": { \"id\": { \"description\": \"JUST Test\", \"type\": \"integer\" } }, \"required\": [ \"id\" ]}";
             var v = new JsonValidator(input);
             v.AddSchema(null, schema);
 
-            v.Validate();
+            await v.Validate();
 
             Assert.Pass();
         }

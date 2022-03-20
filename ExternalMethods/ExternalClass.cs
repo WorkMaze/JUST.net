@@ -33,5 +33,10 @@ namespace ExternalMethods
         {
             return val?.ToString();
         }
+
+        public object CheckNullParameters(object val1, object val2)
+        {
+            return val1 ?? val2;
+        }
     }
 }

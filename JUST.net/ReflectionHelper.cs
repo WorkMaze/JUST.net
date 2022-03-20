@@ -78,7 +78,7 @@ namespace JUST
             var assembly = GetAssembly(isAssemblyDefined, assemblyName, namespc, methodName);
             if (assembly != null)
             {
-                return Caller<T>(assembly, namespc, methodName, FilterParameters(parameters), true, context);
+                return Caller<T>(assembly, namespc, methodName, parameters, true, context);
             }
 
             throw new MissingMethodException((assemblyName != null ? $"{assemblyName}." : string.Empty) + $"{namespc}.{methodName}");
@@ -147,19 +147,6 @@ namespace JUST
                 }
             }
             return null;
-        }
-
-        private static object[] FilterParameters(object[] parameters)
-        {
-            if (string.IsNullOrEmpty(parameters[0]?.ToString() ?? string.Empty))
-            {
-                parameters = parameters.Skip(1).ToArray();
-            }
-            if (parameters.Length > 0 && parameters.Last().ToString() == "{}")
-            {
-                parameters = parameters.Take(parameters.Length - 1).ToArray();
-            }
-            return parameters;
         }
 
         internal static Type GetType(JTokenType jType)
