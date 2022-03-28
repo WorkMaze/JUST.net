@@ -58,6 +58,23 @@ namespace JUST.UnitTests
             Assert.AreEqual($"{{\"result\":{expectedResult}}}", result);
         }
 
+        [TestCase("\"12345678901\"", "12345678901")]
+        [TestCase("\"-12345678901\"", "-12345678901")]
+        [TestCase("\"0\"", "0")]
+        [TestCase("12345678901.23", "12345678901")]
+        [TestCase("-12345678901.56", "-12345678902")]
+        [TestCase("true", "1")]
+        [TestCase("false", "0")]
+        public void ToLongConversion(string typedValue, string expectedResult)
+        {
+            var input = $"{{ \"value\": {typedValue} }}";
+            const string transformer = "{ \"result\": \"#tolong(#valueof($.value))\" }";
+
+            var result = new JsonTransformer().Transform(transformer, input);
+
+            Assert.AreEqual($"{{\"result\":{expectedResult}}}", result);
+        }
+
         [TestCase("\"0\"", "0.0")]
         [TestCase("\"1.01\"", "1.01")]
         [TestCase("123", "123.0")]
