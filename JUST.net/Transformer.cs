@@ -712,6 +712,11 @@ namespace JUST
             return ReflectionHelper.GetTypedValue(typeof(int), val, context.EvaluationMode);
         }
 
+        public static object tolong(object val, JUSTContext context)
+        {
+            return ReflectionHelper.GetTypedValue(typeof(long), val, context.EvaluationMode);
+        }
+
         public static object tostring(object val, JUSTContext context)
         {
             return ReflectionHelper.GetTypedValue(typeof(string), val, context.EvaluationMode);
