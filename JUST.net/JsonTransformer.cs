@@ -584,6 +584,7 @@ namespace JUST
                 }
 
                 condProps.Add(propertyName);
+                childToken.First.Replace(JToken.Parse("{}"));
             }
         }
 
