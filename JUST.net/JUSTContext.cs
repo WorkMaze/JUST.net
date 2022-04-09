@@ -1,4 +1,5 @@
 ﻿using JUST.net.Selectables;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
@@ -31,18 +32,22 @@ namespace JUST
     {
         FallbackToDefault = 1,
         AddOrReplaceProperties = 2,
-        Strict = 4
+        Strict = 4,
+        LookInTransformed = 16
     }
 
     public class JUSTContext
     {
         private Dictionary<string, MethodInfo> _customFunctions = new Dictionary<string, MethodInfo>();
         private int _defaultDecimalPlaces = 28;
+        private char _escapeChar = '/'; //do not use backslash, it is already the escape char in JSON
+        private char _splitGroupChar = ':';
 
         internal JToken Input;
 
         public EvaluationMode EvaluationMode = EvaluationMode.FallbackToDefault;
-        private char _escapeChar = '/'; //do not use backslash, it is already the escape char in JSON
+
+        public JsonSerializerSettings JsonSettings { get; set; }
 
         public char EscapeChar { 
             get
@@ -52,6 +57,18 @@ namespace JUST
             set
             {
                 _escapeChar = value;
+            }
+        }
+
+        public char SplitGroupChar
+        {
+            get
+            {
+                return _splitGroupChar;
+            }
+            set
+            {
+                _splitGroupChar = value;
             }
         }
 
@@ -95,6 +112,11 @@ namespace JUST
             return (EvaluationMode & EvaluationMode.FallbackToDefault) == EvaluationMode.FallbackToDefault;
         }
 
+        internal bool IsLookInTransformed()
+        {
+            return (EvaluationMode & EvaluationMode.LookInTransformed) == EvaluationMode.LookInTransformed;
+        }
+
         public void RegisterCustomFunction(CustomFunction customFunction)
         {
             RegisterCustomFunction(customFunction.AssemblyName, customFunction.Namespace, customFunction.MethodName, customFunction.MethodAlias);
@@ -135,7 +157,7 @@ namespace JUST
             return _customFunctions.ContainsKey(aliasOrName);
         }
 
-        internal T Resolve<T>(JToken token) where T: ISelectableToken
+        internal T Resolve<T>(JToken token) where T : ISelectableToken
         {
             T instance = Activator.CreateInstance<T>();
             instance.Token = token;
