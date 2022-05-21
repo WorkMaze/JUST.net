@@ -430,14 +430,16 @@ namespace JUST
             args[0] = (string)ParseFunction(args[0], parentArray, currentArrayToken);
             string alias = args.Length > 1 ? (string)ParseFunction(args[1].Trim(), parentArray, currentArrayToken) : $"loop{++_loopCounter}";
 
-            if (args.Length > 2)
+            if (currentArrayToken?.Any() ?? false)
             {
-                previousAlias = (string)ParseFunction(args[2].Trim(), parentArray, currentArrayToken);
-                currentArrayToken = new Dictionary<string, JToken> { { previousAlias, Context.Input } };
-            }
-            else if (currentArrayToken?.Any() ?? false)
-            {
-                previousAlias = currentArrayToken.Last().Key;
+                if (args.Length > 2)
+                {
+                    previousAlias = (string)ParseFunction(args[2].Trim(), parentArray, currentArrayToken);
+                }
+                else
+                {
+                    previousAlias = currentArrayToken.Last().Key;
+                }
             }
             else
             {
@@ -1019,32 +1021,6 @@ namespace JUST
             return jsonObjects;
         }
         #endregion
-
-        private static int GetIndexOfFunctionEnd(string totalString)
-        {
-            int index = -1;
-
-            int startIndex = totalString.IndexOf("#");
-
-            int startBrackettCount = 0;
-            int endBrackettCount = 0;
-
-            for (int i = startIndex; i < totalString.Length; i++)
-            {
-                if (totalString[i] == '(')
-                    startBrackettCount++;
-                if (totalString[i] == ')')
-                    endBrackettCount++;
-
-                if (endBrackettCount == startBrackettCount && endBrackettCount > 0)
-                {
-                    index = i;
-                    break;
-                }
-            }
-
-            return index;
-        }
 
         private static T GetSelectableToken(JToken token, JUSTContext context)
         {

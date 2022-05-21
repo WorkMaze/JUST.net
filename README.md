@@ -76,7 +76,16 @@ string transformedString = new JsonTransformer<JmesPathSelectable>.Transform(tra
 
 JUST is a transformation language just like XSLT. It includes functions which are used inside the transformer JSON to transform the input JSON in a desired output JSON. This section describes the various functions present in JUST and how they can be used to transform your JSON.
 
-Every JUST function starts with "#" character.
+Every JUST function starts with "#" character and must start at the begininng of the expression or at the beginning of an argument.
+
+Example:
+
+```JSON
+{
+  "valid_function": "#valueof(#xconcat($.prop[,other_prop_or_filter,]))",
+  "not_a_function": "some_sentence_at_the_beginning_invalidates_evaluation_#xconcat(sencence,_argument_not_evaluated_#valueof($.prop)_does_not_start_with_#)"
+}
+```
 
 ## <a name="valueof"></a> valueof
 
@@ -873,6 +882,7 @@ When a concatenation is needed, one can use #concat or #xconcat to join two arra
 
 ## <a name="nestedarrays"></a> Nested array looping
 It is possible to loop over more than one array at once. By default, the last array is used, but one can use properties from other arrays by using alias for array looping.
+There's a special alias 'root', that refers to the whole input.
 One side note: loops must be last property, any properties after that will be ignored.
 
 Cosider the input:
@@ -1301,12 +1311,12 @@ Transformer:
   "Contact Information": {
     "Street Name": "#substring(#valueof($.ContactInformation),0,#firstindexof(#valueof($.ContactInformation),:))",
     "City": "#substring(#valueof($.ContactInformation),#add(#firstindexof(#valueof($.ContactInformation),:),1),#subtract(#subtract(#lastindexof(#valueof($.ContactInformation),:),#firstindexof(#valueof($.ContactInformation),:)),1))",
-    "PhoneNumber": "#substring(#valueof($.ContactInformation),#add(#lastindexof(#valueof($.ContactInformation),:),1),#subtract(#lastindexof(#valueof($.ContactInformation),),#lastindexof(#valueof($.ContactInformation),:)))"
+	"PhoneNumber": "#substring(#valueof($.ContactInformation),#add(#lastindexof(#valueof($.ContactInformation),:),1),#subtract(#subtract(#length(#valueof($.ContactInformation)),1),#lastindexof(#valueof($.ContactInformation),:)))"
   },
   "Personal Information": {
     "Age": "#substring(#valueof($.PersonalInformation),0,#firstindexof(#valueof($.PersonalInformation),:))",
     "Civil Status": "#substring(#valueof($.PersonalInformation),#add(#firstindexof(#valueof($.PersonalInformation),:),1),#subtract(#subtract(#lastindexof(#valueof($.PersonalInformation),:),#firstindexof(#valueof($.PersonalInformation),:)),1))",
-    "Ethnicity": "#substring(#valueof($.PersonalInformation),#add(#lastindexof(#valueof($.PersonalInformation),:),1),#subtract(#lastindexof(#valueof($.PersonalInformation),),#lastindexof(#valueof($.PersonalInformation),:)))"
+    "Ethnicity": "#substring(#valueof($.PersonalInformation),#add(#lastindexof(#valueof($.PersonalInformation),:),1),#subtract(#subtract(#length(#valueof($.PersonalInformation)),1),#lastindexof(#valueof($.PersonalInformation),:)))"
   }
 }
 ```
