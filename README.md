@@ -375,7 +375,7 @@ Output:
 
 ## <a name="multiarrays"></a> Aggregate functions for multidimensional arrays:
 
-These functions are essentially the same as the above ones, the only difference being that you can also provide a path to point to particluar element inside the array.
+These functions are essentially the same as the above ones, the only difference being that you can also provide a path to point to particular element inside the array.
 1. concatallatpath(array,path)
 2. sumatpath(array,path)
 3. averageatpath(array,path)
@@ -709,9 +709,9 @@ Cosider the input:
     }
   },
   "spell_numbers": {
-	"3": "three",
+    "3": "three",
     "2": "two",
-	"1": "one"
+    "1": "one"
   }
 }
 ```
@@ -795,13 +795,13 @@ Output:
   ],
   "sounds": {
     "cat": "meow",
-	"dog": "woof",
-	"human": "@!#$?"
+    "dog": "woof",
+    "human": "@!#$?"
   },
   "number_index": {
     "0": "three",
-	"1": "two",
-	"2": "one"
+    "1": "two",
+    "2": "one"
   },
   "othervalue": "othervalue"
 }
@@ -811,6 +811,8 @@ Output:
 When a concatenation is needed, one can use #concat or #xconcat to join two arrays
 1. concat(object1, object2)
 2. xconcat(object1,object2......objectx)
+
+Input:
 
 ```JSON
 {
@@ -832,7 +834,9 @@ When a concatenation is needed, one can use #concat or #xconcat to join two arra
 }
 ```
 
-```Transformer
+Transformer:
+
+```JSON
 {
   "concat": "#concat(#valueof($.drugs), #valueof($.pa))", 
   "multipleConcat": "#concat(#concat(#valueof($.drugs), #valueof($.pa)), #valueof($.sa))\",
@@ -840,7 +844,9 @@ When a concatenation is needed, one can use #concat or #xconcat to join two arra
 }
 ```
 
-```Output
+Output:
+
+```JSON
 {
   "concat": [{
       "code": "001", "display": "Drug1" 
