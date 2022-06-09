@@ -839,7 +839,7 @@ Transformer:
 ```JSON
 {
   "concat": "#concat(#valueof($.drugs), #valueof($.pa))", 
-  "multipleConcat": "#concat(#concat(#valueof($.drugs), #valueof($.pa)), #valueof($.sa))\",
+  "multipleConcat": "#concat(#concat(#valueof($.drugs), #valueof($.pa)), #valueof($.sa))",
   "xconcat": "#xconcat(#valueof($.drugs), #valueof($.pa), #valueof($.sa))" 
 }
 ```
@@ -1777,9 +1777,9 @@ The output will contain 4 JSON files:
 ## <a name="otherformats"></a> Transforming JSON to other data formats
 
 JUST.NET can now transform JSON data into other generic formats too. All functions except the BULK FUNCTIONS are supported in this feature.
-The #loop functions excepts an extra argument which defines the seperator between the individual records.
+The #loop functions accepts an extra argument which defines the seperator between the individual records.
 
-```JSON
+```
 #loop(path,seaperator)
 ```
 
