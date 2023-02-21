@@ -22,7 +22,7 @@ This will repace the JUST and JUST.NETCore packages.</Description>
 
   <ItemGroup>
     <PackageReference Include="JmesPath.Net" Version="1.0.153" />
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
     <PackageReference Include="NJsonSchema" Version="10.5.2" />
     <PackageReference Include="System.Reflection" Version="4.3.0" />
     <PackageReference Include="System.Reflection.Primitives" Version="4.3.0" />
