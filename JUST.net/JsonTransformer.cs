@@ -144,15 +144,15 @@ namespace JUST
 
             if (selectedTokens != null)
             {
-                CopyPostOperationBuildUp(parentToken, selectedTokens);
+                CopyPostOperationBuildUp(parentToken, selectedTokens, this.Context);
             }
             if (tokensToReplace != null)
             {
-                ReplacePostOperationBuildUp(parentToken, tokensToReplace);
+                ReplacePostOperationBuildUp(parentToken, tokensToReplace, this.Context);
             }
             if (tokensToDelete != null)
             {
-                DeletePostOperationBuildUp(parentToken, tokensToDelete);
+                DeletePostOperationBuildUp(parentToken, tokensToDelete, this.Context);
             }
             if (tokensToAdd != null)
             {
@@ -265,7 +265,7 @@ namespace JUST
             }
         }
 
-        private void CopyPostOperationBuildUp(JToken parentToken, List<JToken> selectedTokens)
+        private static void CopyPostOperationBuildUp(JToken parentToken, List<JToken> selectedTokens, JUSTContext context)
         {
             foreach (JToken selectedToken in selectedTokens)
             {
@@ -273,7 +273,7 @@ namespace JUST
                 {
                     JObject parent = parentToken as JObject;
                     JEnumerable<JToken> copyChildren = selectedToken.Children();
-                    if (Context.IsAddOrReplacePropertiesMode())
+                    if (context.IsAddOrReplacePropertiesMode())
                     {
                         CopyDescendants(parent, copyChildren);
                     }
@@ -335,12 +335,12 @@ namespace JUST
             }
         }
 
-        private void DeletePostOperationBuildUp(JToken parentToken, List<JToken> tokensToDelete)
+        private static void DeletePostOperationBuildUp(JToken parentToken, List<JToken> tokensToDelete, JUSTContext context)
         {
 
             foreach (string selectedToken in tokensToDelete)
             {
-                JToken tokenToRemove = GetSelectableToken(parentToken, Context).Select(selectedToken);
+                JToken tokenToRemove = GetSelectableToken(parentToken, context).Select(selectedToken);
 
                 if (tokenToRemove != null)
                     tokenToRemove.Ancestors().First().Remove();
@@ -348,12 +348,13 @@ namespace JUST
 
         }
 
-        private static void ReplacePostOperationBuildUp(JToken parentToken, Dictionary<string, JToken> tokensToReplace)
+        private static void ReplacePostOperationBuildUp(JToken parentToken, Dictionary<string, JToken> tokensToReplace, JUSTContext context)
         {
 
             foreach (KeyValuePair<string, JToken> tokenToReplace in tokensToReplace)
             {
-                JToken selectedToken = (parentToken as JObject).SelectToken(tokenToReplace.Key);
+                JsonPathSelectable selectable = JsonTransformer.GetSelectableToken(parentToken, context);
+                JToken selectedToken = selectable.Select(tokenToReplace.Key);
                 selectedToken.Replace(tokenToReplace.Value);
             }
 
