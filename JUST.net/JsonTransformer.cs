@@ -230,7 +230,35 @@ namespace JUST
                 case "eval":
                     EvalOperation(property, arguments, parentArray, currentArrayToken, ref loopProperties, ref tokensToAdd);
                     break;
+                case "transform":
+                    TranformOperation(property, arguments, parentArray, currentArrayToken, ref loopProperties);
+                    break;
             }
+        }
+
+        private void TranformOperation(JProperty property, string arguments, IDictionary<string, JArray> parentArray, IDictionary<string, JToken> currentArrayToken, ref List<string> loopProperties)
+        {
+            if (property.Value.Type == JTokenType.Array)
+            {
+                JToken originalInput = Context.Input;
+                for (int i = 0; i < property.Value.Count(); i++)
+                {
+                    JToken token = property.Value[i];
+                    if (token.Type == JTokenType.String)
+                    {
+                        var obj = ParseFunction(token.Value<string>(), parentArray, currentArrayToken);
+                        token.Replace(GetToken(obj));
+                    }
+                    else
+                    {
+                        RecursiveEvaluate(ref token, parentArray, currentArrayToken);
+                    }
+                    Context.Input = token;
+                }
+                
+                Context.Input = originalInput;
+            }
+            property.Parent.Replace(property.Value[property.Value.Count() - 1]);
         }
 
         private void PostOperationsBuildUp(ref JToken parentToken, List<JToken> tokenToForm)

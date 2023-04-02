@@ -254,5 +254,37 @@ namespace JUST.UnitTests
 
             Assert.AreEqual("{\"isNumberTrue1\":true,\"isNumberTrue2\":true,\"isNumberFalse\":false,\"isBooleanTrue\":true,\"isBooleanFalse\":false,\"isStringTrue\":true,\"isStringFalse\":false,\"isArrayTrue\":true,\"isArrayFalse\":false}", result);
         }
+
+        [Test]
+        public void MultipleTransformsScalarResult()
+        {
+            const string input = "{\"d\": [ \"one\", \"two\", \"three\" ], \"values\": [ \"z\", \"c\", \"n\" ]}";
+            const string transformer = 
+                "{ \"result\": " +
+                    "{ \"#transform($)\": [ " + 
+                        "{ \"condition\": { \"#loop($.values)\": { \"test\": \"#ifcondition(#stringcontains(#valueof($.d[0]),#currentvalue()),True,yes,no)\" } } }, " +
+                        "{ \"condition\": \"#valueof($.condition)\" }," +
+                          "\"#exists($.condition[?(@.test=='yes')])\" ] } }";
+
+            var result = new JsonTransformer().Transform(transformer, input);
+
+            Assert.AreEqual("{\"result\":true}", result);
+        }
+
+        [Test]
+        public void MultipleTransformsObjectResult()
+        {
+            const string input = "{\"d\": [ \"one\", \"two\", \"three\" ], \"values\": [ \"z\", \"c\", \"n\" ]}";
+            const string transformer = 
+                "{ \"result\": " +
+                    "{ \"#transform($)\": [ " + 
+                        "{ \"condition\": { \"#loop($.values)\": { \"test\": \"#ifcondition(#stringcontains(#valueof($.d[0]),#currentvalue()),True,yes,no)\" } } }, " +
+                        "{ \"condition\": \"#valueof($.condition)\" }," +
+                        "{ \"a\": \"#exists($.condition[?(@.test=='yes')])\" } ] } }";
+
+            var result = new JsonTransformer().Transform(transformer, input);
+
+            Assert.AreEqual("{\"result\":{\"a\":true}}", result);
+        }
     }
 }
