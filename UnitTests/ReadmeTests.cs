@@ -286,5 +286,39 @@ namespace JUST.UnitTests
 
             Assert.AreEqual("{\"result\":{\"a\":true}}", result);
         }
+
+        [Test]
+        public void MultipleTransformsOverSelectedToken()
+        {
+            const string input = "{ \"select\": {\"d\": [ \"one\", \"two\", \"three\" ], \"values\": [ \"z\", \"c\", \"n\" ]} }";
+            const string transformer = 
+                "{ \"result\": " +
+                    "{ \"#transform($.select)\": [ " + 
+                        "{ \"condition\": { \"#loop($.values)\": { \"test\": \"#ifcondition(#stringcontains(#valueof($.d[0]),#currentvalue()),True,yes,no)\" } } }, " +
+                        "{ \"condition\": \"#valueof($.condition)\" }," +
+                        "{ \"a\": \"#exists($.condition[?(@.test=='yes')])\" } ] } }";
+
+            var result = new JsonTransformer().Transform(transformer, input);
+
+            Assert.AreEqual("{\"result\":{\"a\":true}}", result);
+        }
+
+        [Test]
+        public void MultipleTransformsWithinLoop()
+        {
+            const string input = "{ \"select\": [{ \"d\": [ \"one\", \"two\", \"three\" ], \"values\": [ \"z\", \"c\", \"n\" ] }, { \"d\": [ \"four\", \"five\", \"six\" ], \"values\": [ \"z\", \"c\", \"n\" ] }] }";
+            const string transformer = 
+                "{ \"result\": {" +
+                    " \"#loop($.select,selectLoop)\": { " +
+                            "\"#transform($)\": [ " + 
+                                "{ \"condition\": { \"#loop($.values)\": { \"test\": \"#ifcondition(#stringcontains(#currentvalueatpath($.d[0],selectLoop),#currentvalue()),True,yes,no)\" } } }, " +
+                                "{ \"condition\": \"#valueof($.condition)\" }," +
+                                "{ \"a\": \"#exists($.condition[?(@.test=='yes')])\" } ] " +
+                        " } } }";
+
+            var result = new JsonTransformer().Transform(transformer, input);
+
+            Assert.AreEqual("{\"result\":[{\"a\":true},{\"a\":false}]}", result);
+        }
     }
 }

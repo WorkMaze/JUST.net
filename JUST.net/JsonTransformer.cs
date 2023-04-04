@@ -231,16 +231,44 @@ namespace JUST
                     EvalOperation(property, arguments, parentArray, currentArrayToken, ref loopProperties, ref tokensToAdd);
                     break;
                 case "transform":
-                    TranformOperation(property, arguments, parentArray, currentArrayToken, ref loopProperties);
+                    TranformOperation(property, arguments, parentArray, currentArrayToken);
                     break;
             }
         }
 
-        private void TranformOperation(JProperty property, string arguments, IDictionary<string, JArray> parentArray, IDictionary<string, JToken> currentArrayToken, ref List<string> loopProperties)
+        private void TranformOperation(JProperty property, string arguments, IDictionary<string, JArray> parentArray, IDictionary<string, JToken> currentArrayToken)
         {
+            string[] argumentArr = ExpressionHelper.SplitArguments(arguments, Context.EscapeChar);
+
+            object functionResult = ParseArgument(parentArray, currentArrayToken, argumentArr[0]);
+            if (!(functionResult is string jsonPath))
+            {
+                throw new ArgumentException($"Invalid path for #transform: '{argumentArr[0]}' resolved to null!");
+            }
+
+            JToken selectedToken = null;
+            string alias = null;
+            if (argumentArr.Length > 1)
+            {
+                alias = ParseArgument(parentArray, currentArrayToken, argumentArr[1]) as string;
+                if (!(currentArrayToken?.ContainsKey(alias) ?? false))
+                {
+                    throw new ArgumentException($"Unknown loop alias: '{argumentArr[1]}'");
+                }
+                JToken input = alias != null ? currentArrayToken?[alias] : currentArrayToken?.Last().Value ?? Context.Input;
+                var selectable = GetSelectableToken(currentArrayToken[alias], Context);
+                selectedToken = selectable.Select(argumentArr[0]);
+            }
+            else
+            {
+                var selectable = GetSelectableToken(currentArrayToken?.Last().Value ?? Context.Input, Context);
+                selectedToken = selectable.Select(argumentArr[0]);
+            }
+            
             if (property.Value.Type == JTokenType.Array)
             {
                 JToken originalInput = Context.Input;
+                Context.Input = selectedToken;
                 for (int i = 0; i < property.Value.Count(); i++)
                 {
                     JToken token = property.Value[i];
@@ -251,7 +279,7 @@ namespace JUST
                     }
                     else
                     {
-                        RecursiveEvaluate(ref token, parentArray, currentArrayToken);
+                        RecursiveEvaluate(ref token, i == 0 ? parentArray : null, i == 0 ? currentArrayToken : null);
                     }
                     Context.Input = token;
                 }
