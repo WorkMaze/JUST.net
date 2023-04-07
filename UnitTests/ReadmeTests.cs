@@ -256,69 +256,14 @@ namespace JUST.UnitTests
         }
 
         [Test]
-        public void MultipleTransformsScalarResult()
+        public void Transform()
         {
-            const string input = "{\"d\": [ \"one\", \"two\", \"three\" ], \"values\": [ \"z\", \"c\", \"n\" ]}";
-            const string transformer = 
-                "{ \"result\": " +
-                    "{ \"#transform($)\": [ " + 
-                        "{ \"condition\": { \"#loop($.values)\": { \"test\": \"#ifcondition(#stringcontains(#valueof($.d[0]),#currentvalue()),True,yes,no)\" } } }, " +
-                        "{ \"condition\": \"#valueof($.condition)\" }," +
-                          "\"#exists($.condition[?(@.test=='yes')])\" ] } }";
+            const string input = "{ \"spell\": [\"one\", \"two\", \"three\"], \"letters\": [\"z\", \"c\", \"n\"], \"nested\": {	\"spell\": [\"one\", \"two\", \"three\"], \"letters\": [\"z\", \"c\", \"n\"] },\"array\": [{ \"spell\": [\"one\", \"two\", \"three\"], \"letters\": [\"z\", \"c\", \"n\"] }, { \"spell\": [\"four\", \"five\", \"six\"], \"letters\": [\"z\", \"c\", \"n\"] } ]}";
+            const string transformer = "{ \"scalar\": { \"#transform($)\": [{ \"condition\": { \"#loop($.letters)\": { \"test\": \"#ifcondition(#stringcontains(#valueof($.spell[0]),#currentvalue()),True,yes,no)\" } } }, \"#exists($.condition[?(@.test=='yes')])\"] }, \"object\": { \"#transform($)\": [{ \"condition\": { \"#loop($.letters)\": { \"test\": \"#ifcondition(#stringcontains(#valueof($.spell[0]),#currentvalue()),True,yes,no)\" } } }, { \"intermediate_transform\": \"#valueof($.condition)\" }, { \"result\": \"#exists($.intermediate_transform[?(@.test=='yes')])\" } ] }, \"select_token\": { \"#transform($.nested)\": [{ \"condition\": { \"#loop($.letters)\": { \"test\": \"#ifcondition(#stringcontains(#valueof($.spell[0]),#currentvalue()),True,yes,no)\" } } }, { \"intermediate_transform\": \"#valueof($.condition)\" }, { \"result\": \"#exists($.intermediate_transform[?(@.test=='yes')])\" } ] }, \"loop\": { \"#loop($.array,selectLoop)\": { \"#transform($)\": [{ \"condition\": { \"#loop($.letters)\": { \"test\": \"#ifcondition(#stringcontains(#currentvalueatpath($.spell[0],selectLoop),#currentvalue()),True,yes,no)\" } } }, { \"intermediate_transform\": \"#valueof($.condition)\" }, { \"result\": \"#exists($.intermediate_transform[?(@.test=='yes')])\" } ] } } } ";
 
             var result = new JsonTransformer().Transform(transformer, input);
 
-            Assert.AreEqual("{\"result\":true}", result);
-        }
-
-        [Test]
-        public void MultipleTransformsObjectResult()
-        {
-            const string input = "{\"d\": [ \"one\", \"two\", \"three\" ], \"values\": [ \"z\", \"c\", \"n\" ]}";
-            const string transformer = 
-                "{ \"result\": " +
-                    "{ \"#transform($)\": [ " + 
-                        "{ \"condition\": { \"#loop($.values)\": { \"test\": \"#ifcondition(#stringcontains(#valueof($.d[0]),#currentvalue()),True,yes,no)\" } } }, " +
-                        "{ \"condition\": \"#valueof($.condition)\" }," +
-                        "{ \"a\": \"#exists($.condition[?(@.test=='yes')])\" } ] } }";
-
-            var result = new JsonTransformer().Transform(transformer, input);
-
-            Assert.AreEqual("{\"result\":{\"a\":true}}", result);
-        }
-
-        [Test]
-        public void MultipleTransformsOverSelectedToken()
-        {
-            const string input = "{ \"select\": {\"d\": [ \"one\", \"two\", \"three\" ], \"values\": [ \"z\", \"c\", \"n\" ]} }";
-            const string transformer = 
-                "{ \"result\": " +
-                    "{ \"#transform($.select)\": [ " + 
-                        "{ \"condition\": { \"#loop($.values)\": { \"test\": \"#ifcondition(#stringcontains(#valueof($.d[0]),#currentvalue()),True,yes,no)\" } } }, " +
-                        "{ \"condition\": \"#valueof($.condition)\" }," +
-                        "{ \"a\": \"#exists($.condition[?(@.test=='yes')])\" } ] } }";
-
-            var result = new JsonTransformer().Transform(transformer, input);
-
-            Assert.AreEqual("{\"result\":{\"a\":true}}", result);
-        }
-
-        [Test]
-        public void MultipleTransformsWithinLoop()
-        {
-            const string input = "{ \"select\": [{ \"d\": [ \"one\", \"two\", \"three\" ], \"values\": [ \"z\", \"c\", \"n\" ] }, { \"d\": [ \"four\", \"five\", \"six\" ], \"values\": [ \"z\", \"c\", \"n\" ] }] }";
-            const string transformer = 
-                "{ \"result\": {" +
-                    " \"#loop($.select,selectLoop)\": { " +
-                            "\"#transform($)\": [ " + 
-                                "{ \"condition\": { \"#loop($.values)\": { \"test\": \"#ifcondition(#stringcontains(#currentvalueatpath($.d[0],selectLoop),#currentvalue()),True,yes,no)\" } } }, " +
-                                "{ \"condition\": \"#valueof($.condition)\" }," +
-                                "{ \"a\": \"#exists($.condition[?(@.test=='yes')])\" } ] " +
-                        " } } }";
-
-            var result = new JsonTransformer().Transform(transformer, input);
-
-            Assert.AreEqual("{\"result\":[{\"a\":true},{\"a\":false}]}", result);
+            Assert.AreEqual("{\"scalar\":true,\"object\":{\"result\":true},\"select_token\":{\"result\":true},\"loop\":[{\"result\":true},{\"result\":false}]}", result);
         }
     }
 }
