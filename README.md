@@ -1586,6 +1586,8 @@ Output:
 ## <a name="applyover"></a> Apply function over transformation
 
 Sometimes you cannnot achieve what you want directly from a single function (or composition). To overcome this you may want to apply a function over a previous transformation. That's what #applyover does.
+You can also apply another complete transformation, not just a single function, over the transformed input. 
+Bare in mind that every special character (comma, parenthesis) must be escaped if they appear inside the second argument/transformation.
 
 Consider the following input:
 
@@ -1608,6 +1610,90 @@ Output:
 ```JSON
 {
   "result": true
+}
+```
+
+
+## <a name="transform"></a> Multiple transformations
+
+The #applyover funnction is handy to make a simple transformation, but when extra transformation is complex, it can became cumbersome, because one has to escape all special characters.
+To avoid this, there's a function called #transform. It takes a path as parameter, and like bulk functions, is composed by an array. Each element of the array is a transformation,
+that will be applied over the generated result of the previous item of the array. The first item/transformation will be applied over the given input, or current element if one is on an array loop.
+Note that for the second element/transformation and beyond, the input is the previous generated output of the previous transformation, so it's like a new transformation.
+
+Consider the following input:
+
+```JSON
+{
+  "spell": ["one", "two", "three"],
+  "letters": ["z", "c", "n"],
+  "nested": {
+    "spell": ["one", "two", "three"],
+    "letters": ["z", "c", "n"]
+  },
+  "array": [{
+      "spell": ["one", "two", "three"],
+      "letters": ["z", "c", "n"]
+    }, {
+      "spell": ["four", "five", "six"],
+      "letters": ["z", "c", "n"]
+    }
+  ]
+}
+```
+
+
+Transformer:
+
+```JSON
+{
+  "scalar": {
+    "#transform($)": [
+      { "condition": { "#loop($.letters)": { "test": "#ifcondition(#stringcontains(#valueof($.spell[0]),#currentvalue()),True,yes,no)" } } },
+      "#exists($.condition[?(@.test=='yes')])"
+	]
+  },
+  "object": {
+    "#transform($)": [
+      { "condition": { "#loop($.letters)": { "test": "#ifcondition(#stringcontains(#valueof($.spell[0]),#currentvalue()),True,yes,no)" } } },
+      { "intermediate_transform": "#valueof($.condition)" },
+      { "result": "#exists($.intermediate_transform[?(@.test=='yes')])" }
+    ]
+  },
+  "select_token": {
+    "#transform($.nested)": [
+      { "condition": { "#loop($.letters)": { "test": "#ifcondition(#stringcontains(#valueof($.spell[0]),#currentvalue()),True,yes,no)" } } },
+      { "intermediate_transform": "#valueof($.condition)" },
+      { "result": "#exists($.intermediate_transform[?(@.test=='yes')])" }
+    ]
+  },
+  "loop": {
+    "#loop($.array,selectLoop)": {
+      "#transform($)": [
+        { "condition": { "#loop($.letters)": { "test": "#ifcondition(#stringcontains(#currentvalueatpath($.spell[0],selectLoop),#currentvalue()),True,yes,no)" } } },
+        { "intermediate_transform": "#valueof($.condition)" },
+        { "result": "#exists($.intermediate_transform[?(@.test=='yes')])" }
+      ]
+    }
+  }
+}
+```
+
+Output:
+
+```JSON
+{
+  "scalar": true,
+  "object": {
+    "result": true
+  }
+  "select_token": {
+    "result": true
+  },
+  "loop": [
+    { "result": true },
+	{ "result": false }
+  ]
 }
 ```
 
