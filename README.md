@@ -1047,7 +1047,8 @@ Output:
 }
 ```
 
-You can group using multiple "grouping elements". They should be seperated by a semicolon (:)
+You can group using multiple "grouping elements".
+Default character for separating them is colon (:) but one can define other character setting property 'SpiltGroupChar' in 'JUSTContext' class (just like [Escaping reserved char](#escaping))
 
 Input:
 
