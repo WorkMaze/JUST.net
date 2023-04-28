@@ -793,5 +793,10 @@ namespace JUST
         {
             return string.Empty;
         }
+
+        public static object arrayempty(JUSTContext context)
+        {
+            return Array.Empty<object>();
+        }
     }
 }
