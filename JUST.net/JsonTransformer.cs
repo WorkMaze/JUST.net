@@ -874,7 +874,7 @@ namespace JUST
                     }
                     else if (functionName == "applyover")
                     {
-                        output = ParseApplyOver(array, currentArrayElement, parameters);
+                        output = ParseApplyOver(listParameters, array, currentArrayElement, parameters);
                     }
                     else
                     {
@@ -896,10 +896,16 @@ namespace JUST
             }
         }
 
-        private object ParseApplyOver(IDictionary<string, JArray> array, IDictionary<string, JToken> currentArrayElement, object[] parameters)
+        private object ParseApplyOver(List<object> listParameters, IDictionary<string, JArray> array, IDictionary<string, JToken> currentArrayElement, object[] parameters)
         {
             object output;
-            var contextInput = Context.Input;
+            JToken tmpContext = Context.Input, contextInput = Context.Input;
+            if (array != null)
+            {
+                var alias = ParseLoopAlias(listParameters, 3, array.Last().Key);
+                contextInput = currentArrayElement[alias];
+            }
+
             var input = JToken.Parse(Transform(parameters[0].ToString(), contextInput.ToString()));
             Context.Input = input;
             if (parameters[1].ToString().Trim().Trim('\'').StartsWith("{"))
@@ -916,7 +922,7 @@ namespace JUST
             {
                 output = ParseFunction(parameters[1].ToString().Trim().Trim('\''), array, currentArrayElement);
             }
-            Context.Input = contextInput;
+            Context.Input = tmpContext;
             return output;
         }
 
