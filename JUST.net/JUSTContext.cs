@@ -43,6 +43,7 @@ namespace JUST
 
         public EvaluationMode EvaluationMode = EvaluationMode.FallbackToDefault;
         private char _escapeChar = '/'; //do not use backslash, it is already the escape char in JSON
+        private char _splitGroupChar = ':';
 
         public char EscapeChar { 
             get
@@ -52,6 +53,18 @@ namespace JUST
             set
             {
                 _escapeChar = value;
+            }
+        }
+
+        public char SplitGroupChar
+        {
+            get
+            {
+                return _splitGroupChar;
+            }
+            set
+            {
+                _splitGroupChar = value;
             }
         }
 

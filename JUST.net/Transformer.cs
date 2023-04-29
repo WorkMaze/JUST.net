@@ -567,13 +567,13 @@ namespace JUST
             JArray result;
             var selector = context.Resolve<T>(context.Input);
             JArray arr = (JArray)selector.Select(path);
-            if (!groupingElement.Contains(":"))
+            if (!groupingElement.Contains(context.SplitGroupChar))
             {
                 result = Utilities.GroupArray<T>(arr, groupingElement, groupedElement, context);
             }
             else
             {
-                string[] groupingElements = groupingElement.Split(':');
+                string[] groupingElements = groupingElement.Split(context.SplitGroupChar);
                 result = Utilities.GroupArrayMultipleProperties<T>(arr, groupingElements, groupedElement, context);
             }
             return result;
@@ -792,6 +792,11 @@ namespace JUST
         public static string stringempty()
         {
             return string.Empty;
+        }
+
+        public static object arrayempty(JUSTContext context)
+        {
+            return Array.Empty<object>();
         }
     }
 }
