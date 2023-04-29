@@ -1048,7 +1048,8 @@ Output:
 }
 ```
 
-You can group using multiple "grouping elements". They should be seperated by a semicolon (:)
+You can group using multiple "grouping elements".
+Default character for separating them is colon (:) but one can define other character setting property 'SpiltGroupChar' in 'JUSTContext' class (just like [Escaping reserved char](#escaping))
 
 Input:
 
@@ -1333,15 +1334,16 @@ Output:
 ## <a name="multiargsconstants"></a> Multiple argument & constant functions
 
 The transformation in the above scenario looks quite complex. And it could get quite messy when the string becomes longer.
-Some reserved keywords, like comma (,) and hash (#), have a proper function. Also empty string has a proper function so it can be represented.
+Some reserved keywords, like comma (,) and hash (#), have a proper function. Also empty string and empty array has proper functions so they can be represented.
 
-Hence, the following 5 functions have been introduced:
+Hence, the following 6 functions have been introduced:
 
 1. xconcat(string1,string2......stringx) - Concatenates multiple strings.
 2. xadd(int1,int2......intx) - Adds multiples integers.
 3. constant_comma() - Returns comma(,)
 4. constant_hash() - Returns hash(#)
 5. stringempty() - Returns ""
+6. arrayempty() - Returns []
 
 Consider the following input:
 
@@ -1354,7 +1356,8 @@ Consider the following input:
   "PersonalInformation": "45:Married:Norwegian",
   "AgeOfMother": 67,
   "AgeOfFather": 70,
-  "Empty": ""
+  "EmptyString": "",
+  "EmptyArray": []
 }
 ```
 
@@ -1364,8 +1367,10 @@ Transformer:
 {
   "FullName": "#xconcat(#valueof($.Name),#constant_comma(),#valueof($.MiddleName),#constant_comma(),#valueof($.Surname))",
   "AgeOfParents": "#xadd(#valueof($.AgeOfMother),#valueof($.AgeOfFather))",
-  "TestSomeEmptyString": "#ifcondition(#valueof($.Empty),#stringempty(),String is empty,String is not empty)",
-  "TestSomeOtherString": "#ifcondition(#valueof($.Name),#stringempty(),String is empty,String is not empty)"
+  "TestSomeEmptyString": "#ifcondition(#valueof($.EmptyString),#stringempty(),String is empty,String is not empty)",
+  "TestSomeOtherString": "#ifcondition(#valueof($.Name),#stringempty(),String is empty,String is not empty)",
+  "TestEmptyArray": "#ifcondition(#valueof($.EmptyArray),#arrayempty(),Array is empty,Array is not empty)",
+  "ReturnEmptyArray": "#ifcondition(#valueof($.Name),Kari,#arrayempty(),Name is not Kari)"
 }
 ```
 
@@ -1376,7 +1381,9 @@ Output:
   "FullName":"Kari,Inger,Nordmann",
   "AgeOfParents": 137,
   "TestSomeEmptyString": "String is empty",
-  "TestSomeOtherString": "String is not empty"
+  "TestSomeOtherString": "String is not empty",
+  "TestEmptyArray": "Array is empty",
+  "ReturnEmptyArray": []
 }
 ```
 
@@ -1587,6 +1594,8 @@ Output:
 ## <a name="applyover"></a> Apply function over transformation
 
 Sometimes you cannnot achieve what you want directly from a single function (or composition). To overcome this you may want to apply a function over a previous transformation. That's what #applyover does.
+First argument is the first transformation to apply to input, and the result will serve as input to the second argument/transformation. Second argument can be a simple function or a complex transformation (an object or an array).
+Note that if any of the arguments/transformations of #applyover has commas (,), one has to use #constant_comma to represent them (and use #xconcat to construct the argument/transformation).
 
 Consider the following input:
 
@@ -1601,14 +1610,28 @@ Transformer:
 
 ```JSON
 {
-  "result": "#applyover({ 'condition': { '#loop($.values)': { 'test': '#ifcondition(#stringcontains(#valueof($.d[0]),#currentvalue()),True,yes,no)' } } }, '#exists($.condition[?(@.test=='yes')])')" 
+  "simple_function": "#applyover({ 'condition': { '#loop($.values)': { 'test': '#ifcondition(#stringcontains(#valueof($.d[0]),#currentvalue()),True,yes,no)' } } }, '#exists($.condition[?(@.test=='yes')])')",
+  "object": "#applyover(#xconcat({ 'temp': { '#loop($.values)': { 'index': '#currentindex()', #constant_comma(), 'value': '#currentvalue()' } } }), { 'first_element': '#valueof($.temp[0])' })",
+  "array": "#applyover(#xconcat({ '#loop($.d)': { 'index': '#currentindex()', #constant_comma(), 'value': '#currentvalue()' } }), { 'last_element': '#valueof($[2])' })" }"
 }
 ```
 
 Output:
 ```JSON
 {
-  "result": true
+  "simple_function": true,
+  "object": {
+    "first_element": {
+      "index":0,
+      "value": "z"
+    }
+  },
+  "array": {
+    "last_element": {
+      "index": 2,
+      "value": "three"
+    }
+  }
 }
 ```
 
@@ -1904,7 +1927,7 @@ DataTransformer.xml:
     <stringresult>
       <lastindexofand>#lastindexof(#valueof($.stringref),and)</lastindexofand>
       <firstindexofand>#firstindexof(#valueof($.stringref),and)</firstindexofand>
-      <subsrting>#substring(#valueof($.stringref),8,10)</subsrting>
+      <substring>#substring(#valueof($.stringref),8,10)</substring>
       <concat>#concat(#valueof($.menu.id.file),#valueof($.menu.value.Window))</concat>
     </stringresult>
     <mathresult>
@@ -1927,12 +1950,12 @@ DataTransformer.xml:
   <FullName>#concat(#concat(#concat(#valueof($.Name), ),#concat(#valueof($.MiddleName), )),#valueof($.Surname))</FullName>
   <Contact_Information>
     <City>#substring(#valueof($.ContactInformation),#add(#firstindexof(#valueof($.ContactInformation),:),1),#subtract(#subtract(#lastindexof(#valueof($.ContactInformation),:),#firstindexof(#valueof($.ContactInformation),:)),1))</City>
-    <PhoneNumber>#substring(#valueof($.ContactInformation),#add(#lastindexof(#valueof($.ContactInformation),:),1),#subtract(#lastindexof(#valueof($.ContactInformation),),#lastindexof(#valueof($.ContactInformation),:)))</PhoneNumber>
+    <PhoneNumber>#substring(#valueof($.ContactInformation),#add(#lastindexof(#valueof($.ContactInformation),:),1),#subtract(#subtract(#length(#valueof($.ContactInformation)),1),#lastindexof(#valueof($.ContactInformation),:)))</PhoneNumber>
     <Street_Name>#substring(#valueof($.ContactInformation),0,#firstindexof(#valueof($.ContactInformation),:))</Street_Name>
   </Contact_Information>
   <Personal_Information>
     <Age>#substring(#valueof($.PersonalInformation),0,#firstindexof(#valueof($.PersonalInformation),:))</Age>
-    <Ethnicity>#substring(#valueof($.PersonalInformation),#add(#lastindexof(#valueof($.PersonalInformation),:),1),#subtract(#lastindexof(#valueof($.PersonalInformation),),#lastindexof(#valueof($.PersonalInformation),:)))</Ethnicity>
+    <Ethnicity>#substring(#valueof($.PersonalInformation),#add(#lastindexof(#valueof($.PersonalInformation),:),1),#subtract(#subtract(#length(#valueof($.PersonalInformation)),1),#lastindexof(#valueof($.PersonalInformation),:)))</Ethnicity>
     <LogId>#valueof($.LogId)</LogId>
     <Civil_Status>#substring(#valueof($.PersonalInformation),#add(#firstindexof(#valueof($.PersonalInformation),:),1),#subtract(#subtract(#lastindexof(#valueof($.PersonalInformation),:),#firstindexof(#valueof($.PersonalInformation),:)),1))</Civil_Status>
   </Personal_Information>
@@ -1960,7 +1983,7 @@ Output:
     <stringresult>
       <lastindexofand>21</lastindexofand>
       <firstindexofand>6</firstindexofand>
-      <subsrting>dveryunuas</subsrting>
+      <substring>dveryunuas</substring>
       <concat>csvpopup</concat>
     </stringresult>
     <mathresult>

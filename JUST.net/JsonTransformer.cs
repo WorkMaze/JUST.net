@@ -771,7 +771,8 @@ namespace JUST
             {
                 throw new Exception("Function #replace needs at least two arguments - 1. path to be replaced, 2. token to replace with.");
             }
-            if (ParseArgument(null, parentArray, currentArrayElement, argumentArr[0]) is not string key)
+            string key = ParseArgument(null, parentArray, currentArrayElement, argumentArr[0]) as string;
+            if (key == null)
             {
                 throw new ArgumentException($"Invalid path for #replace: '{argumentArr[0]}' resolved to null!");
             }
@@ -785,7 +786,8 @@ namespace JUST
         #region Delete
         private string Delete(string argument, IDictionary<string, JArray> parentArray, IDictionary<string, JToken> currentArrayElement)
         {
-            if (ParseArgument(null, parentArray, currentArrayElement, argument) is not string result)
+            string result = ParseArgument(null, parentArray, currentArrayElement, argument) as string;
+            if (result == null)
             {
                 throw new ArgumentException($"Invalid path for #delete: '{argument}' resolved to null!");
             }
@@ -838,6 +840,30 @@ namespace JUST
             {
                 throw new Exception("Error while calling function : " + functionString + " - " + ex.Message, ex);
             }
+        }
+
+        private object ParseApplyOver(IDictionary<string, JArray> array, IDictionary<string, JToken> currentArrayElement, object[] parameters)
+        {
+            object output;
+            var contextInput = Context.Input;
+            var input = JToken.Parse(Transform(parameters[0].ToString(), contextInput.ToString()));
+            Context.Input = input;
+            if (parameters[1].ToString().Trim().Trim('\'').StartsWith("{"))
+            {
+                var jobj = JObject.Parse(parameters[1].ToString().Trim().Trim('\''));
+                output = new JsonTransformer(Context).Transform(jobj, input);
+            }
+            else if (parameters[1].ToString().Trim().Trim('\'').StartsWith("["))
+            {
+                var jarr = JArray.Parse(parameters[1].ToString().Trim().Trim('\''));
+                output = new JsonTransformer(Context).Transform(jarr, input);
+            }
+            else
+            {
+                output = ParseFunction(parameters[1].ToString().Trim().Trim('\''), null, array, currentArrayElement);
+            }
+            Context.Input = contextInput;
+            return output;
         }
 
         private string ParseLoopAlias(IList<object> listParameters, int index, string defaultValue)
@@ -929,11 +955,7 @@ namespace JUST
             }
             else if (functionName == "applyover")
             {
-                var contextInput = Context.Input;
-                var input = JToken.Parse(Transform(listParameters[0].ToString(), contextInput.ToString()));
-                Context.Input = input;
-                output = ParseFunction(listParameters[1].ToString().Trim().Trim('\''), null, array, currentArrayElement);
-                Context.Input = contextInput;
+                output = ParseApplyOver(array, currentArrayElement, listParameters.ToArray());
             }
             else
             {
