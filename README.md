@@ -1636,7 +1636,7 @@ Output:
 
 ## <a name="transform"></a> Multiple transformations
 
-The #applyover funnction is handy to make a simple transformation, but when extra transformation is complex, it can became cumbersome, because one has to escape all special characters.
+The #applyover function is handy to make a simple transformation, but when extra transformation is complex, it can became cumbersome, because one has to escape all special characters.
 To avoid this, there's a function called #transform. It takes a path as parameter, and like bulk functions, is composed by an array. Each element of the array is a transformation,
 that will be applied over the generated result of the previous item of the array. The first item/transformation will be applied over the given input, or current element if one is on an array loop.
 Note that for the second element/transformation and beyond, the input is the previous generated output of the previous transformation, so it's like a new transformation.
