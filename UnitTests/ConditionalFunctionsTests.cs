@@ -245,5 +245,16 @@ namespace JUST.UnitTests
 
             Assert.AreEqual("{\"OrderID\":\"1001\",\"Approver\":\"John\"}", result);
         }
+        
+        [Test, Category("IfCondition")]
+        public void ConstantEmptyArray()
+        {
+            const string input = "{ \"val\": \"test\" }";
+            const string transformer = "{ \"result\": \"#ifcondition(something_else,#valueof($.val),truevalue,#arrayempty())\" }";
+
+            var result = new JsonTransformer().Transform(transformer, input);
+
+            Assert.AreEqual("{\"result\":[]}", result);
+        }
     }
 }
