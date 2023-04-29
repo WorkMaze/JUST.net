@@ -26,5 +26,17 @@ namespace JUST.UnitTests.Arrays
 
             Assert.AreEqual("{\"Result\":[{\"type\":\"air\",\"company\":\"Boeing\",\"all\":[{\"name\":\"airplane\"},{\"name\":\"Chopper\"}]},{\"type\":\"air\",\"company\":\"Concorde\",\"all\":[{\"name\":\"airplane\"}]},{\"type\":\"land\",\"company\":\"GM\",\"all\":[{\"name\":\"car\"},{\"name\":\"truck\"}]},{\"type\":\"sea\",\"company\":\"Viking\",\"all\":[{\"name\":\"ship\"}]}]}", result);
         }
+
+        [Test]
+        public void RedefineSplitChar()
+        {
+            const string transformer = "{ \"Result\": \"#grouparrayby($.Vehicle,type:a|company,all)\" }";
+            const string input = "{ \"Vehicle\": [ { \"type:a\": \"air\", \"company\": \"Boeing\", \"name\": \"airplane\" }, { \"type:a\": \"air\", \"company\": \"Concorde\", \"name\": \"airplane\" }, { \"type:a\": \"air\", \"company\": \"Boeing\", \"name\": \"Chopper\" }, { \"type:a\": \"land\", \"company\": \"GM\", \"name\": \"car\" }, { \"type:a\": \"sea\", \"company\": \"Viking\", \"name\": \"ship\" }, { \"type:a\": \"land\", \"company\": \"GM\", \"name\": \"truck\" } ] }";
+
+            var context = new JUSTContext() { SplitGroupChar = '|' };
+            var result = new JsonTransformer(context).Transform(transformer, input);
+
+            Assert.AreEqual("{\"Result\":[{\"type:a\":\"air\",\"company\":\"Boeing\",\"all\":[{\"name\":\"airplane\"},{\"name\":\"Chopper\"}]},{\"type:a\":\"air\",\"company\":\"Concorde\",\"all\":[{\"name\":\"airplane\"}]},{\"type:a\":\"land\",\"company\":\"GM\",\"all\":[{\"name\":\"car\"},{\"name\":\"truck\"}]},{\"type:a\":\"sea\",\"company\":\"Viking\",\"all\":[{\"name\":\"ship\"}]}]}", result);
+        }
     }
 }
