@@ -32,6 +32,9 @@
     <None Update="Inputs\Transformer_customfunctionnestedresult.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Update="Inputs\thread_safe_input.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>
