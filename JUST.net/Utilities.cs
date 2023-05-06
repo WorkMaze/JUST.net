@@ -45,7 +45,7 @@ namespace JUST
             return result;
         }
 
-        public static JArray GroupArray<T>(JArray array, string groupingPropertyName, string groupedPropertyName, JUSTContext context) where T: ISelectableToken
+        public static JArray GroupArray<T>(JArray array, string groupingPropertyName, string groupedPropertyName, IContext context) where T: ISelectableToken
         {
             Dictionary<string, JArray> groupedPair = null;
 
@@ -55,7 +55,6 @@ namespace JUST
                 {
                     var selectable = context.Resolve<T>(eachObj);
                     JToken groupToken = selectable.Select(selectable.RootReference + groupingPropertyName);
-
                     if (groupedPair == null)
                         groupedPair = new Dictionary<string, JArray>();
 
@@ -105,7 +104,7 @@ namespace JUST
             return resultObj;
         }
 
-        public static JArray GroupArrayMultipleProperties<T>(JArray array, string[] groupingPropertyNames, string groupedPropertyName, JUSTContext context) where T: ISelectableToken
+        public static JArray GroupArrayMultipleProperties<T>(JArray array, string[] groupingPropertyNames, string groupedPropertyName, IContext context) where T: ISelectableToken
         {
             Dictionary<string, JArray> groupedPair = null;
 

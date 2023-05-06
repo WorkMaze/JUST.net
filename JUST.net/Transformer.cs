@@ -22,6 +22,13 @@ namespace JUST
             return number * 10 % 10 == 0 ? (number <= int.MaxValue ? (object)Convert.ToInt32(number) : number) : number;
         }
 
+        
+        internal static JToken GetToken<T>(JToken input, string path, IContext context) where T : ISelectableToken
+        {
+            T selector = context.Resolve<T>(input);
+            return selector.Select(path);
+        }
+
         internal static object GetValue(JToken selectedToken)
         {
             object output = null;
@@ -84,31 +91,28 @@ namespace JUST
         {
         }
 
-        public static object valueof(string path, JUSTContext context)
+        public static object valueof(string path, JToken input, IContext context)
         {
-            var selector = context.Resolve<T>(context.Input);
-            JToken selectedToken = selector.Select(path);
+            JToken selectedToken = GetToken<T>(input, path, context);
             return GetValue(selectedToken);
         }
 
-        public static bool exists(string path, JUSTContext context)
+        public static bool exists(string path, JToken input, IContext context)
         {
-            var selector = context.Resolve<T>(context.Input);
-            JToken selectedToken = selector.Select(path);
+            JToken selectedToken = GetToken<T>(input, path, context);
             return selectedToken != null;
         }
 
-        public static bool existsandnotempty(string path, JUSTContext context)
+        public static bool existsandnotempty(string path, JToken input, IContext context)
         {
-            var selector = context.Resolve<T>(context.Input);
-            JToken selectedToken = selector.Select(path);
+            JToken selectedToken = GetToken<T>(input, path, context);
             return selectedToken != null && (
                 (selectedToken.Type == JTokenType.String && selectedToken.ToString().Trim() != string.Empty) ||
                 (selectedToken.Type == JTokenType.Array && selectedToken.Children().Count() > 0)
             );
         }
 
-        public static object ifcondition(object condition, object value, object trueResult, object falseResult, JUSTContext context)
+        public static object ifcondition(object condition, object value, object trueResult, object falseResult, JToken input, IContext context)
         {
             object output = falseResult;
 
@@ -152,7 +156,7 @@ namespace JUST
             return item.ToObject<object[]>();
         }
 
-        public static object concat(object obj1, object obj2, JUSTContext context)
+        public static object concat(object obj1, object obj2, JToken input, IContext context)
         {
             if (obj1 != null)
             {
@@ -174,7 +178,7 @@ namespace JUST
             return null;
         }
 
-        public static string substring(string stringRef, int startIndex, int length, JUSTContext context)
+        public static string substring(string stringRef, int startIndex, int length, JToken input, IContext context)
         {
             try
             {
@@ -182,27 +186,27 @@ namespace JUST
             }
             catch (Exception ex)
             {
-                ExceptionHelper.HandleException(ex, context.EvaluationMode);
+                ExceptionHelper.HandleException(ex, context.IsStrictMode());
             }
             return null;
         }
 
-        public static int firstindexof(string stringRef, string searchString, JUSTContext context)
+        public static int firstindexof(string stringRef, string searchString, JToken input, IContext context)
         {
             return stringRef.IndexOf(searchString, 0);
         }
 
-        public static int lastindexof(string stringRef, string searchString, JUSTContext context)
+        public static int lastindexof(string stringRef, string searchString, JToken input, IContext context)
         {
             return stringRef.LastIndexOf(searchString);
         }
 
-        public static string concatall(object obj, JUSTContext context)
+        public static string concatall(object obj, JToken input, IContext context)
         {
             JToken token = JToken.FromObject(obj);
             if (obj is string path && path.StartsWith(context.Resolve<T>(token).RootReference))
             {
-                return Concatall(JToken.FromObject(valueof(path, context)), context);
+                return Concatall(JToken.FromObject(valueof(path, input, context)), context);
             }
             else
             {
@@ -210,7 +214,7 @@ namespace JUST
             }
         }
 
-        private static string Concatall(JToken parsedArray, JUSTContext context)
+        private static string Concatall(JToken parsedArray, IContext context)
         {
             string result = null;
 
@@ -233,7 +237,7 @@ namespace JUST
             return result;
         }
 
-        public static string concatallatpath(JArray parsedArray, string path, JUSTContext context)
+        public static string concatallatpath(JArray parsedArray, string path, JToken input, IContext context)
         {
             string result = null;
 
@@ -242,8 +246,7 @@ namespace JUST
                 result = string.Empty;
                 foreach (JToken token in parsedArray.Children())
                 {
-                    var selector = context.Resolve<T>(token);
-                    JToken selectedToken = selector.Select(path);
+                    JToken selectedToken = GetToken<T>(input, path, context);
                     if (context.IsStrictMode() && selectedToken.Type != JTokenType.String)
                     {
                         throw new Exception($"Invalid value in array to concatenate: {selectedToken.ToString()}");
@@ -260,40 +263,40 @@ namespace JUST
         #region math functions
 
 
-        public static object add(decimal num1, decimal num2, JUSTContext context)
+        public static object add(decimal num1, decimal num2, JToken input, IContext context)
         {
             return TypedNumber(num1 + num2);
         }
 
-        public static object subtract(decimal num1, decimal num2, JUSTContext context)
+        public static object subtract(decimal num1, decimal num2, JToken input, IContext context)
         {
             return TypedNumber(num1 - num2);
         }
-        public static object multiply(decimal num1, decimal num2, JUSTContext context)
+        public static object multiply(decimal num1, decimal num2, JToken input, IContext context)
         {
             return TypedNumber(num1 * num2);
         }
-        public static object divide(decimal num1, decimal num2, JUSTContext context)
+        public static object divide(decimal num1, decimal num2, JToken input, IContext context)
         {
             return TypedNumber(num1 / num2);
         }
         #endregion
 
         #region aggregate functions
-        public static object sum(object obj, JUSTContext context)
+        public static object sum(object obj, JToken input, IContext context)
         {
             JToken token = JToken.FromObject(obj);
             if (obj is string path && path.StartsWith(context.Resolve<T>(token).RootReference))
             {
-                return Sum(JToken.FromObject(valueof(path, context)), context);
+                return Sum(JToken.FromObject(valueof(path, input, context)));
             }
             else
             {
-                return Sum(token, context);
+                return Sum(token);
             }
         }
 
-        private static object Sum(JToken parsedArray, JUSTContext context)
+        private static object Sum(JToken parsedArray)
         {
             decimal result = 0;
             if (parsedArray != null)
@@ -307,15 +310,14 @@ namespace JUST
             return TypedNumber(result);
         }
 
-        public static object sumatpath(JArray parsedArray, string path, JUSTContext context)
+        public static object sumatpath(JArray parsedArray, string path, JToken input, IContext context)
         {
             decimal result = 0;
             if (parsedArray != null)
             {
                 foreach (JToken token in parsedArray.Children())
                 {
-                    var selector = context.Resolve<T>(token);
-                    JToken selectedToken = selector.Select(path);
+                    JToken selectedToken = GetToken<T>(input, path, context);
                     result += Convert.ToDecimal(selectedToken.ToString());
                 }
             }
@@ -323,20 +325,20 @@ namespace JUST
             return TypedNumber(result);
         }
 
-        public static object average(object obj, JUSTContext context)
+        public static object average(object obj, JToken input, IContext context)
         {
             JToken token = JToken.FromObject(obj);
             if (obj is string path && path.StartsWith(context.Resolve<T>(token).RootReference))
             {
-                return Average(JToken.FromObject(valueof(path, context)), context);
+                return Average(JToken.FromObject(valueof(path, input, context)));
             }
             else
             {
-                return Average(token, context);
+                return Average(token);
             }
         }
 
-        private static object Average(JToken token, JUSTContext context)
+        private static object Average(JToken token)
         {
             decimal result = 0;
             JArray parsedArray = token as JArray;
@@ -351,7 +353,7 @@ namespace JUST
             return TypedNumber(result / parsedArray.Count);
         }
 
-        public static object averageatpath(JArray parsedArray, string path, JUSTContext context)
+        public static object averageatpath(JArray parsedArray, string path, JToken input, IContext context)
         {
             decimal result = 0;
 
@@ -359,8 +361,7 @@ namespace JUST
             {
                 foreach (JToken token in parsedArray.Children())
                 {
-                    var selector = context.Resolve<T>(token);
-                    JToken selectedToken = selector.Select(path);
+                    JToken selectedToken = GetToken<T>(input, path, context);
                     result += Convert.ToDecimal(selectedToken.ToString());
                 }
             }
@@ -368,20 +369,20 @@ namespace JUST
             return TypedNumber(result / parsedArray.Count);
         }
 
-        public static object max(object obj, JUSTContext context)
+        public static object max(object obj, JToken input, IContext context)
         {
             JToken token = JToken.FromObject(obj);
             if (obj is string path && path.StartsWith(context.Resolve<T>(token).RootReference))
             {
-                return Max(JToken.FromObject(valueof(path, context)), context);
+                return Max(JToken.FromObject(valueof(path, input, context)));
             }
             else
             {
-                return Max(token, context);
+                return Max(token);
             }
         }
 
-        private static object Max(JToken token, JUSTContext context)
+        private static object Max(JToken token)
         {
             decimal result = 0;
             if (token != null)
@@ -401,15 +402,14 @@ namespace JUST
             return Math.Max(d1, thisValue);
         }
 
-        public static object maxatpath(JArray parsedArray, string path, JUSTContext context)
+        public static object maxatpath(JArray parsedArray, string path, JToken input, IContext context)
         {
             decimal result = 0;
             if (parsedArray != null)
             {
                 foreach (JToken token in parsedArray.Children())
                 {
-                    var selector = context.Resolve<T>(token);
-                    JToken selectedToken = selector.Select(path);
+                    JToken selectedToken = GetToken<T>(input, path, context);
                     result = Max(result, selectedToken);
                 }
             }
@@ -417,20 +417,20 @@ namespace JUST
             return TypedNumber(result);
         }
 
-        public static object min(object obj, JUSTContext context)
+        public static object min(object obj, JToken input, IContext context)
         {
             JToken token = JToken.FromObject(obj);
             if (obj is string path && path.StartsWith(context.Resolve<T>(token).RootReference))
             {
-                return Min(JToken.FromObject(valueof(path, context)), context);
+                return Min(JToken.FromObject(valueof(path, input, context)));
             }
             else
             {
-                return Min(token, context);
+                return Min(token);
             }
         }
 
-        private static object Min(JToken token, JUSTContext context)
+        private static object Min(JToken token)
         {
             decimal result = decimal.MaxValue;
             if (token != null)
@@ -445,7 +445,7 @@ namespace JUST
             return TypedNumber(result);
         }
 
-        public static object minatpath(JArray parsedArray, string path, JUSTContext context)
+        public static object minatpath(JArray parsedArray, string path, JToken input, IContext context)
         {
             decimal result = decimal.MaxValue;
 
@@ -453,8 +453,7 @@ namespace JUST
             {
                 foreach (JToken token in parsedArray.Children())
                 {
-                    var selector = context.Resolve<T>(token);
-                    JToken selectedToken = selector.Select(path);
+                    JToken selectedToken = GetToken<T>(input, path, context);
                     decimal thisValue = Convert.ToDecimal(selectedToken.ToString());
                     result = Math.Min(result, thisValue);
                 }
@@ -463,7 +462,7 @@ namespace JUST
             return TypedNumber(result);
         }
 
-        public static int arraylength(string array, JUSTContext context)
+        public static int arraylength(string array, JToken input, IContext context)
         {
             JArray parsedArray = JArray.Parse(array);
             return parsedArray.Count;
@@ -492,14 +491,13 @@ namespace JUST
             return array.Count - 1;
         }
 
-        public static object currentvalueatpath(JArray array, JToken currentElement, string path, JUSTContext context)
+        public static object currentvalueatpath(JArray array, JToken currentElement, string path, JToken input, IContext context)
         {
-            var selector = context.Resolve<T>(currentElement);
-            JToken selectedToken = selector.Select(path);
+            JToken selectedToken = GetToken<T>(currentElement, path, context);
             return GetValue(selectedToken);
         }
 
-        public static object currentproperty(JArray array, JToken currentElement, JUSTContext context)
+        public static object currentproperty(JArray array, JToken currentElement, JToken input, IContext context)
         {
             var prop = (currentElement.First as JProperty);
             if (prop == null && context.IsStrictMode())
@@ -509,22 +507,21 @@ namespace JUST
             return prop.Name;
         }
 
-        public static object lastvalueatpath(JArray array, JToken currentElement, string path, JUSTContext context)
+        public static object lastvalueatpath(JArray array, JToken currentElement, string path, JToken input, IContext context)
         {
-            var selector = context.Resolve<T>(array.Last);
-            JToken selectedToken = selector.Select(path);
+            JToken selectedToken = GetToken<T>(array.Last(), path, context);
             return GetValue(selectedToken);
         }
         #endregion
 
         #region Constants
 
-        public static string constant_comma(JUSTContext context)
+        public static string constant_comma(JToken input, IContext context)
         {
             return ",";
         }
 
-        public static string constant_hash(JUSTContext context)
+        public static string constant_hash(JToken input, IContext context)
         {
             return "#";
         }
@@ -540,7 +537,7 @@ namespace JUST
             {
                 if (list[i] != null)
                 {
-                    result = concat(result, list[i], null);
+                    result = concat(result, list[i], null, null);
                 }
             }
 
@@ -549,12 +546,12 @@ namespace JUST
 
         public static object xadd(object[] list)
         {
-            JUSTContext context = list[list.Length - 1] as JUSTContext;
+            IContext context = list[list.Length - 1] as IContext;
             decimal add = 0;
             for (int i = 0; i < list.Length - 1; i++)
             {
                 if (list[i] != null)
-                    add += (decimal)ReflectionHelper.GetTypedValue(typeof(decimal), list[i], context.EvaluationMode);
+                    add += (decimal)ReflectionHelper.GetTypedValue(typeof(decimal), list[i], context.IsStrictMode());
             }
 
             return TypedNumber(add);
@@ -562,11 +559,10 @@ namespace JUST
         #endregion
 
         #region grouparrayby
-        public static JArray grouparrayby(string path, string groupingElement, string groupedElement, JUSTContext context)
+        public static JArray grouparrayby(string path, string groupingElement, string groupedElement, JToken input, IContext context)
         {
             JArray result;
-            var selector = context.Resolve<T>(context.Input);
-            JArray arr = (JArray)selector.Select(path);
+            JArray arr = (JArray)GetToken<T>(input, path, context);
             if (!groupingElement.Contains(context.SplitGroupChar))
             {
                 result = Utilities.GroupArray<T>(arr, groupingElement, groupedElement, context);
@@ -623,10 +619,10 @@ namespace JUST
             {
                 decimal lshDecimal = (decimal)ReflectionHelper.GetTypedValue(typeof(decimal),
                     list[0],
-                    list.Length >= 3 ? ((JUSTContext)list[2]).EvaluationMode : EvaluationMode.Strict);
+                    list.Length >= 3 ? ((IContext)list[2]).IsStrictMode() : true);
                 decimal rhsDecimal = (decimal)ReflectionHelper.GetTypedValue(typeof(decimal),
                     list[1],
-                    list.Length >= 3 ? ((JUSTContext)list[2]).EvaluationMode : EvaluationMode.Strict);
+                    list.Length >= 3 ? ((IContext)list[2]).IsStrictMode() : true);
 
                 result = lshDecimal == rhsDecimal;
             }
@@ -641,10 +637,10 @@ namespace JUST
             {
                 decimal lshDecimal = (decimal)ReflectionHelper.GetTypedValue(typeof(decimal),
                     list[0],
-                    list.Length >= 3 ? ((JUSTContext)list[2]).EvaluationMode : EvaluationMode.Strict);
+                    list.Length >= 3 ? ((IContext)list[2]).IsStrictMode() : true);
                 decimal rhsDecimal = (decimal)ReflectionHelper.GetTypedValue(typeof(decimal),
                     list[1],
-                    list.Length >= 3 ? ((JUSTContext)list[2]).EvaluationMode : EvaluationMode.Strict);
+                    list.Length >= 3 ? ((IContext)list[2]).IsStrictMode() : true);
 
                 result = lshDecimal > rhsDecimal;
             }
@@ -659,10 +655,10 @@ namespace JUST
             {
                 decimal lshDecimal = (decimal)ReflectionHelper.GetTypedValue(typeof(decimal),
                     list[0],
-                    list.Length >= 3 ? ((JUSTContext)list[2]).EvaluationMode : EvaluationMode.Strict);
+                    list.Length >= 3 ? ((IContext)list[2]).IsStrictMode() : true);
                 decimal rhsDecimal = (decimal)ReflectionHelper.GetTypedValue(typeof(decimal),
                     list[1],
-                    list.Length >= 3 ? ((JUSTContext)list[2]).EvaluationMode : EvaluationMode.Strict);
+                    list.Length >= 3 ? ((IContext)list[2]).IsStrictMode() : true);
 
                 result = lshDecimal < rhsDecimal;
             }
@@ -677,10 +673,10 @@ namespace JUST
             {
                 decimal lshDecimal = (decimal)ReflectionHelper.GetTypedValue(typeof(decimal),
                     list[0],
-                    list.Length >= 3 ? ((JUSTContext)list[2]).EvaluationMode : EvaluationMode.Strict);
+                    list.Length >= 3 ? ((IContext)list[2]).IsStrictMode() : true);
                 decimal rhsDecimal = (decimal)ReflectionHelper.GetTypedValue(typeof(decimal),
                     list[1],
-                    list.Length >= 3 ? ((JUSTContext)list[2]).EvaluationMode : EvaluationMode.Strict);
+                    list.Length >= 3 ? ((IContext)list[2]).IsStrictMode() : true);
 
                 result = lshDecimal >= rhsDecimal;
             }
@@ -695,10 +691,10 @@ namespace JUST
             {
                 decimal lshDecimal = (decimal)ReflectionHelper.GetTypedValue(typeof(decimal),
                     list[0],
-                    list.Length >= 3 ? ((JUSTContext)list[2]).EvaluationMode : EvaluationMode.Strict);
+                    list.Length >= 3 ? ((IContext)list[2]).IsStrictMode() : true);
                 decimal rhsDecimal = (decimal)ReflectionHelper.GetTypedValue(typeof(decimal),
                     list[1],
-                    list.Length >= 3 ? ((JUSTContext)list[2]).EvaluationMode : EvaluationMode.Strict);
+                    list.Length >= 3 ? ((IContext)list[2]).IsStrictMode() : true);
 
                 result = lshDecimal <= rhsDecimal;
             }
@@ -709,35 +705,35 @@ namespace JUST
 
         public static object tointeger(object val, JUSTContext context)
         {
-            return ReflectionHelper.GetTypedValue(typeof(int), val, context.EvaluationMode);
+            return ReflectionHelper.GetTypedValue(typeof(int), val, context.IsStrictMode());
         }
 
         public static object tostring(object val, JUSTContext context)
         {
-            return ReflectionHelper.GetTypedValue(typeof(string), val, context.EvaluationMode);
+            return ReflectionHelper.GetTypedValue(typeof(string), val, context.IsStrictMode());
         }
 
         public static object toboolean(object val, JUSTContext context)
         {
-            return ReflectionHelper.GetTypedValue(typeof(bool), val, context.EvaluationMode);
+            return ReflectionHelper.GetTypedValue(typeof(bool), val, context.IsStrictMode());
         }
 
         public static decimal todecimal(object val, JUSTContext context)
         {
-            return decimal.Round((decimal)ReflectionHelper.GetTypedValue(typeof(decimal), val, context.EvaluationMode), context.DefaultDecimalPlaces);
+            return decimal.Round((decimal)ReflectionHelper.GetTypedValue(typeof(decimal), val, context.IsStrictMode()), context.DefaultDecimalPlaces);
         }
 
-        public static decimal round(decimal val, int decimalPlaces, JUSTContext context)
+        public static decimal round(decimal val, int decimalPlaces, JToken input, IContext context)
         {
             return decimal.Round(val, decimalPlaces, MidpointRounding.AwayFromZero);
         }
 
-        public static int length(object val, JUSTContext context)
+        public static int length(object val, JToken input, IContext context)
         {
             int result = 0;
             if (val is string path && path.StartsWith(context.Resolve<T>(null).RootReference))
             {
-                result = length(valueof(path, context), context);
+                result = length(valueof(path, input, context), input, context);
             }
             else if (val is IEnumerable enumerable)
             {
@@ -756,11 +752,11 @@ namespace JUST
             }
             return result;
         }
-        public static bool isnumber(object val, JUSTContext context)
+        public static bool isnumber(object val, JToken input, IContext context)
         {
             try
             {
-                object r = ReflectionHelper.GetTypedValue(typeof(decimal), val, context.EvaluationMode);
+                object r = ReflectionHelper.GetTypedValue(typeof(decimal), val, context.IsStrictMode());
                 return r is decimal;
             }
             catch
@@ -769,17 +765,17 @@ namespace JUST
             }
         }
 
-        public static bool isboolean(object val, JUSTContext context)
+        public static bool isboolean(object val, JToken input, IContext context)
         {
             return val.GetType() == typeof(bool);
         }
 
-        public static bool isstring(object val, JUSTContext context)
+        public static bool isstring(object val, JToken input, IContext context)
         {
             return val.GetType() == typeof(string);
         }
 
-        public static bool isarray(object val, JUSTContext context)
+        public static bool isarray(object val, JToken input, IContext context)
         {
             return val.GetType().IsArray;
         }
@@ -794,7 +790,7 @@ namespace JUST
             return string.Empty;
         }
 
-        public static object arrayempty(JUSTContext context)
+        public static object arrayempty(JToken input, IContext context)
         {
             return Array.Empty<object>();
         }

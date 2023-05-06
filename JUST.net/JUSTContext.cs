@@ -34,7 +34,7 @@ namespace JUST
         Strict = 4
     }
 
-    public class JUSTContext
+    public class JUSTContext : IContext
     {
         private Dictionary<string, MethodInfo> _customFunctions = new Dictionary<string, MethodInfo>();
         private int _defaultDecimalPlaces = 28;
@@ -93,7 +93,7 @@ namespace JUST
             Input = JToken.Parse(inputJson);
         }
 
-        internal bool IsStrictMode()
+        public bool IsStrictMode()
         {
             return (EvaluationMode & EvaluationMode.Strict) == EvaluationMode.Strict;
         }
@@ -148,7 +148,7 @@ namespace JUST
             return _customFunctions.ContainsKey(aliasOrName);
         }
 
-        internal T Resolve<T>(JToken token) where T: ISelectableToken
+        public T Resolve<T>(JToken token) where T: ISelectableToken
         {
             T instance = Activator.CreateInstance<T>();
             instance.Token = token;

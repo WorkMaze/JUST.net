@@ -4,9 +4,9 @@ namespace JUST
 {
     internal static class ExceptionHelper
     {
-        internal static void HandleException(Exception ex, EvaluationMode evaluationMode)
+        internal static void HandleException(Exception ex, bool IsStrictMode)
         {
-            if ( (evaluationMode & EvaluationMode.Strict) == EvaluationMode.Strict)
+            if (IsStrictMode)
             {
                 if (ex.InnerException != null)
                 {

@@ -549,7 +549,7 @@ namespace JUST
             bool result;
             try
             {
-                result = (bool)ReflectionHelper.GetTypedValue(typeof(bool), functionResult, Context.EvaluationMode);
+                result = (bool)ReflectionHelper.GetTypedValue(typeof(bool), functionResult, Context.IsStrictMode());
             }
             catch
             {
@@ -821,6 +821,7 @@ namespace JUST
                     {
                         listParameters.Add(ParseArgument(array, currentArrayElement, arguments[i]));
                     }
+                    listParameters.Add(Context.Input);
                     listParameters.Add(Context);
 
                     var parameters = listParameters.ToArray();
@@ -902,12 +903,12 @@ namespace JUST
             var contextInput = Context.Input;
             var input = JToken.Parse(Transform(parameters[0].ToString(), contextInput.ToString()));
             Context.Input = input;
-            if (parameters[1].ToString().Trim().Trim('\'').StartsWith('{'))
+            if (parameters[1].ToString().Trim().Trim('\'').StartsWith("{"))
             {
                 var jobj = JObject.Parse(parameters[1].ToString().Trim().Trim('\''));
                 output = new JsonTransformer(Context).Transform(jobj, input);
             }
-            else if (parameters[1].ToString().Trim().Trim('\'').StartsWith('['))
+            else if (parameters[1].ToString().Trim().Trim('\'').StartsWith("["))
             {
                 var jarr = JArray.Parse(parameters[1].ToString().Trim().Trim('\''));
                 output = new JsonTransformer(Context).Transform(jarr, input);
