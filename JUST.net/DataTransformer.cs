@@ -157,8 +157,6 @@ namespace JUST
                     }
                 }
 
-                listParameters.Add(new JUSTContext(inputJson));
-                var parameters = listParameters.ToArray();
                 var convertParameters = true;
                 if (new[] { "concat", "xconcat", "currentproperty" }.Contains(functionName))
                 {
@@ -167,7 +165,7 @@ namespace JUST
 
                 if (functionName == "loop")
                 {
-                    output = GetLoopResult(parameters, loopArgumentString);
+                    output = GetLoopResult(listParameters.Concat(new object[] { JToken.Parse(inputJson), Context }).ToArray(), loopArgumentString, Context);
                 }
                 else if (functionName == "currentvalue" || functionName == "currentindex" || functionName == "lastindex"
                     || functionName == "lastvalue")
@@ -175,11 +173,11 @@ namespace JUST
                 else if (functionName == "currentvalueatpath" || functionName == "lastvalueatpath")
                     output = Caller("JUST.Transformer`1", functionName, new object[] { array, currentArrayElement, arguments[0], new JUSTContext() });
                 else if (functionName == "customfunction")
-                    output = CallCustomFunction(parameters);
+                    output = CallCustomFunction(listParameters.Concat(new object[] { JToken.Parse(inputJson), Context }).ToArray());
                 else if (Context?.IsRegisteredCustomFunction(functionName) ?? false)
                 {
                     var methodInfo = Context.GetCustomMethod(functionName);
-                    output = ReflectionHelper.InvokeCustomMethod<T>(methodInfo, parameters, convertParameters, Context);
+                    output = ReflectionHelper.InvokeCustomMethod<T>(methodInfo, listParameters.Concat(new object[] { JToken.Parse(inputJson), Context }).ToArray(), convertParameters, Context);
                 }
                 else if (functionName == "xconcat" || functionName == "xadd" || functionName == "mathequals" || functionName == "mathgreaterthan" || functionName == "mathlessthan"
                     || functionName == "mathgreaterthanorequalto"
@@ -187,24 +185,24 @@ namespace JUST
                     functionName == "stringequals")
                 {
                     object[] oParams = new object[1];
-                    oParams[0] = parameters;
+                    oParams[0] = listParameters.Concat(new object[] { Context }).ToArray();
                     output = Caller("JUST.Transformer`1", functionName, oParams);
                 }
                 else
-                    output = Caller("JUST.Transformer`1", functionName, parameters);
+                    output = Caller("JUST.Transformer`1", functionName, listParameters.Concat(new object[] { JToken.Parse(inputJson), Context }).ToArray());
             }
             return output;
         }
 
-        private string GetLoopResult(object[] parameters,string loopArgumentString)
+        private string GetLoopResult(object[] parameters,string loopArgumentString, JUSTContext context)
         {
             string returnString = string.Empty;
 
-            if (parameters.Length < 2)
+            if (parameters.Length < 3)
                 throw new Exception("Incorrect number of parameters for function #Loop");
 
-            var context = (JUSTContext)parameters[parameters.Length - 1];
-            JToken token = context.Input;
+            //var context = (JUSTContext)parameters[parameters.Length - 1];
+            JToken token = (JToken)parameters[parameters.Length - 2];
             JToken selectedToken = context.Resolve<T>(token).Select(parameters[0].ToString());
 
             if (selectedToken.Type != JTokenType.Array)
@@ -214,7 +212,7 @@ namespace JUST
 
             string seperator = Environment.NewLine;
 
-            if (parameters.Length == 3)
+            if (parameters.Length == 4)
                 seperator = parameters[1].ToString();
 
             foreach (JToken arrToken in selectedToken.Children())
