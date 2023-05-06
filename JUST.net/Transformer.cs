@@ -246,7 +246,7 @@ namespace JUST
                 result = string.Empty;
                 foreach (JToken token in parsedArray.Children())
                 {
-                    JToken selectedToken = GetToken<T>(input, path, context);
+                    JToken selectedToken = GetToken<T>(token, path, context);
                     if (context.IsStrictMode() && selectedToken.Type != JTokenType.String)
                     {
                         throw new Exception($"Invalid value in array to concatenate: {selectedToken.ToString()}");
@@ -317,7 +317,7 @@ namespace JUST
             {
                 foreach (JToken token in parsedArray.Children())
                 {
-                    JToken selectedToken = GetToken<T>(input, path, context);
+                    JToken selectedToken = GetToken<T>(token, path, context);
                     result += Convert.ToDecimal(selectedToken.ToString());
                 }
             }
@@ -361,7 +361,7 @@ namespace JUST
             {
                 foreach (JToken token in parsedArray.Children())
                 {
-                    JToken selectedToken = GetToken<T>(input, path, context);
+                    JToken selectedToken = GetToken<T>(token, path, context);
                     result += Convert.ToDecimal(selectedToken.ToString());
                 }
             }
@@ -409,7 +409,7 @@ namespace JUST
             {
                 foreach (JToken token in parsedArray.Children())
                 {
-                    JToken selectedToken = GetToken<T>(input, path, context);
+                    JToken selectedToken = GetToken<T>(token, path, context);
                     result = Max(result, selectedToken);
                 }
             }
@@ -453,7 +453,7 @@ namespace JUST
             {
                 foreach (JToken token in parsedArray.Children())
                 {
-                    JToken selectedToken = GetToken<T>(input, path, context);
+                    JToken selectedToken = GetToken<T>(token, path, context);
                     decimal thisValue = Convert.ToDecimal(selectedToken.ToString());
                     result = Math.Min(result, thisValue);
                 }
@@ -491,13 +491,13 @@ namespace JUST
             return array.Count - 1;
         }
 
-        public static object currentvalueatpath(JArray array, JToken currentElement, string path, JToken input, IContext context)
+        public static object currentvalueatpath(JArray array, JToken currentElement, string path, IContext context)
         {
             JToken selectedToken = GetToken<T>(currentElement, path, context);
             return GetValue(selectedToken);
         }
 
-        public static object currentproperty(JArray array, JToken currentElement, JToken input, IContext context)
+        public static object currentproperty(JArray array, JToken currentElement, IContext context)
         {
             var prop = (currentElement.First as JProperty);
             if (prop == null && context.IsStrictMode())
@@ -507,7 +507,7 @@ namespace JUST
             return prop.Name;
         }
 
-        public static object lastvalueatpath(JArray array, JToken currentElement, string path, JToken input, IContext context)
+        public static object lastvalueatpath(JArray array, JToken currentElement, string path, IContext context)
         {
             JToken selectedToken = GetToken<T>(array.Last(), path, context);
             return GetValue(selectedToken);
@@ -703,22 +703,22 @@ namespace JUST
         }
         #endregion
 
-        public static object tointeger(object val, JUSTContext context)
+        public static object tointeger(object val, JToken input, IContext context)
         {
             return ReflectionHelper.GetTypedValue(typeof(int), val, context.IsStrictMode());
         }
 
-        public static object tostring(object val, JUSTContext context)
+        public static object tostring(object val, JToken input, IContext context)
         {
             return ReflectionHelper.GetTypedValue(typeof(string), val, context.IsStrictMode());
         }
 
-        public static object toboolean(object val, JUSTContext context)
+        public static object toboolean(object val, JToken input, IContext context)
         {
             return ReflectionHelper.GetTypedValue(typeof(bool), val, context.IsStrictMode());
         }
 
-        public static decimal todecimal(object val, JUSTContext context)
+        public static decimal todecimal(object val, JToken input, IContext context)
         {
             return decimal.Round((decimal)ReflectionHelper.GetTypedValue(typeof(decimal), val, context.IsStrictMode()), context.DefaultDecimalPlaces);
         }

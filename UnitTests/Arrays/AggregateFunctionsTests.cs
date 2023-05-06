@@ -113,7 +113,7 @@ namespace JUST.UnitTests.Arrays
         {
             const string transformer = "{ \"avg_at_path\": \"#averageatpath(#valueof($.x),$.v.c)\" }";
 
-            var result = new JsonTransformer().Transform(transformer, ExampleInputs.MultiDimensionalArray);
+            var result = new JsonTransformer(new JUSTContext { EvaluationMode = EvaluationMode.Strict }).Transform(transformer, ExampleInputs.MultiDimensionalArray);
 
             Assert.AreEqual("{\"avg_at_path\":20}", result);
         }

@@ -807,12 +807,7 @@ namespace JUST
 
                 if (functionName == "ifcondition")
                 {
-                    var condition = ParseArgument(array, currentArrayElement, arguments[0]);
-                    var value = ParseArgument(array, currentArrayElement, arguments[1]);
-                    var equal = ComparisonHelper.Equals(condition, value, Context.EvaluationMode);
-                    var index = (equal) ? 2 : 3;
-
-                    output = ParseArgument(array, currentArrayElement, arguments[index]);
+                    output = ConditionalFunction(array, currentArrayElement, arguments);
                 }
                 else
                 {
@@ -821,10 +816,7 @@ namespace JUST
                     {
                         listParameters.Add(ParseArgument(array, currentArrayElement, arguments[i]));
                     }
-                    listParameters.Add(Context.Input);
-                    listParameters.Add(Context);
-
-                    var parameters = listParameters.ToArray();
+                    
                     var convertParameters = true;
                     if (new[] { "concat", "xconcat", "currentproperty" }.Contains(functionName))
                     {
@@ -834,7 +826,13 @@ namespace JUST
                     if (new[] { "currentvalue", "currentindex", "lastindex", "lastvalue" }.Contains(functionName))
                     {
                         var alias = ParseLoopAlias(listParameters, 1, array.Last().Key);
-                        output = ReflectionHelper.Caller<T>(null, "JUST.Transformer`1", functionName, new object[] { array[alias], currentArrayElement[alias] }, convertParameters, Context);
+                        output = ReflectionHelper.Caller<T>(
+                            null,
+                            "JUST.Transformer`1",
+                            functionName,
+                            new object[] { array[alias], currentArrayElement[alias] },
+                            convertParameters,
+                            Context);
                     }
                     else if (new[] { "currentvalueatpath", "lastvalueatpath" }.Contains(functionName))
                     {
@@ -843,7 +841,7 @@ namespace JUST
                             null,
                             "JUST.Transformer`1",
                             functionName,
-                            new[] { array[alias], currentArrayElement[alias] }.Concat(listParameters.ToArray()).ToArray(),
+                            new[] { array[alias], currentArrayElement[alias] }.Concat(new object[] { listParameters[0], Context }).ToArray(),
                             convertParameters,
                             Context);
                     }
@@ -855,11 +853,12 @@ namespace JUST
                             convertParameters, Context);
                     }
                     else if (functionName == "customfunction")
-                        output = CallCustomFunction(listParameters.ToArray());
+                        output = CallCustomFunction(listParameters.Concat(new object[] { currentArrayElement?.Last().Value ??
+                            Context.Input, Context }).ToArray());
                     else if (Context?.IsRegisteredCustomFunction(functionName) ?? false)
                     {
                         var methodInfo = Context.GetCustomMethod(functionName);
-                        output = ReflectionHelper.InvokeCustomMethod<T>(methodInfo, parameters, convertParameters, Context);
+                        output = ReflectionHelper.InvokeCustomMethod<T>(methodInfo, listParameters.ToArray(), convertParameters, Context);
                     }
                     else if (Regex.IsMatch(functionName, ReflectionHelper.EXTERNAL_ASSEMBLY_REGEX))
                     {
@@ -870,22 +869,26 @@ namespace JUST
                         "stringcontains", "stringequals"}.Contains(functionName))
                     {
                         object[] oParams = new object[1];
-                        oParams[0] = parameters;
+                        oParams[0] = listParameters.Concat(new object[] { Context }).ToArray();
                         output = ReflectionHelper.Caller<T>(null, "JUST.Transformer`1", functionName, oParams, convertParameters, Context);
                     }
                     else if (functionName == "applyover")
                     {
-                        output = ParseApplyOver(array, currentArrayElement, parameters);
+                        output = ParseApplyOver(array, currentArrayElement, listParameters.Concat(new object[] { Context }).ToArray());
                     }
                     else
                     {
-                        var input = ((JUSTContext)listParameters.Last()).Input;
-                        if (currentArrayElement != null && functionName != "valueof")
-                        {
-                            ((JUSTContext)listParameters.Last()).Input = currentArrayElement.Last().Value;
-                        }
-                        output = ReflectionHelper.Caller<T>(null, "JUST.Transformer`1", functionName, parameters, convertParameters, Context);
-                        ((JUSTContext)parameters.Last()).Input = input;
+                        var input = currentArrayElement != null && functionName != "valueof" ?
+                            currentArrayElement.Last().Value :
+                            Context.Input;
+
+                        output = ReflectionHelper.Caller<T>(
+                            null,
+                            "JUST.Transformer`1",
+                            functionName,
+                            listParameters.Concat(new object[] { input, Context }).ToArray(),
+                            convertParameters,
+                            Context);
                     }
                 }
 
@@ -895,6 +898,16 @@ namespace JUST
             {
                 throw new Exception("Error while calling function : " + functionString + " - " + ex.Message, ex);
             }
+        }
+
+        private object ConditionalFunction(IDictionary<string, JArray> array, IDictionary<string, JToken> currentArrayElement, string[] arguments)
+        {
+            var condition = ParseArgument(array, currentArrayElement, arguments[0]);
+            var value = ParseArgument(array, currentArrayElement, arguments[1]);
+            var equal = ComparisonHelper.Equals(condition, value, Context.EvaluationMode);
+            var index = (equal) ? 2 : 3;
+
+            return ParseArgument(array, currentArrayElement, arguments[index]);
         }
 
         private object ParseApplyOver(IDictionary<string, JArray> array, IDictionary<string, JToken> currentArrayElement, object[] parameters)
@@ -924,7 +937,7 @@ namespace JUST
         private string ParseLoopAlias(List<object> listParameters, int index, string defaultValue)
         {
             string alias;
-            if (listParameters.Count > index)
+            if (listParameters.Count >= index)
             {
                 alias = (listParameters[index - 1] as string).Trim();
                 listParameters.RemoveAt(index - 1);
