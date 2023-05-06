@@ -93,6 +93,15 @@ namespace JUST
             Input = JToken.Parse(inputJson);
         }
 
+        internal JUSTContext(string inputJson, JUSTContext context) : this(inputJson)
+        {
+            this.EvaluationMode = context.EvaluationMode;
+            this.EscapeChar = context.EscapeChar;
+            this.DefaultDecimalPlaces = context.DefaultDecimalPlaces;
+            this.SplitGroupChar = context.SplitGroupChar;
+            this._customFunctions = context._customFunctions;
+        }
+
         public bool IsStrictMode()
         {
             return (EvaluationMode & EvaluationMode.Strict) == EvaluationMode.Strict;

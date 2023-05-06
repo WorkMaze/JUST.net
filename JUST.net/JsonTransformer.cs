@@ -191,7 +191,7 @@ namespace JUST
                     }
                     else if (property.Value.ToString().Trim().StartsWith("#"))
                     {
-                        property.Value = GetToken(ParseFunction(property.Value.ToString().Trim(), parentArray, currentArrayToken));
+                        property.Value = GetToken(ParseFunction(property.Value.ToString().Trim(), parentArray, currentArrayToken, Context.Input));
                     }
                 }
 
@@ -206,7 +206,7 @@ namespace JUST
             else if (childToken.Type == JTokenType.String && childToken.Value<string>().Trim().StartsWith("#")
                 && parentArray != null && currentArrayToken != null)
             {
-                object newValue = ParseFunction(childToken.Value<string>(), parentArray, currentArrayToken);
+                object newValue = ParseFunction(childToken.Value<string>(), parentArray, currentArrayToken, Context.Input);
                 childToken.Replace(GetToken(newValue));
             }
 
@@ -427,12 +427,12 @@ namespace JUST
         {
             var args = ExpressionHelper.SplitArguments(arguments, Context.EscapeChar);
             var previousAlias = "root";
-            args[0] = (string)ParseFunction(args[0], parentArray, currentArrayToken);
-            string alias = args.Length > 1 ? (string)ParseFunction(args[1].Trim(), parentArray, currentArrayToken) : $"loop{++_loopCounter}";
+            args[0] = (string)ParseFunction(args[0], parentArray, currentArrayToken, Context.Input);
+            string alias = args.Length > 1 ? (string)ParseFunction(args[1].Trim(), parentArray, currentArrayToken, Context.Input) : $"loop{++_loopCounter}";
 
             if (args.Length > 2)
             {
-                previousAlias = (string)ParseFunction(args[2].Trim(), parentArray, currentArrayToken);
+                previousAlias = (string)ParseFunction(args[2].Trim(), parentArray, currentArrayToken, Context.Input);
                 currentArrayToken = new Dictionary<string, JToken> { { previousAlias, Context.Input } };
             }
             else if (currentArrayToken?.Any() ?? false)
@@ -545,7 +545,7 @@ namespace JUST
 
         private void ConditionalGroupOperation(string propertyName, string arguments, IDictionary<string, JArray> parentArray, IDictionary<string, JToken> currentArrayToken, ref List<string> condProps, ref List<JToken> tokenToForm, JToken childToken)
         {
-            object functionResult = ParseFunction(arguments, parentArray, currentArrayToken);
+            object functionResult = ParseFunction(arguments, parentArray, currentArrayToken, Context.Input);
             bool result;
             try
             {
@@ -589,12 +589,12 @@ namespace JUST
 
         private void EvalOperation(JProperty property, string arguments, IDictionary<string, JArray> parentArray, IDictionary<string, JToken> currentArrayToken, ref List<string> loopProperties, ref List<JToken> tokensToAdd)
         {
-            object functionResult = ParseFunction(arguments, parentArray, currentArrayToken);
+            object functionResult = ParseFunction(arguments, parentArray, currentArrayToken, Context.Input);
 
             object val;
             if (property.Value.Type == JTokenType.String)
             {
-                val = ParseFunction(property.Value.Value<string>(), parentArray, currentArrayToken);
+                val = ParseFunction(property.Value.Value<string>(), parentArray, currentArrayToken, Context.Input);
             }
             else
             {
@@ -726,7 +726,7 @@ namespace JUST
                 object itemToAdd = arrEl.Value<JToken>();
                 if (arrEl.Type == JTokenType.String && arrEl.ToString().Trim().StartsWith("#"))
                 {
-                    itemToAdd = ParseFunction(arrEl.ToString(), parentArray, currentArrayToken);
+                    itemToAdd = ParseFunction(arrEl.ToString(), parentArray, currentArrayToken, Context.Input);
                 }
                 result.Add(itemToAdd);
             }
@@ -792,7 +792,7 @@ namespace JUST
 
         #region ParseFunction
 
-        private object ParseFunction(string functionString, IDictionary<string, JArray> array, IDictionary<string, JToken> currentArrayElement)
+        private object ParseFunction(string functionString, IDictionary<string, JArray> array, IDictionary<string, JToken> currentArrayElement, JToken input)
         {
             try
             {
@@ -854,7 +854,7 @@ namespace JUST
                     }
                     else if (functionName == "customfunction")
                         output = CallCustomFunction(listParameters.Concat(new object[] { currentArrayElement?.Last().Value ??
-                            Context.Input, Context }).ToArray());
+                            input, Context }).ToArray());
                     else if (Context?.IsRegisteredCustomFunction(functionName) ?? false)
                     {
                         var methodInfo = Context.GetCustomMethod(functionName);
@@ -878,15 +878,15 @@ namespace JUST
                     }
                     else
                     {
-                        var input = currentArrayElement != null && functionName != "valueof" ?
+                        var inputToken = currentArrayElement != null && functionName != "valueof" ?
                             currentArrayElement.Last().Value :
-                            Context.Input;
+                            input;
 
                         output = ReflectionHelper.Caller<T>(
                             null,
                             "JUST.Transformer`1",
                             functionName,
-                            listParameters.Concat(new object[] { input, Context }).ToArray(),
+                            listParameters.Concat(new object[] { inputToken, Context }).ToArray(),
                             convertParameters,
                             Context);
                     }
@@ -913,24 +913,21 @@ namespace JUST
         private object ParseApplyOver(IDictionary<string, JArray> array, IDictionary<string, JToken> currentArrayElement, object[] parameters)
         {
             object output;
-            var contextInput = Context.Input;
-            var input = JToken.Parse(Transform(parameters[0].ToString(), contextInput.ToString()));
-            Context.Input = input;
+            string input = Transform(parameters[0].ToString(), Context.Input.ToString());
             if (parameters[1].ToString().Trim().Trim('\'').StartsWith("{"))
             {
                 var jobj = JObject.Parse(parameters[1].ToString().Trim().Trim('\''));
-                output = new JsonTransformer(Context).Transform(jobj, input);
+                output = new JsonTransformer(new JUSTContext(input)).Transform(jobj, input);
             }
             else if (parameters[1].ToString().Trim().Trim('\'').StartsWith("["))
             {
                 var jarr = JArray.Parse(parameters[1].ToString().Trim().Trim('\''));
-                output = new JsonTransformer(Context).Transform(jarr, input);
+                output = new JsonTransformer(new JUSTContext(input)).Transform(jarr, input);
             }
             else
             {
-                output = ParseFunction(parameters[1].ToString().Trim().Trim('\''), array, currentArrayElement);
+                output = ParseFunction(parameters[1].ToString().Trim().Trim('\''), array, currentArrayElement, JToken.Parse(input));
             }
-            Context.Input = contextInput;
             return output;
         }
 
@@ -954,7 +951,7 @@ namespace JUST
             var trimmedArgument = argument.Trim();
             if (trimmedArgument.StartsWith("#"))
             {
-                return ParseFunction(trimmedArgument, array, currentArrayElement);
+                return ParseFunction(trimmedArgument, array, currentArrayElement, Context.Input);
             }
             if (trimmedArgument.StartsWith($"{Context.EscapeChar}#"))
             {
