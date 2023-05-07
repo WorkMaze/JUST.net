@@ -37,24 +37,33 @@ namespace JUST.UnitTests
         [Test]
         public void ThreadSafe()
         {
-            var input = File.ReadAllText("Inputs/thread_safe_input.json");
+            string threadSafeInput = File.ReadAllText("Inputs/thread_safe_input.json");
+            string[] inputs = 
+            {
+                threadSafeInput,
+                threadSafeInput,
+                ExampleInputs.Menu,
+
+            };
             string[] transformers =
             {
                 "{ \"list\": { \"#loop($.list)\": { \"id\": \"#currentindex()\", \"name\": \"#concat(#currentvalueatpath($.title), #currentvalueatpath($.name))\", \"contact\": \"#currentvalueatpath($.contacts[?(@.is_default==true)])\", \"address\": \"#currentvalueatpath($.addresses[0])\" } }, \"applyover\": \"#applyover({ 'first_title': '#valueof($.list[0].title)'/, 'second_address': '#valueof($.list[1].addresses[1])'/, 'first_contact': '#valueof($.list[0].contacts[0])' }, '#valueof($.second_address.street)')\" }",
-                "{ \"result\": { \"name\": \"#concat(#valueof($.title), #valueof($.name))\", \"contact\": \"#valueof($.contacts[?(@.is_default==true)])\", \"address\": \"#valueof($.addresses[0])\" } }"
+                "{ \"result\": { \"name\": \"#concat(#valueof($.title), #valueof($.name))\", \"contact\": \"#valueof($.contacts[?(@.is_default==true)])\", \"address\": \"#valueof($.addresses[0])\" } }",
+                "{\"root\": {\"menu1\": \"#valueof($.menu.popup.menuitem[?(@.value=='New')].onclick)\", \"menu2\": \"#valueof($.menu.popup.menuitem[?(@.value=='Open')].onclick)\"}}",
             };
             string[] expects =
             {
                 "{\"list\":[{\"id\":0,\"name\":\"Mr.Smith\",\"contact\":{\"type\":\"mobile\",\"number\":987654321,\"is_default\":true},\"address\":{\"street\":\"Some Street\",\"number\":1,\"city\":\"Some City\",\"postal_code\":1234}},{\"id\":1,\"name\":\"Mrs.Smith\",\"contact\":{\"type\":\"mobile\",\"number\":111111111111111,\"is_default\":true},\"address\":{\"street\":\"Street Who?\",\"number\":11,\"city\":\"City Who?\",\"postal_code\":1111}}],\"applyover\":\"Other Street Who?\"}",
                 "{\"result\":{\"name\":\"Mr.Smith\",\"contact\":{\"type\":\"mobile\",\"number\":987654321,\"is_default\":true},\"address\":{\"street\":\"Some Street\",\"number\":1,\"city\":\"Some City\",\"postal_code\":1234}}}",
+                "{\"root\":{\"menu1\":{\"action\":\"CreateNewDoc()\"},\"menu2\":\"OpenDoc()\"}}"
             };
 
             var jsonTransformer = new JsonTransformer(new JUSTContext { EvaluationMode = EvaluationMode.Strict });
 
             ParallelLoopResult result = Parallel.For(0, 100, i =>
             {
-                JToken transformResult = jsonTransformer.Transform(JObject.Parse(transformers[i % 2]), input);
-                Assert.AreEqual(JObject.Parse(expects[i % 2]), transformResult);
+                JToken transformResult = jsonTransformer.Transform(JObject.Parse(transformers[i % 3]), inputs[i % 3]);
+                Assert.AreEqual(JObject.Parse(expects[i % 3]), transformResult);
             });
 
             Assert.IsTrue(result.IsCompleted);

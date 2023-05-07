@@ -39,8 +39,6 @@ namespace JUST
         private Dictionary<string, MethodInfo> _customFunctions = new Dictionary<string, MethodInfo>();
         private int _defaultDecimalPlaces = 28;
 
-        internal JToken Input;
-
         public EvaluationMode EvaluationMode = EvaluationMode.FallbackToDefault;
         private char _escapeChar = '/'; //do not use backslash, it is already the escape char in JSON
         private char _splitGroupChar = ':';
@@ -88,12 +86,7 @@ namespace JUST
             }
         }
 
-        internal JUSTContext(string inputJson)
-        {
-            Input = JToken.Parse(inputJson);
-        }
-
-        internal JUSTContext(string inputJson, JUSTContext context) : this(inputJson)
+        internal JUSTContext(JUSTContext context)
         {
             this.EvaluationMode = context.EvaluationMode;
             this.EscapeChar = context.EscapeChar;
