@@ -32,7 +32,7 @@ namespace JUST
         FallbackToDefault = 1,
         AddOrReplaceProperties = 2,
         Strict = 4,
-         CloneTransformer = 8,
+        CloneTransformer = 8,
     }
 
     public class JUSTContext
