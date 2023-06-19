@@ -106,7 +106,16 @@ namespace JUST
         public JToken Transform(JObject transformer, JToken input)
         {
             Context.Input = input;
-            var parentToken = (JToken)transformer;
+
+            // We should (arguably, must!) clone the transformer or the input templated is mutated preventing 
+            // it from being applied correctly to subsequent inputs.
+            // (An alternative solution is to refactor to otherwise prevent this seemingly undesirable mutation.)
+            JToken parentToken = Context.EvaluationMode.HasFlag(EvaluationMode.CloneTransformer)
+                ? ((transformer?.DeepClone()) is JObject transformerTemplate)
+                    ? (JToken)transformerTemplate
+                    : throw new InvalidOperationException("Transformer could not be cloned successfully.")
+                : (JToken)transformer;
+
             RecursiveEvaluate(ref parentToken, null, null);
             return parentToken;
         }
