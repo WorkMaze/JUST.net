@@ -9,6 +9,7 @@ namespace JUST
     public abstract class Transformer
     {
         protected int _loopCounter = 0;
+        protected int _scopeCounter = 0;
 
         protected readonly JUSTContext Context;
 
@@ -86,21 +87,21 @@ namespace JUST
 
         public static object valueof(string path, JUSTContext context)
         {
-            var selector = context.Resolve<T>(context.Input);
+            T selector = context.Resolve<T>(context.Input);
             JToken selectedToken = selector.Select(path);
             return GetValue(selectedToken);
         }
 
         public static bool exists(string path, JUSTContext context)
         {
-            var selector = context.Resolve<T>(context.Input);
+            T selector = context.Resolve<T>(context.Input);
             JToken selectedToken = selector.Select(path);
             return selectedToken != null;
         }
 
         public static bool existsandnotempty(string path, JUSTContext context)
         {
-            var selector = context.Resolve<T>(context.Input);
+            T selector = context.Resolve<T>(context.Input);
             JToken selectedToken = selector.Select(path);
             return selectedToken != null && (
                 (selectedToken.Type == JTokenType.String && selectedToken.ToString().Trim() != string.Empty) ||
@@ -314,7 +315,7 @@ namespace JUST
             {
                 foreach (JToken token in parsedArray.Children())
                 {
-                    var selector = context.Resolve<T>(token);
+                    T selector = context.Resolve<T>(token);
                     JToken selectedToken = selector.Select(path);
                     result += Convert.ToDecimal(selectedToken.ToString());
                 }
@@ -359,7 +360,7 @@ namespace JUST
             {
                 foreach (JToken token in parsedArray.Children())
                 {
-                    var selector = context.Resolve<T>(token);
+                    T selector = context.Resolve<T>(token);
                     JToken selectedToken = selector.Select(path);
                     result += Convert.ToDecimal(selectedToken.ToString());
                 }
@@ -408,7 +409,7 @@ namespace JUST
             {
                 foreach (JToken token in parsedArray.Children())
                 {
-                    var selector = context.Resolve<T>(token);
+                    T selector = context.Resolve<T>(token);
                     JToken selectedToken = selector.Select(path);
                     result = Max(result, selectedToken);
                 }
@@ -453,7 +454,7 @@ namespace JUST
             {
                 foreach (JToken token in parsedArray.Children())
                 {
-                    var selector = context.Resolve<T>(token);
+                    T selector = context.Resolve<T>(token);
                     JToken selectedToken = selector.Select(path);
                     decimal thisValue = Convert.ToDecimal(selectedToken.ToString());
                     result = Math.Min(result, thisValue);
@@ -511,7 +512,7 @@ namespace JUST
 
         public static object lastvalueatpath(JArray array, JToken currentElement, string path, JUSTContext context)
         {
-            var selector = context.Resolve<T>(array.Last);
+            T selector = context.Resolve<T>(array.Last);
             JToken selectedToken = selector.Select(path);
             return GetValue(selectedToken);
         }
@@ -565,7 +566,7 @@ namespace JUST
         public static JArray grouparrayby(string path, string groupingElement, string groupedElement, JUSTContext context)
         {
             JArray result;
-            var selector = context.Resolve<T>(context.Input);
+            T selector = context.Resolve<T>(context.Input);
             JArray arr = (JArray)selector.Select(path);
             if (!groupingElement.Contains(context.SplitGroupChar))
             {
@@ -741,7 +742,7 @@ namespace JUST
             }
             else if (val is IEnumerable enumerable)
             {
-                var enumerator = enumerable.GetEnumerator();
+                IEnumerator enumerator = enumerable.GetEnumerator();
                 while (enumerator.MoveNext())
                 {
                     result++;
