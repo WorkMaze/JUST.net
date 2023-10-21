@@ -31,9 +31,12 @@ namespace JUST
             {
                 return InvokeCustomMethod<T>(methodInfo, parameters, convertParameters, context);
             }
-            catch (Exception ex)
+            catch
             {
-                ExceptionHelper.HandleException(ex, context.EvaluationMode);
+                if (context.IsStrictMode())
+                {
+                    throw;
+                }
             }
             return GetDefaultValue(methodInfo.ReturnType);
         }
@@ -249,9 +252,12 @@ namespace JUST
                     }
                 }
             }
-            catch (Exception ex)
+            catch
             {
-                ExceptionHelper.HandleException(ex, mode);
+                if (mode == EvaluationMode.Strict)
+                {
+                    throw;
+                } 
                 typedValue = GetDefaultValue(pType);
             }
             return typedValue;

@@ -107,7 +107,12 @@ namespace JUST
         {
             Context.Input = input;
             var parentToken = (JToken)transformer;
-            RecursiveEvaluate(ref parentToken, new State());
+            State state = new State()
+            {
+                CurrentArrayToken = new Dictionary<LevelKey, JToken> { { new LevelKey { Level = _levelCounter, Key = "root"}, Context.Input } },
+                CurrentScopeToken = new Dictionary<LevelKey, JToken> { { new LevelKey { Level = _levelCounter, Key = "root"}, Context.Input } }
+            };
+            RecursiveEvaluate(ref parentToken, state);
             return parentToken;
         }
 
@@ -467,27 +472,24 @@ namespace JUST
             var args = ExpressionHelper.SplitArguments(arguments, Context.EscapeChar);
             var previousAlias = "root";
             args[0] = (string)ParseFunction(args[0], state);
-            string alias = args.Length > 1 ? (string)ParseFunction(args[1].Trim(), state) : $"loop{++_levelCounter}";
+            _levelCounter++;
+            string alias = args.Length > 1 ? (string)ParseFunction(args[1].Trim(), state) : $"loop{_levelCounter}";
 
             if (args.Length > 2)
             {
                 previousAlias = (string)ParseFunction(args[2].Trim(), state);
                 state.CurrentArrayToken = new Dictionary<LevelKey, JToken> { { new LevelKey { Level =_levelCounter, Key = previousAlias }, Context.Input } };
             }
-            else if (state.CurrentArrayToken?.Any() ?? false)
-            {
-                previousAlias = state.CurrentArrayToken.Last().Key.Key;
-            }
             else
             {
-                state.CurrentArrayToken = new Dictionary<LevelKey, JToken> { { new LevelKey {Level = _levelCounter, Key = previousAlias }, state.GetLastLevelToken() ?? Context.Input } };
+                previousAlias = state.GetHigherAlias();
             }
-
+            
             var strArrayToken = ParseArgument(state, args[0]) as string;
 
             bool isDictionary = false;
             JToken arrayToken;
-            var selectable = GetSelectableToken(state.CurrentArrayToken.Single(a => a.Key.Key == previousAlias).Value, Context);
+            var selectable = GetSelectableToken(state.GetAliasToken(previousAlias), Context);
             arrayToken = selectable.Select(strArrayToken);
 
             if (arrayToken != null)
@@ -586,26 +588,22 @@ namespace JUST
             var args = ExpressionHelper.SplitArguments(arguments, Context.EscapeChar);
             var previousAlias = "root";
             args[0] = (string)ParseFunction(args[0], state);
-            string alias = args.Length > 1 ? (string)ParseFunction(args[1].Trim(), state) : $"scope{++_levelCounter}";
+            _levelCounter++;
+            string alias = args.Length > 1 ? (string)ParseFunction(args[1].Trim(), state) : $"scope{_levelCounter}";
 
             if (args.Length > 2)
             {
                 previousAlias = (string)ParseFunction(args[2].Trim(), state);
             }
-            else if (state.CurrentScopeToken?.Any() ?? false)
-            {
-                previousAlias = state.CurrentScopeToken.Last().Key.Key;
-                //state.CurrentScopeToken.Add(alias, state.CurrentArrayToken?.Last().Value ?? Context.Input);
-            }
             else
             {
-                state.CurrentScopeToken = new Dictionary<LevelKey, JToken> { { new LevelKey { Level = _levelCounter, Key = previousAlias}, state.GetLastLevelToken() ?? Context.Input } };
+                previousAlias = state.GetHigherAlias();
             }
 
             var strScopeToken = ParseArgument(state, args[0]) as string;
 
             JToken scopeToken;
-            var selectable = GetSelectableToken(state.CurrentScopeToken.Single(a => a.Key.Key == previousAlias).Value, Context);
+            var selectable = GetSelectableToken(state.GetAliasToken(previousAlias), Context);
             scopeToken = selectable.Select(strScopeToken);
 
             JToken clonedToken = childToken.DeepClone();
@@ -916,7 +914,7 @@ namespace JUST
                     if (new[] { "currentvalue", "currentindex", "lastindex", "lastvalue" }.Contains(functionName))
                     {
                         var alias = ParseLoopAlias(listParameters, 1, state.ParentArray.Last().Key.Key);
-                        output = ReflectionHelper.Caller<T>(null, "JUST.Transformer`1", functionName, new object[] { state.ParentArray.Single(p => p.Key.Key == alias), state.CurrentArrayToken.Single(p => p.Key.Key == alias) }, convertParameters, Context);
+                        output = ReflectionHelper.Caller<T>(null, "JUST.Transformer`1", functionName, new object[] { state.ParentArray.Single(p => p.Key.Key == alias).Value, state.CurrentArrayToken.Single(p => p.Key.Key == alias).Value }, convertParameters, Context);
                     }
                     else if (new[] { "currentvalueatpath", "lastvalueatpath" }.Contains(functionName))
                     {
@@ -962,34 +960,24 @@ namespace JUST
                     else
                     {
                         var input = ((JUSTContext)parameters.Last()).Input;
-                        // TODO which to check first? loop or scope?
-                        if (state.CurrentScopeToken != null)
+                        if (functionName != "valueof")
                         {
-                            if (state.CurrentArrayToken != null && functionName != "valueof")
-                            {
-                                ((JUSTContext)parameters.Last()).Input = state.CurrentArrayToken.Last().Value;
-                            }
-                            else
-                            {
-                                if (functionName == "valueof" && listParameters.Count > 2)
-                                {
-                                    ((JUSTContext)parameters.Last()).Input = state.CurrentScopeToken.Single(p => p.Key.Key == listParameters[1].ToString()).Value;
-                                    listParameters.Remove(listParameters.ElementAt(listParameters.Count - 2));
-                                    parameters = listParameters.ToArray();
-                                }
-                                else
-                                {
-                                    ((JUSTContext)parameters.Last()).Input = state.CurrentScopeToken.Last().Value;
-                                }
-                            }
+                            ((JUSTContext)parameters.Last()).Input = state.CurrentArrayToken.Last().Value;
                         }
                         else
                         {
-                            if (state.CurrentArrayToken != null && functionName != "valueof")
+                            if (functionName == "valueof" && listParameters.Count > 2)
                             {
-                                ((JUSTContext)parameters.Last()).Input = state.CurrentArrayToken.Last().Value;
-                            }    
+                                ((JUSTContext)parameters.Last()).Input = state.CurrentScopeToken.Single(p => p.Key.Key == listParameters[1].ToString()).Value;
+                                listParameters.Remove(listParameters.ElementAt(listParameters.Count - 2));
+                                parameters = listParameters.ToArray();
+                            }
+                            else
+                            {
+                                ((JUSTContext)parameters.Last()).Input = state.CurrentScopeToken.Last().Value;
+                            }
                         }
+                        
                         output = ReflectionHelper.Caller<T>(null, "JUST.Transformer`1", functionName, parameters, convertParameters, Context);
                         ((JUSTContext)parameters.Last()).Input = input;
                     }
@@ -1009,6 +997,13 @@ namespace JUST
             var contextInput = Context.Input;
             var input = JToken.Parse(Transform(parameters[0].ToString(), contextInput.ToString()));
             Context.Input = input;
+            
+            IDictionary<LevelKey, JToken> tmpArray = state.CurrentArrayToken;
+            IDictionary<LevelKey, JToken> tmpScope = state.CurrentScopeToken;
+
+            state.CurrentArrayToken = new Dictionary<LevelKey, JToken>() { { new LevelKey { Key = "root", Level = 0 }, input } };
+            state.CurrentScopeToken = new Dictionary<LevelKey, JToken>() { { new LevelKey { Key = "root", Level = 0 }, input } };
+
             if (parameters[1].ToString().Trim().Trim('\'').StartsWith("{"))
             {
                 var jobj = JObject.Parse(parameters[1].ToString().Trim().Trim('\''));
@@ -1024,6 +1019,10 @@ namespace JUST
                 output = ParseFunction(parameters[1].ToString().Trim().Trim('\''), state);
             }
             Context.Input = contextInput;
+            
+            state.CurrentArrayToken = tmpArray;
+            state.CurrentScopeToken = tmpScope;
+
             return output;
         }
 
@@ -1037,7 +1036,7 @@ namespace JUST
             }
             else
             {
-                alias = defaultValue; //$"loop{_loopCounter}";
+                alias = defaultValue;
             }
             return alias;
         }
@@ -1146,32 +1145,6 @@ namespace JUST
             return jsonObjects;
         }
         #endregion
-
-        private static int GetIndexOfFunctionEnd(string totalString)
-        {
-            int index = -1;
-
-            int startIndex = totalString.IndexOf("#");
-
-            int startBrackettCount = 0;
-            int endBrackettCount = 0;
-
-            for (int i = startIndex; i < totalString.Length; i++)
-            {
-                if (totalString[i] == '(')
-                    startBrackettCount++;
-                if (totalString[i] == ')')
-                    endBrackettCount++;
-
-                if (endBrackettCount == startBrackettCount && endBrackettCount > 0)
-                {
-                    index = i;
-                    break;
-                }
-            }
-
-            return index;
-        }
 
         private static T GetSelectableToken(JToken token, JUSTContext context)
         {

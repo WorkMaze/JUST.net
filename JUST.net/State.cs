@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json.Linq;
@@ -16,19 +17,32 @@ internal sealed class State
 
     internal IDictionary<LevelKey, JToken> CurrentScopeToken { get; set; }
 
-    // internal State(IDictionary<string, JArray> parentArray, IDictionary<string, JToken> currentArrayToken, IDictionary<string, JToken> currentScopeToken)
-    // {
-    //     this.ParentArray = parentArray;
-    //     this.CurrentArrayToken = currentArrayToken;
-    //     this.CurrentScopeToken = currentScopeToken;
-    // }
-
-    internal JToken GetLastLevelToken()
+    internal string GetHigherAlias()
     {
-        if ((CurrentArrayToken?.Max(k => k.Key.Level) ?? 0) > (CurrentScopeToken?.Max(k => k.Key.Level) ?? 0))
+        if (IsArrayHigherThanScope())
         {
-            return CurrentArrayToken?.Last().Value;
+            return CurrentArrayToken.Last().Key.Key;
         }
-        return CurrentScopeToken?.Last().Value;
+        return CurrentScopeToken.Last().Key.Key;
+    }
+
+    internal JToken GetAliasToken(string alias)
+    {
+        IEnumerable<KeyValuePair<LevelKey, JToken>> arr = CurrentArrayToken.Where(a => a.Key.Key == alias);
+        IEnumerable<KeyValuePair<LevelKey, JToken>> scope = CurrentScopeToken.Where(a => a.Key.Key == alias);
+
+        int maxArr = arr.Any() ? arr.Max(a => a.Key.Level) : -1;
+        int maxScope = scope.Any() ? scope.Max(a => a.Key.Level) : -1;
+
+        if (maxArr > maxScope)
+        {
+            return arr.Single(a => a.Key.Level == maxArr).Value;
+        }
+        return scope.Single(a => a.Key.Level == maxScope).Value;
+    }
+
+    private bool IsArrayHigherThanScope()
+    {
+        return (CurrentArrayToken?.Max(k => k.Key.Level) ?? 0) > (CurrentScopeToken?.Max(k => k.Key.Level) ?? 0);
     }
 }

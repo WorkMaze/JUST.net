@@ -180,9 +180,11 @@ namespace JUST
             {
                 return stringRef.Substring(startIndex, length);
             }
-            catch (Exception ex)
+            catch
             {
-                ExceptionHelper.HandleException(ex, context.EvaluationMode);
+                if (context.IsStrictMode()) {
+                    throw;
+                }
             }
             return null;
         }
@@ -224,7 +226,7 @@ namespace JUST
                 {
                     if (context.IsStrictMode() && token.Type != JTokenType.String)
                     {
-                        throw new Exception($"Invalid value in array to concatenate: {token.ToString()}");
+                        throw new Exception($"Invalid value in array to concatenate: {token}");
                     }
                     result += token.ToString();
                 }
