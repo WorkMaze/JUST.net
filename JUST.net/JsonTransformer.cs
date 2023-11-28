@@ -191,7 +191,10 @@ namespace JUST
                     }
                     else if (property.Value.ToString().Trim().StartsWith("#"))
                     {
-                        property.Value = GetToken(ParseFunction(property.Value.ToString().Trim(), parentArray, currentArrayToken));
+                        var propVal = property.Value.ToString().Trim();
+                        var output = ParseFunction(propVal, parentToken, parentArray, currentArrayToken);
+                        output = LookInTransformed(output, propVal, parentToken, parentArray, currentArrayToken);
+                        property.Value = GetToken(output);
                     }
                 }
 
@@ -206,7 +209,7 @@ namespace JUST
             else if (childToken.Type == JTokenType.String && childToken.Value<string>().Trim().StartsWith("#")
                 && parentArray != null && currentArrayToken != null)
             {
-                object newValue = ParseFunction(childToken.Value<string>(), parentArray, currentArrayToken);
+                object newValue = ParseFunction(childToken.Value<string>(), parentToken, parentArray, currentArrayToken);
                 childToken.Replace(GetToken(newValue));
             }
 
@@ -427,12 +430,12 @@ namespace JUST
         {
             var args = ExpressionHelper.SplitArguments(arguments, Context.EscapeChar);
             var previousAlias = "root";
-            args[0] = (string)ParseFunction(args[0], parentArray, currentArrayToken);
-            string alias = args.Length > 1 ? (string)ParseFunction(args[1].Trim(), parentArray, currentArrayToken) : $"loop{++_loopCounter}";
+            args[0] = (string)ParseFunction(args[0], null, parentArray, currentArrayToken);
+            string alias = args.Length > 1 ? (string)ParseFunction(args[1].Trim(), null, parentArray, currentArrayToken) : $"loop{++_loopCounter}";
 
             if (args.Length > 2)
             {
-                previousAlias = (string)ParseFunction(args[2].Trim(), parentArray, currentArrayToken);
+                previousAlias = (string)ParseFunction(args[2].Trim(), null, parentArray, currentArrayToken);
                 currentArrayToken = new Dictionary<string, JToken> { { previousAlias, Context.Input } };
             }
             else if (currentArrayToken?.Any() ?? false)
@@ -444,7 +447,7 @@ namespace JUST
                 currentArrayToken = new Dictionary<string, JToken> { { previousAlias, Context.Input } };
             }
 
-            var strArrayToken = ParseArgument(parentArray, currentArrayToken, args[0]) as string;
+            var strArrayToken = ParseArgument(null, parentArray, currentArrayToken, args[0]) as string;
 
             bool isDictionary = false;
             JToken arrayToken;
@@ -545,7 +548,7 @@ namespace JUST
 
         private void ConditionalGroupOperation(string propertyName, string arguments, IDictionary<string, JArray> parentArray, IDictionary<string, JToken> currentArrayToken, ref List<string> condProps, ref List<JToken> tokenToForm, JToken childToken)
         {
-            object functionResult = ParseFunction(arguments, parentArray, currentArrayToken);
+            object functionResult = ParseFunction(arguments, null, parentArray, currentArrayToken);
             bool result;
             try
             {
@@ -590,12 +593,12 @@ namespace JUST
 
         private void EvalOperation(JProperty property, string arguments, IDictionary<string, JArray> parentArray, IDictionary<string, JToken> currentArrayToken, ref List<string> loopProperties, ref List<JToken> tokensToAdd)
         {
-            object functionResult = ParseFunction(arguments, parentArray, currentArrayToken);
+            object functionResult = ParseFunction(arguments, null, parentArray, currentArrayToken);
 
             object val;
             if (property.Value.Type == JTokenType.String)
             {
-                val = ParseFunction(property.Value.Value<string>(), parentArray, currentArrayToken);
+                val = ParseFunction(property.Value.Value<string>(), null, parentArray, currentArrayToken);
             }
             else
             {
@@ -727,7 +730,7 @@ namespace JUST
                 object itemToAdd = arrEl.Value<JToken>();
                 if (arrEl.Type == JTokenType.String && arrEl.ToString().Trim().StartsWith("#"))
                 {
-                    itemToAdd = ParseFunction(arrEl.ToString(), parentArray, currentArrayToken);
+                    itemToAdd = ParseFunction(arrEl.ToString(), null, parentArray, currentArrayToken);
                 }
                 result.Add(itemToAdd);
             }
@@ -740,7 +743,7 @@ namespace JUST
         {
             string[] argumentArr = ExpressionHelper.SplitArguments(arguments, Context.EscapeChar);
             string path = argumentArr[0];
-            if (!(ParseArgument(parentArray, currentArrayElement, path) is string jsonPath))
+            if (!(ParseArgument(null, parentArray, currentArrayElement, path) is string jsonPath))
             {
                 throw new ArgumentException($"Invalid path for #copy: '{argumentArr[0]}' resolved to null!");
             }
@@ -748,7 +751,7 @@ namespace JUST
             string alias = null;
             if (argumentArr.Length > 1)
             {
-                alias = ParseArgument(parentArray, currentArrayElement, argumentArr[1]) as string;
+                alias = ParseArgument(null, parentArray, currentArrayElement, argumentArr[1]) as string;
                 if (!(currentArrayElement?.ContainsKey(alias) ?? false))
                 {
                     throw new ArgumentException($"Unknown loop alias: '{argumentArr[1]}'");
@@ -769,11 +772,12 @@ namespace JUST
             {
                 throw new Exception("Function #replace needs at least two arguments - 1. path to be replaced, 2. token to replace with.");
             }
-            if (!(ParseArgument(parentArray, currentArrayElement, argumentArr[0]) is string key))
+            string key = ParseArgument(null, parentArray, currentArrayElement, argumentArr[0]) as string;
+            if (key == null)
             {
                 throw new ArgumentException($"Invalid path for #replace: '{argumentArr[0]}' resolved to null!");
             }
-            object str = ParseArgument(parentArray, currentArrayElement, argumentArr[1]);
+            object str = ParseArgument(null, parentArray, currentArrayElement, argumentArr[1]);
             JToken newToken = GetToken(str);
             return new KeyValuePair<string, JToken>(key, newToken);
         }
@@ -783,7 +787,8 @@ namespace JUST
         #region Delete
         private string Delete(string argument, IDictionary<string, JArray> parentArray, IDictionary<string, JToken> currentArrayElement)
         {
-            if (!(ParseArgument(parentArray, currentArrayElement, argument) is string result))
+            string result = ParseArgument(null, parentArray, currentArrayElement, argument) as string;
+            if (result == null)
             {
                 throw new ArgumentException($"Invalid path for #delete: '{argument}' resolved to null!");
             }
@@ -793,7 +798,7 @@ namespace JUST
 
         #region ParseFunction
 
-        private object ParseFunction(string functionString, IDictionary<string, JArray> array, IDictionary<string, JToken> currentArrayElement)
+        private object ParseFunction(string functionString, JToken parentToken, IDictionary<string, JArray> array, IDictionary<string, JToken> currentArrayElement)
         {
             try
             {
@@ -808,85 +813,26 @@ namespace JUST
 
                 if (functionName == "ifcondition")
                 {
-                    var condition = ParseArgument(array, currentArrayElement, arguments[0]);
-                    var value = ParseArgument(array, currentArrayElement, arguments[1]);
-                    var equal = ComparisonHelper.Equals(condition, value, Context.EvaluationMode);
-                    var index = (equal) ? 2 : 3;
-
-                    output = ParseArgument(array, currentArrayElement, arguments[index]);
+                    output = GetConditionalOutput(parentToken, arguments, array, currentArrayElement);
                 }
                 else
                 {
                     int i = 0;
                     for (; i < (arguments?.Length ?? 0); i++)
                     {
-                        listParameters.Add(ParseArgument(array, currentArrayElement, arguments[i]));
+                        output = ParseArgument(parentToken, array, currentArrayElement, arguments[i]);
+                        output = LookInTransformed(output, arguments[i], parentToken, array, currentArrayElement);
+                        listParameters.Add(output);
                     }
                     listParameters.Add(Context);
 
-                    var parameters = listParameters.ToArray();
                     var convertParameters = true;
                     if (new[] { "concat", "xconcat", "currentproperty" }.Contains(functionName))
                     {
                         convertParameters = false;
                     }
 
-                    if (new[] { "currentvalue", "currentindex", "lastindex", "lastvalue" }.Contains(functionName))
-                    {
-                        var alias = ParseLoopAlias(listParameters, 1, array.Last().Key);
-                        output = ReflectionHelper.Caller<T>(null, "JUST.Transformer`1", functionName, new object[] { array[alias], currentArrayElement[alias] }, convertParameters, Context);
-                    }
-                    else if (new[] { "currentvalueatpath", "lastvalueatpath" }.Contains(functionName))
-                    {
-                        var alias = ParseLoopAlias(listParameters, 2, array.Last().Key);
-                        output = ReflectionHelper.Caller<T>(
-                            null,
-                            "JUST.Transformer`1",
-                            functionName,
-                            new[] { array[alias], currentArrayElement[alias] }.Concat(listParameters.ToArray()).ToArray(),
-                            convertParameters,
-                            Context);
-                    }
-                    else if (functionName == "currentproperty")
-                    {
-                        var alias = ParseLoopAlias(listParameters, 1, array.Last().Key);
-                        output = ReflectionHelper.Caller<T>(null, "JUST.Transformer`1", functionName,
-                            new object[] { array[alias], currentArrayElement[alias], Context },
-                            convertParameters, Context);
-                    }
-                    else if (functionName == "customfunction")
-                        output = CallCustomFunction(listParameters.ToArray());
-                    else if (Context?.IsRegisteredCustomFunction(functionName) ?? false)
-                    {
-                        var methodInfo = Context.GetCustomMethod(functionName);
-                        output = ReflectionHelper.InvokeCustomMethod<T>(methodInfo, parameters, convertParameters, Context);
-                    }
-                    else if (Regex.IsMatch(functionName, ReflectionHelper.EXTERNAL_ASSEMBLY_REGEX))
-                    {
-                        output = ReflectionHelper.CallExternalAssembly<T>(functionName, listParameters.ToArray(), Context);
-                    }
-                    else if (new[] { "xconcat", "xadd",
-                        "mathequals", "mathgreaterthan", "mathlessthan", "mathgreaterthanorequalto", "mathlessthanorequalto",
-                        "stringcontains", "stringequals"}.Contains(functionName))
-                    {
-                        object[] oParams = new object[1];
-                        oParams[0] = parameters;
-                        output = ReflectionHelper.Caller<T>(null, "JUST.Transformer`1", functionName, oParams, convertParameters, Context);
-                    }
-                    else if (functionName == "applyover")
-                    {
-                        output = ParseApplyOver(array, currentArrayElement, parameters);
-                    }
-                    else
-                    {
-                        var input = ((JUSTContext)listParameters.Last()).Input;
-                        if (currentArrayElement != null && functionName != "valueof")
-                        {
-                            ((JUSTContext)listParameters.Last()).Input = currentArrayElement.Last().Value;
-                        }
-                        output = ReflectionHelper.Caller<T>(null, "JUST.Transformer`1", functionName, parameters, convertParameters, Context);
-                        ((JUSTContext)parameters.Last()).Input = input;
-                    }
+                    output = GetFunctionOutput(functionName, listParameters, convertParameters, array, currentArrayElement);
                 }
 
                 return output;
@@ -915,42 +861,129 @@ namespace JUST
             }
             else
             {
-                output = ParseFunction(parameters[1].ToString().Trim().Trim('\''), array, currentArrayElement);
+                output = ParseFunction(parameters[1].ToString().Trim().Trim('\''), null, array, currentArrayElement);
             }
             Context.Input = contextInput;
             return output;
         }
 
-        private string ParseLoopAlias(List<object> listParameters, int index, string defaultValue)
+        private string ParseLoopAlias(IList<object> listParameters, int index, string defaultValue)
         {
             string alias;
-            if (listParameters.Count > index)
+            if (listParameters != null && listParameters.Count > index)
             {
                 alias = (listParameters[index - 1] as string).Trim();
                 listParameters.RemoveAt(index - 1);
             }
             else
             {
-                alias = defaultValue; //$"loop{_loopCounter}";
+                alias = defaultValue;
             }
             return alias;
         }
 
-        private object ParseArgument(IDictionary<string, JArray> array, IDictionary<string, JToken> currentArrayElement, string argument)
+        private object ParseArgument(JToken parentToken, IDictionary<string, JArray> array, IDictionary<string, JToken> currentArrayElement, string argument)
         {
+            object output = argument;
             var trimmedArgument = argument.Trim();
             if (trimmedArgument.StartsWith("#"))
             {
-                return ParseFunction(trimmedArgument, array, currentArrayElement);
+                output = ParseFunction(trimmedArgument, parentToken, array, currentArrayElement);
             }
-            if (trimmedArgument.StartsWith($"{Context.EscapeChar}#"))
+            else if (trimmedArgument.StartsWith($"{Context.EscapeChar}#"))
             {
-                return ExpressionHelper.UnescapeSharp(argument, Context.EscapeChar);
+                output = ExpressionHelper.UnescapeSharp(argument, Context.EscapeChar);
             }
-            return argument;
+            return output;
         }
 
-        private object CallCustomFunction(object[] parameters)
+        private object GetConditionalOutput(JToken parentToken, string[] arguments, IDictionary<string, JArray> array, IDictionary<string, JToken> currentArrayElement)
+        {
+            var condition = ParseArgument(parentToken, array, currentArrayElement, arguments[0]);
+            condition = LookInTransformed(condition, arguments[0], parentToken, array, currentArrayElement);
+            var value = ParseArgument(parentToken, array, currentArrayElement, arguments[1]);
+            value = LookInTransformed(value, arguments[1], parentToken, array, currentArrayElement);
+            var equal = ComparisonHelper.Equals(condition, value, Context.EvaluationMode);
+            var index = (equal) ? 2 : 3;
+
+            return ParseArgument(parentToken, array, currentArrayElement, arguments[index]);
+        }
+
+        private object GetFunctionOutput(string functionName, IList<object> listParameters, bool convertParameters, IDictionary<string, JArray> array, IDictionary<string, JToken> currentArrayElement)
+        {
+            object output = null;
+            if (new[] { "currentvalue", "currentindex", "lastindex", "lastvalue" }.Contains(functionName))
+            {
+                var alias = ParseLoopAlias(listParameters, 1, array.Last().Key);
+                output = ReflectionHelper.Caller<T>(null, "JUST.Transformer`1", functionName, new object[] { array[alias], currentArrayElement[alias] }, convertParameters, Context);
+            }
+            else if (new[] { "currentvalueatpath", "lastvalueatpath" }.Contains(functionName))
+            {
+                var alias = ParseLoopAlias(listParameters, 2, array.Last().Key);
+                output = ReflectionHelper.Caller<T>(
+                    null,
+                    "JUST.Transformer`1",
+                    functionName,
+                    new[] { array[alias], currentArrayElement[alias] }.Concat(listParameters.ToArray()).ToArray(),
+                    convertParameters,
+                    Context);
+            }
+            else if (functionName == "currentproperty")
+            {
+                var alias = ParseLoopAlias(listParameters, 1, array.Last().Key);
+                output = ReflectionHelper.Caller<T>(null, "JUST.Transformer`1", functionName,
+                    new object[] { array[alias], currentArrayElement[alias], Context },
+                    convertParameters, Context);
+            }
+            else if (functionName == "customfunction")
+                output = CallCustomFunction(listParameters.ToArray());
+            else if (Context?.IsRegisteredCustomFunction(functionName) ?? false)
+            {
+                var methodInfo = Context.GetCustomMethod(functionName);
+                output = ReflectionHelper.InvokeCustomMethod<T>(methodInfo, listParameters.ToArray(), convertParameters, Context);
+            }
+            else if (Regex.IsMatch(functionName, ReflectionHelper.EXTERNAL_ASSEMBLY_REGEX))
+            {
+                output = ReflectionHelper.CallExternalAssembly<T>(functionName, listParameters.ToArray(), Context);
+            }
+            else if (new[] { "xconcat", "xadd",
+                        "mathequals", "mathgreaterthan", "mathlessthan", "mathgreaterthanorequalto", "mathlessthanorequalto",
+                        "stringcontains", "stringequals"}.Contains(functionName))
+            {
+                object[] oParams = new object[1];
+                oParams[0] = listParameters.ToArray();
+                output = ReflectionHelper.Caller<T>(null, "JUST.Transformer`1", functionName, oParams, convertParameters, Context);
+            }
+            else if (functionName == "applyover")
+            {
+                output = ParseApplyOver(array, currentArrayElement, listParameters.ToArray());
+            }
+            else
+            {
+                var input = ((JUSTContext)listParameters.Last()).Input;
+                if (currentArrayElement != null && functionName != "valueof")
+                {
+                    ((JUSTContext)listParameters.Last()).Input = currentArrayElement.Last().Value;
+                }
+                output = ReflectionHelper.Caller<T>(null, "JUST.Transformer`1", functionName, listParameters.ToArray(), convertParameters, Context);
+                ((JUSTContext)listParameters.ToArray().Last()).Input = input;
+            }
+            return output;
+        }
+
+        private object LookInTransformed(object output, string propVal, JToken parentToken, IDictionary<string, JArray> parentArray, IDictionary<string, JToken> currentArrayToken)
+        {
+            if (output == null && Context.IsLookInTransformed())
+            {
+                JToken tmpContext = Context.Input;
+                Context.Input = parentToken;
+                output = ParseFunction(propVal, parentToken, parentArray, currentArrayToken);
+                Context.Input = tmpContext;
+            }
+            return output;
+        }
+
+            private object CallCustomFunction(object[] parameters)
         {
             object[] customParameters = new object[parameters.Length - 3];
             string functionString = string.Empty;
