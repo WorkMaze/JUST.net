@@ -235,6 +235,17 @@ namespace JUST.UnitTests
             Assert.AreEqual("{\"Result\":{},\"Other\":\"property\"}", result);
         }
 
+        [Test, Category("IfGroup")]
+        public void ConditionalGroupDoNotEvaluateIfFalse()
+        {
+            const string input = "{ \"Order\": { \"OrderID\": \"1001\", \"OrderApprover\": \"John\" }}";
+            const string transformer = "{ \"#ifgroup(#exists($.Order.OrderID))\": { \"OrderID\": \"#valueof($.Order.OrderID)\", \"Approver\": \"#valueof($.Order.OrderApprover)\" }, \"#ifgroup(#exists($.Order[0].OrderID))\": { \"orders\": { \"#loop($.Order)\" : {  \"OrderID\": \"#currentvalueatpath($.OrderID)\",  \"Approver\": \"#currentvalueatpath($.OrderApprover)\" } } }}";
+
+            var result = new JsonTransformer().Transform(transformer, input);
+
+            Assert.AreEqual("{\"OrderID\":\"1001\",\"Approver\":\"John\"}", result);
+        }
+        
         [Test, Category("IfCondition")]
         public void ConstantEmptyArray()
         {
