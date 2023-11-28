@@ -25,16 +25,16 @@ namespace JUST
             return Transform(transformerJson, DeserializeWithoutDateParse<JToken>(inputJson));
         }
 
-        private static string SerializeWithoutDateParse<T>(T obj)
+        private static string SerializeWithoutDateParse<U>(U obj)
         {
             var settings = new JsonSerializerSettings() { DateParseHandling = DateParseHandling.None };
             return JsonConvert.SerializeObject(obj, settings);
         }
 
-        private static T DeserializeWithoutDateParse<T>(string inputJson)
+        private static U DeserializeWithoutDateParse<U>(string inputJson)
         {
             var settings = new JsonSerializerSettings() { DateParseHandling = DateParseHandling.None };
-            return JsonConvert.DeserializeObject<T>(inputJson, settings);
+            return JsonConvert.DeserializeObject<U>(inputJson, settings);
         }
 
         public string Transform(string transformerJson, JToken input)
