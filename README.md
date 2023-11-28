@@ -121,7 +121,7 @@ Output:
 {
   "result": {
     "Open": "OpenDoc()",
-	"Close": "CloseDoc()"
+    "Close": "CloseDoc()"
   }
 }
 ```
