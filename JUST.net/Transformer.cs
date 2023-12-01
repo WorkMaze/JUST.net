@@ -461,12 +461,12 @@ namespace JUST
                     if (selector.Select(path) is JToken selectedToken)
                     {
                         decimal thisValue = Convert.ToDecimal(selectedToken.ToString());
-                        result = Math.Min(result ?? int.MaxValue, thisValue);
+                        result = Math.Min(result ?? decimal.MaxValue, thisValue);
                     }
                 }
             }
 
-            return TypedNumber(result ?? int.MaxValue);
+            return TypedNumber(result ?? decimal.MaxValue);
         }
 
         public static int arraylength(string array, JUSTContext context)
