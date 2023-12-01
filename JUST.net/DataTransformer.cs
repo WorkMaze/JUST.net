@@ -56,16 +56,20 @@ namespace JUST
                     {
                         object result = EvaluateFunction(functionString, inputJson, array, currentArrayElement, null);
                         string evaluatedFunction = result.ToString();
+                        
+                        StringBuilder builder = new StringBuilder(transformer);
+                        builder.Remove(index, functionString.Length);
 
                         if (!string.IsNullOrEmpty(evaluatedFunction))
                         {
-                            StringBuilder builder = new StringBuilder(transformer);
-                            builder.Remove(index, functionString.Length);
                             builder.Insert(index, evaluatedFunction);
-                            transformer = builder.ToString();
-
                             startIndex = index + evaluatedFunction.Length;
                         }
+                        else
+                        {
+                            startIndex = index + 1;
+                        }
+                        transformer = builder.ToString();
                     }
                 }
                 else

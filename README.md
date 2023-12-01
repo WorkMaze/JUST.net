@@ -16,6 +16,7 @@ This C# project has working examples of the transformations.
 Also a new enum field called `EvaluationMode` was added to `JUSTContext`, which lets you select how type mismatches are handled:
 - option `Strict` mode will throw an exception on error;
 - option `FallbackToDefault` will return the default value for the return type of the function/expression being evaluated
+- option `LookInTransformed` will make 'transformer' argument available to perform functions over it (one can perform actions over previously calculated properties, [example here](#lookintransformed))
 
 There's also an option to tell how #copy will behave:
 - option `AddOrReplaceProperties` will add or replace any property that may be present both in #copy and transformer.
@@ -63,7 +64,7 @@ string transformedString = new JsonTransformer().Transform(transformer, input);
 // with context
 JUSTContext context = new JUSTContext 
 { 
-  EvaluationMode = EvaluationMode.Strict,
+  EvaluationMode = EvaluationMode.Strict | EvaluationMode.LookInTransformed,
   DefaultDecimalPlaces = 4
 };
 string transformedString = new JsonTransformer(context).Transform(transformer, input);
@@ -1651,6 +1652,50 @@ Output:
 }
 ```
 
+## <a name="lookintransformed"></a> LookInTransformed evaluation mode example
+
+Example on how to use `LookInTransformed` evaluation mode:
+
+Code:
+```C#
+...
+string transformedString = new JsonTransformer(new JUSTContext { EvaluationMode = EvaluationMode.LookInTransformed }).Transform(transformer, input);
+...
+```
+
+Input:
+
+```JSON
+{
+  "number": 123,
+  "boolean": true
+}
+```
+
+Transformer:
+
+```JSON
+{
+  "first": "#valueof($.number)",
+  "second": "#valueof($.first)",
+  "third": "#add(2,#valueof($.second))",
+  "fourth": "#valueof($.boolean)",
+  "fifth": "#valueof($.fourth)",
+  "sixth": "#ifcondition(#valueof($.fifth),true,value is true,value is false)"
+}
+```
+
+Output:
+```JSON
+{
+  "first": 123,
+  "second": 123,
+  "third": 125,
+  "fourth": true,
+  "fifth": true,
+  "sixth": "value is true"
+}
+```
 
 ## <a name="schemavalidation"></a> Schema Validation against multiple schemas using prefixes
 
