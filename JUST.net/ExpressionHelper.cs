@@ -9,7 +9,7 @@ namespace JUST
 
         internal static bool TryParseFunctionNameAndArguments(string input, out string functionName, out string arguments)
         {
-            var match = new Regex(FunctionAndArgumentsRegex).Match(input);
+            var match = Regex.Match(input, FunctionAndArgumentsRegex, RegexOptions.Compiled);
             functionName = match.Success ? match.Groups[1].Value : input;
             arguments = match.Success ? match.Groups[2].Value : null;
             return match.Success;
