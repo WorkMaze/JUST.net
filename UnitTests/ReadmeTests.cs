@@ -258,6 +258,17 @@ namespace JUST.UnitTests
         }
 
         [Test]
+        public void UsePreviousGeneratedProperty()
+        {
+            const string input = "{ \"number\": 123, \"boolean\": true }";
+            const string transformer = "{ \"first\": \"#valueof($.number)\", \"second\": \"#valueof($.first)\", \"third\": \"#add(2,#valueof($.second))\", \"fourth\": \"#valueof($.boolean)\", \"fifth\": \"#valueof($.fourth)\", \"sixth\": \"#ifcondition(#valueof($.fifth),true,value is true,value is false)\" }";
+
+            var result = new JsonTransformer(new JUSTContext { EvaluationMode = EvaluationMode.LookInTransformed | EvaluationMode.Strict }).Transform(transformer, input);
+
+            Assert.AreEqual("{\"first\":123,\"second\":123,\"third\":125,\"fourth\":true,\"fifth\":true,\"sixth\":\"value is true\"}", result);
+        }
+
+        [Test]
         public void Transform()
         {
             const string input = "{ \"spell\": [\"one\", \"two\", \"three\"], \"letters\": [\"z\", \"c\", \"n\"], \"nested\": {	\"spell\": [\"one\", \"two\", \"three\"], \"letters\": [\"z\", \"c\", \"n\"] },\"array\": [{ \"spell\": [\"one\", \"two\", \"three\"], \"letters\": [\"z\", \"c\", \"n\"] }, { \"spell\": [\"four\", \"five\", \"six\"], \"letters\": [\"z\", \"c\", \"n\"] } ]}";
