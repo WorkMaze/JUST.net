@@ -451,7 +451,7 @@ namespace JUST
 
         public static object minatpath(JArray parsedArray, string path, JUSTContext context)
         {
-            decimal result = 0;
+            decimal? result = null;
 
             if (parsedArray != null)
             {
@@ -461,12 +461,12 @@ namespace JUST
                     if (selector.Select(path) is JToken selectedToken)
                     {
                         decimal thisValue = Convert.ToDecimal(selectedToken.ToString());
-                        result = Math.Min(result, thisValue);
+                        result = Math.Min(result ?? decimal.MaxValue, thisValue);
                     }
                 }
             }
 
-            return TypedNumber(result);
+            return TypedNumber(result ?? decimal.MaxValue);
         }
 
         public static int arraylength(string array, JUSTContext context)
