@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <Title>JUST - JSON Under Simple Transformation</Title>
-    <TargetFrameworks>netstandard2.0;</TargetFrameworks>
+    <TargetFramework>netstandard2.1</TargetFramework>
     <Description>This a cool .NET Standard library which enables you to transform a JSON document into another JSON document using JSON transformations using JSON path. This is the JSON equivalent of XSLT. 
 This will repace the JUST and JUST.NETCore packages.</Description>
     <Summary>This is the JSON equivalent of XSLT</Summary>
@@ -15,7 +15,7 @@ This will repace the JUST and JUST.NETCore packages.</Description>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <PackageReleaseNotes></PackageReleaseNotes>
-    <Version>4.3.0</Version>
+    <Version>4.4.0</Version>
     <AssemblyVersion>4.0.0.0</AssemblyVersion>
     <FileVersion>4.0.0.0</FileVersion>
   </PropertyGroup>
