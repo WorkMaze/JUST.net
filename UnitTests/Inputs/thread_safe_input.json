@@ -1,0 +1,88 @@
+{
+    "list": [
+      {
+        "title": "Mr.",
+        "name": "Smith",
+        "addresses": [
+          {
+            "street": "Some Street",
+            "number": 1,
+            "city": "Some City",
+            "postal_code": 1234
+          },
+          {
+            "street": "Some Other Street",
+            "number": 2,
+            "city": "Some Other City",
+            "postal_code": 5678
+          }
+        ],
+        "contacts": [
+          {
+            "type": "home",
+            "number": 123546789,
+            "is_default": false
+          },
+          {
+            "type": "mobile",
+            "number": 987654321,
+            "is_default": true
+          }
+        ]
+      },
+      {
+        "title": "Mrs.",
+        "name": "Smith",
+        "addresses": [
+          {
+            "street": "Street Who?",
+            "number": 11,
+            "city": "City Who?",
+            "postal_code": 1111
+          },
+          {
+            "street": "Other Street Who?",
+            "number": 22,
+            "city": "Other City Who?",
+            "postal_code": 2222
+          }
+        ],
+        "contacts": [
+          {
+            "type": "home",
+            "number": 999999999999999,
+            "is_default": false
+          },
+          {
+            "type": "mobile",
+            "number": 111111111111111,
+            "is_default": true
+          }
+        ]
+      }
+    ],
+    "title": "Mr.",
+    "name": "Smith",
+    "addresses": [{
+            "street": "Some Street",
+            "number": 1,
+            "city": "Some City",
+            "postal_code": 1234
+        }, {
+            "street": "Some Other Street",
+            "number": 2,
+            "city": "Some Other City",
+            "postal_code": 5678
+        }
+    ],
+    "contacts": [{
+            "type": "home",
+            "number": 123546789,
+            "is_default": false
+        }, {
+            "type": "mobile",
+            "number": 987654321,
+            "is_default": true
+        }
+    ]
+}
