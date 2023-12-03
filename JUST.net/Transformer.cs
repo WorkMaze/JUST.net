@@ -251,7 +251,7 @@ namespace JUST
                     {
                         throw new Exception($"Invalid value in array to concatenate: {selectedToken.ToString()}");
                     }
-                    result += selectedToken.ToString();
+                    result += selectedToken?.ToString();
                 }
             }
 
@@ -319,6 +319,11 @@ namespace JUST
                 {
                     JToken selectedToken = GetToken<T>(token, path, context);
                     result += Convert.ToDecimal(selectedToken.ToString());
+                    // var selector = context.Resolve<T>(token);
+                    // if (selector.Select(path) is JToken selectedToken)
+                    // {
+                    //     result += Convert.ToDecimal(selectedToken.ToString());
+                    // }
                 }
             }
 
@@ -363,6 +368,11 @@ namespace JUST
                 {
                     JToken selectedToken = GetToken<T>(token, path, context);
                     result += Convert.ToDecimal(selectedToken.ToString());
+                    // var selector = context.Resolve<T>(token);
+                    // if (selector.Select(path) is JToken selectedToken)
+                    // {
+                    //     result += Convert.ToDecimal(selectedToken.ToString());
+                    // }
                 }
             }
 
@@ -398,7 +408,7 @@ namespace JUST
 
         private static decimal Max(decimal d1, JToken token)
         {
-            decimal thisValue = Convert.ToDecimal(token.ToString());
+            decimal thisValue = Convert.ToDecimal(token?.ToString());
             return Math.Max(d1, thisValue);
         }
 
@@ -447,7 +457,7 @@ namespace JUST
 
         public static object minatpath(JArray parsedArray, string path, JToken input, IContext context)
         {
-            decimal result = decimal.MaxValue;
+            decimal? result = null;
 
             if (parsedArray != null)
             {
@@ -455,11 +465,11 @@ namespace JUST
                 {
                     JToken selectedToken = GetToken<T>(token, path, context);
                     decimal thisValue = Convert.ToDecimal(selectedToken.ToString());
-                    result = Math.Min(result, thisValue);
+                    result = Math.Min(result ?? decimal.MaxValue, thisValue);
                 }
             }
 
-            return TypedNumber(result);
+            return TypedNumber(result ?? decimal.MaxValue);
         }
 
         public static int arraylength(string array, JToken input, IContext context)
@@ -767,17 +777,17 @@ namespace JUST
 
         public static bool isboolean(object val, JToken input, IContext context)
         {
-            return val.GetType() == typeof(bool);
+            return val != null ? val.GetType() == typeof(bool) : false;
         }
 
         public static bool isstring(object val, JToken input, IContext context)
         {
-            return val.GetType() == typeof(string);
+            return val != null ? val.GetType() == typeof(string) : false;
         }
 
         public static bool isarray(object val, JToken input, IContext context)
         {
-            return val.GetType().IsArray;
+            return val != null ? val.GetType().IsArray : false;
         }
 
         public static object ifgroup(bool isToInclude, object val)

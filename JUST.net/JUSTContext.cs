@@ -1,4 +1,5 @@
 ﻿using JUST.net.Selectables;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
@@ -31,17 +32,20 @@ namespace JUST
     {
         FallbackToDefault = 1,
         AddOrReplaceProperties = 2,
-        Strict = 4
+        Strict = 4,
+        LookInTransformed = 16
     }
 
     public class JUSTContext : IContext
     {
         private Dictionary<string, MethodInfo> _customFunctions = new Dictionary<string, MethodInfo>();
         private int _defaultDecimalPlaces = 28;
-
-        public EvaluationMode EvaluationMode = EvaluationMode.FallbackToDefault;
         private char _escapeChar = '/'; //do not use backslash, it is already the escape char in JSON
         private char _splitGroupChar = ':';
+
+        public EvaluationMode EvaluationMode = EvaluationMode.FallbackToDefault;
+
+        public JsonSerializerSettings JsonSettings { get; set; }
 
         public char EscapeChar { 
             get
@@ -108,6 +112,11 @@ namespace JUST
         internal bool IsFallbackToDefault()
         {
             return (EvaluationMode & EvaluationMode.FallbackToDefault) == EvaluationMode.FallbackToDefault;
+        }
+
+        internal bool IsLookInTransformed()
+        {
+            return (EvaluationMode & EvaluationMode.LookInTransformed) == EvaluationMode.LookInTransformed;
         }
 
         public void RegisterCustomFunction(CustomFunction customFunction)

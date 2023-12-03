@@ -11,7 +11,7 @@ namespace JUST.UnitTests
             const string input = "{ \"string\": \"some words\", \"integer\": 123, \"boolean\": true }";
             const string transformer = "{ \"result\": \"#valueof($.string)\" }";
 
-            var result = new JsonTransformer().Transform(transformer, input);
+            var result = new JsonTransformer(new JUSTContext() { EvaluationMode = EvaluationMode.Strict }).Transform(transformer, input);
 
             Assert.AreEqual("{\"result\":\"some words\"}", result);
         }
