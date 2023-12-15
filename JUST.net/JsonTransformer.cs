@@ -977,7 +977,7 @@ namespace JUST
             if (output == null && Context.IsLookInTransformed())
             {
                 JToken tmpContext = Context.Input;
-                Context.Input = parentToken;
+                Context.Input = parentToken.Root;
                 output = ParseFunction(propVal, parentToken, parentArray, currentArrayToken);
                 Context.Input = tmpContext;
             }
