@@ -13,11 +13,11 @@ namespace JUST.net.Selectables
         {
             try
             {
-                return Token.SelectToken(path);
+                return Token.SelectToken(path.Replace("`", "'"));
             }
             catch (JsonException)
             {
-                var result = Token.SelectTokens(path);
+                var result = Token.SelectTokens(path.Replace("`", "'"));
                 return new JArray(result.ToArray());
             }
         }

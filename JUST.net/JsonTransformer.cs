@@ -25,16 +25,16 @@ namespace JUST
             return Transform(transformerJson, DeserializeWithoutDateParse<JToken>(inputJson));
         }
 
-        private static string SerializeWithoutDateParse<T>(T obj)
+        private static string SerializeWithoutDateParse<U>(U obj)
         {
             var settings = new JsonSerializerSettings() { DateParseHandling = DateParseHandling.None };
             return JsonConvert.SerializeObject(obj, settings);
         }
 
-        private static T DeserializeWithoutDateParse<T>(string inputJson)
+        private static U DeserializeWithoutDateParse<U>(string inputJson)
         {
             var settings = new JsonSerializerSettings() { DateParseHandling = DateParseHandling.None };
-            return JsonConvert.DeserializeObject<T>(inputJson, settings);
+            return JsonConvert.DeserializeObject<U>(inputJson, settings);
         }
 
         public string Transform(string transformerJson, JToken input)
@@ -152,15 +152,15 @@ namespace JUST
 
             if (selectedTokens != null)
             {
-                CopyPostOperationBuildUp(parentToken, selectedTokens);
+                CopyPostOperationBuildUp(parentToken, selectedTokens, this.Context);
             }
             if (tokensToReplace != null)
             {
-                ReplacePostOperationBuildUp(parentToken, tokensToReplace);
+                ReplacePostOperationBuildUp(parentToken, tokensToReplace, this.Context);
             }
             if (tokensToDelete != null)
             {
-                DeletePostOperationBuildUp(parentToken, tokensToDelete);
+                DeletePostOperationBuildUp(parentToken, tokensToDelete, this.Context);
             }
             if (tokensToAdd != null)
             {
@@ -208,6 +208,9 @@ namespace JUST
                     }
                     else if (property.Value.ToString().Trim().StartsWith("#"))
                     {
+                        var propVal = property.Value.ToString().Trim();
+                        var output = ParseFunction(propVal, state);
+                        output = LookInTransformed(parentToken, output, propVal, state);
                         property.Value = GetToken(ParseFunction(property.Value.ToString().Trim(), state));
                     }
                 }
@@ -286,7 +289,7 @@ namespace JUST
             }
         }
 
-        private void CopyPostOperationBuildUp(JToken parentToken, List<JToken> selectedTokens)
+        private static void CopyPostOperationBuildUp(JToken parentToken, List<JToken> selectedTokens, JUSTContext context)
         {
             foreach (JToken selectedToken in selectedTokens)
             {
@@ -294,7 +297,7 @@ namespace JUST
                 {
                     JObject parent = parentToken as JObject;
                     JEnumerable<JToken> copyChildren = selectedToken.Children();
-                    if (Context.IsAddOrReplacePropertiesMode())
+                    if (context.IsAddOrReplacePropertiesMode())
                     {
                         CopyDescendants(parent, copyChildren);
                     }
@@ -356,12 +359,12 @@ namespace JUST
             }
         }
 
-        private void DeletePostOperationBuildUp(JToken parentToken, List<JToken> tokensToDelete)
+        private static void DeletePostOperationBuildUp(JToken parentToken, List<JToken> tokensToDelete, JUSTContext context)
         {
 
             foreach (string selectedToken in tokensToDelete)
             {
-                JToken tokenToRemove = GetSelectableToken(parentToken, Context).Select(selectedToken);
+                JToken tokenToRemove = GetSelectableToken(parentToken, context).Select(selectedToken);
 
                 if (tokenToRemove != null)
                     tokenToRemove.Ancestors().First().Remove();
@@ -369,15 +372,15 @@ namespace JUST
 
         }
 
-        private static void ReplacePostOperationBuildUp(JToken parentToken, Dictionary<string, JToken> tokensToReplace)
+        private static void ReplacePostOperationBuildUp(JToken parentToken, Dictionary<string, JToken> tokensToReplace, JUSTContext context)
         {
 
             foreach (KeyValuePair<string, JToken> tokenToReplace in tokensToReplace)
             {
-                JToken selectedToken = (parentToken as JObject).SelectToken(tokenToReplace.Key);
+                JsonPathSelectable selectable = JsonTransformer.GetSelectableToken(parentToken, context);
+                JToken selectedToken = selectable.Select(tokenToReplace.Key);
                 selectedToken.Replace(tokenToReplace.Value);
             }
-
         }
 
         private static void LoopPostOperationBuildUp(ref JToken parentToken, List<string> condProps, List<string> loopProperties, JArray arrayToForm, JObject dictToForm)
@@ -665,6 +668,7 @@ namespace JUST
                 }
 
                 condProps.Add(propertyName);
+                childToken.First.Replace(JToken.Parse("{}"));
             }
         }
 
@@ -888,99 +892,26 @@ namespace JUST
 
                 if (functionName == "ifcondition")
                 {
-                    var condition = ParseArgument(state, arguments[0]);
-                    var value = ParseArgument(state, arguments[1]);
-                    var equal = ComparisonHelper.Equals(condition, value, Context.EvaluationMode);
-                    var index = equal ? 2 : 3;
-
-                    output = ParseArgument(state, arguments[index]);
+                    output = GetConditionalOutput(arguments, state);
                 }
                 else
                 {
                     int i = 0;
                     for (; i < (arguments?.Length ?? 0); i++)
                     {
-                        listParameters.Add(ParseArgument(state, arguments[i]));
+                        output = ParseArgument(state, arguments[i]);
+                        output = LookInTransformed(null, output, arguments[i], state);
+                        listParameters.Add(output);
                     }
                     listParameters.Add(Context);
 
-                    var parameters = listParameters.ToArray();
                     var convertParameters = true;
                     if (new[] { "concat", "xconcat", "currentproperty" }.Contains(functionName))
                     {
                         convertParameters = false;
                     }
 
-                    if (new[] { "currentvalue", "currentindex", "lastindex", "lastvalue" }.Contains(functionName))
-                    {
-                        var alias = ParseLoopAlias(listParameters, 1, state.ParentArray.Last().Key.Key);
-                        output = ReflectionHelper.Caller<T>(null, "JUST.Transformer`1", functionName, new object[] { state.ParentArray.Single(p => p.Key.Key == alias).Value, state.CurrentArrayToken.Single(p => p.Key.Key == alias).Value }, convertParameters, Context);
-                    }
-                    else if (new[] { "currentvalueatpath", "lastvalueatpath" }.Contains(functionName))
-                    {
-                        var alias = ParseLoopAlias(listParameters, 2, state.ParentArray.Last().Key.Key);
-                        output = ReflectionHelper.Caller<T>(
-                            null,
-                            "JUST.Transformer`1",
-                            functionName,
-                            new[] { state.ParentArray.Single(p => p.Key.Key == alias).Value, state.CurrentArrayToken.Single(p => p.Key.Key == alias).Value }.Concat(listParameters.ToArray()).ToArray(),
-                            convertParameters,
-                            Context);
-                    }
-                    else if (functionName == "currentproperty")
-                    {
-                        var alias = ParseLoopAlias(listParameters, 1, state.ParentArray.Last().Key.Key);
-                        output = ReflectionHelper.Caller<T>(null, "JUST.Transformer`1", functionName,
-                            new object[] { state.ParentArray.Single(p => p.Key.Key == alias).Value, state.CurrentArrayToken.Single(p => p.Key.Key == alias).Value, Context },
-                            convertParameters, Context);
-                    }
-                    else if (functionName == "customfunction")
-                        output = CallCustomFunction(listParameters.ToArray());
-                    else if (Context?.IsRegisteredCustomFunction(functionName) ?? false)
-                    {
-                        var methodInfo = Context.GetCustomMethod(functionName);
-                        output = ReflectionHelper.InvokeCustomMethod<T>(methodInfo, parameters, convertParameters, Context);
-                    }
-                    else if (Regex.IsMatch(functionName, ReflectionHelper.EXTERNAL_ASSEMBLY_REGEX))
-                    {
-                        output = ReflectionHelper.CallExternalAssembly<T>(functionName, listParameters.ToArray(), Context);
-                    }
-                    else if (new[] { "xconcat", "xadd",
-                        "mathequals", "mathgreaterthan", "mathlessthan", "mathgreaterthanorequalto", "mathlessthanorequalto",
-                        "stringcontains", "stringequals"}.Contains(functionName))
-                    {
-                        object[] oParams = new object[1];
-                        oParams[0] = parameters;
-                        output = ReflectionHelper.Caller<T>(null, "JUST.Transformer`1", functionName, oParams, convertParameters, Context);
-                    }
-                    else if (functionName == "applyover")
-                    {
-                        output = ParseApplyOver(state, parameters);
-                    }
-                    else
-                    {
-                        var input = ((JUSTContext)parameters.Last()).Input;
-                        if (functionName != "valueof")
-                        {
-                            ((JUSTContext)parameters.Last()).Input = state.CurrentArrayToken.Last().Value;
-                        }
-                        else
-                        {
-                            if (functionName == "valueof" && listParameters.Count > 2)
-                            {
-                                ((JUSTContext)parameters.Last()).Input = state.CurrentScopeToken.Single(p => p.Key.Key == listParameters[1].ToString()).Value;
-                                listParameters.Remove(listParameters.ElementAt(listParameters.Count - 2));
-                                parameters = listParameters.ToArray();
-                            }
-                            else
-                            {
-                                ((JUSTContext)parameters.Last()).Input = state.CurrentScopeToken.Last().Value;
-                            }
-                        }
-                        
-                        output = ReflectionHelper.Caller<T>(null, "JUST.Transformer`1", functionName, parameters, convertParameters, Context);
-                        ((JUSTContext)parameters.Last()).Input = input;
-                    }
+                    output = GetFunctionOutput(functionName, listParameters, convertParameters, state);
                 }
 
                 return output;
@@ -1026,10 +957,10 @@ namespace JUST
             return output;
         }
 
-        private string ParseLoopAlias(List<object> listParameters, int index, string defaultValue)
+        private string ParseLoopAlias(IList<object> listParameters, int index, string defaultValue)
         {
             string alias;
-            if (listParameters.Count > index)
+            if (listParameters != null && listParameters.Count > index)
             {
                 alias = (listParameters[index - 1] as string).Trim();
                 listParameters.RemoveAt(index - 1);
@@ -1043,19 +974,120 @@ namespace JUST
 
         private object ParseArgument(State state, string argument)
         {
+            object output = argument;
             var trimmedArgument = argument.Trim();
             if (trimmedArgument.StartsWith("#"))
             {
                 return ParseFunction(trimmedArgument, state);
             }
-            if (trimmedArgument.StartsWith($"{Context.EscapeChar}#"))
+            else if (trimmedArgument.StartsWith($"{Context.EscapeChar}#"))
             {
-                return ExpressionHelper.UnescapeSharp(argument, Context.EscapeChar);
+                output = ExpressionHelper.UnescapeSharp(argument, Context.EscapeChar);
             }
-            return argument;
+            return output;
         }
 
-        private object CallCustomFunction(object[] parameters)
+        private object GetConditionalOutput(string[] arguments, State state)
+        {
+            var condition = ParseArgument(state, arguments[0]);
+            condition = LookInTransformed(null, condition, arguments[0], state);
+            var value = ParseArgument(state, arguments[1]);
+            value = LookInTransformed(null, value, arguments[1], state);
+            
+            var equal = ComparisonHelper.Equals(condition, value, Context.EvaluationMode);
+            var index = equal ? 2 : 3;
+
+            return ParseArgument(state, arguments[index]);
+        }
+
+        private object GetFunctionOutput(string functionName, IList<object> listParameters, bool convertParameters, State state)
+        {
+            object output = null;
+            if (new[] { "currentvalue", "currentindex", "lastindex", "lastvalue" }.Contains(functionName))
+            {
+                var alias = ParseLoopAlias(listParameters, 1, state.ParentArray.Last().Key.Key);
+                output = ReflectionHelper.Caller<T>(null, "JUST.Transformer`1", functionName, new object[] { state.ParentArray.Single(p => p.Key.Key == alias).Value, state.CurrentArrayToken.Single(p => p.Key.Key == alias).Value }, convertParameters, Context);
+            }
+            else if (new[] { "currentvalueatpath", "lastvalueatpath" }.Contains(functionName))
+            {
+                var alias = ParseLoopAlias(listParameters, 2, state.ParentArray.Last().Key.Key);
+                output = ReflectionHelper.Caller<T>(
+                    null,
+                    "JUST.Transformer`1",
+                    functionName,
+                    new[] { state.ParentArray.Single(p => p.Key.Key == alias).Value, state.CurrentArrayToken.Single(p => p.Key.Key == alias).Value }.Concat(listParameters.ToArray()).ToArray(),
+                    convertParameters,
+                    Context);
+            }
+            else if (functionName == "currentproperty")
+            {
+                var alias = ParseLoopAlias(listParameters, 1, state.ParentArray.Last().Key.Key);
+                output = ReflectionHelper.Caller<T>(null, "JUST.Transformer`1", functionName,
+                    new object[] { state.ParentArray.Single(p => p.Key.Key == alias).Value, state.CurrentArrayToken.Single(p => p.Key.Key == alias).Value, Context },
+                    convertParameters, Context);
+            }
+            else if (functionName == "customfunction")
+                output = CallCustomFunction(listParameters.ToArray());
+            else if (Context?.IsRegisteredCustomFunction(functionName) ?? false)
+            {
+                var methodInfo = Context.GetCustomMethod(functionName);
+                output = ReflectionHelper.InvokeCustomMethod<T>(methodInfo, listParameters.ToArray(), convertParameters, Context);
+            }
+            else if (Regex.IsMatch(functionName, ReflectionHelper.EXTERNAL_ASSEMBLY_REGEX))
+            {
+                output = ReflectionHelper.CallExternalAssembly<T>(functionName, listParameters.ToArray(), Context);
+            }
+            else if (new[] { "xconcat", "xadd",
+                "mathequals", "mathgreaterthan", "mathlessthan", "mathgreaterthanorequalto", "mathlessthanorequalto",
+                "stringcontains", "stringequals"}.Contains(functionName))
+            {
+                object[] oParams = new object[1];
+                oParams[0] = listParameters.ToArray();
+                output = ReflectionHelper.Caller<T>(null, "JUST.Transformer`1", functionName, oParams, convertParameters, Context);
+            }
+            else if (functionName == "applyover")
+            {
+                output = ParseApplyOver(state, listParameters.ToArray());
+            }
+            else
+            {
+                var input = ((JUSTContext)listParameters.Last()).Input;
+                if (functionName != "valueof")
+                {
+                    ((JUSTContext)listParameters.Last()).Input = state.CurrentArrayToken.Last().Value;
+                }
+                else
+                {
+                    if (functionName == "valueof" && listParameters.Count > 2)
+                    {
+                        ((JUSTContext)listParameters.Last()).Input = state.CurrentScopeToken.Single(p => p.Key.Key == listParameters[1].ToString()).Value;
+                        listParameters.Remove(listParameters.ElementAt(listParameters.Count - 2));
+                    }
+                    else
+                    {
+                        ((JUSTContext)listParameters.Last()).Input = state.CurrentScopeToken.Last().Value;
+                    }
+                }
+                
+                output = ReflectionHelper.Caller<T>(null, "JUST.Transformer`1", functionName, listParameters.ToArray(), convertParameters, Context);
+                ((JUSTContext)listParameters.Last()).Input = input;
+            }
+            return output;
+        }
+
+        private object LookInTransformed(JToken parentToken, object output, string propVal, State state)
+        {
+            if (output == null && Context.IsLookInTransformed())
+            {
+                JToken tmpContext = Context.Input;
+                Context.Input = parentToken;
+                output = ParseFunction(propVal, state);
+                Context.Input = tmpContext;
+            }
+            return output;
+        }
+
+            private object CallCustomFunction(object[] parameters)
         {
             object[] customParameters = new object[parameters.Length - 3];
             string functionString = string.Empty;

@@ -258,6 +258,17 @@ namespace JUST.UnitTests
         }
 
         [Test]
+        public void UsePreviousGeneratedProperty()
+        {
+            const string input = "{ \"number\": 123, \"boolean\": true }";
+            const string transformer = "{ \"first\": \"#valueof($.number)\", \"second\": \"#valueof($.first)\", \"third\": \"#add(2,#valueof($.second))\", \"fourth\": \"#valueof($.boolean)\", \"fifth\": \"#valueof($.fourth)\", \"sixth\": \"#ifcondition(#valueof($.fifth),true,value is true,value is false)\" }";
+
+            var result = new JsonTransformer(new JUSTContext { EvaluationMode = EvaluationMode.LookInTransformed | EvaluationMode.Strict }).Transform(transformer, input);
+
+            Assert.AreEqual("{\"first\":123,\"second\":123,\"third\":125,\"fourth\":true,\"fifth\":true,\"sixth\":\"value is true\"}", result);
+        }
+
+        [Test]
         public void Scopes()
         {
             const string input = "{ \"level1\": { \"level2\": {	 \"level3\": {	 \"prop1\": \"val1\",	 \"prop2\": \"val2\",	 \"prop3\": \"val3\"	 },	 \"lvl2_prop1\": \"lvl2_val1\",	 \"lvl2_prop2\": \"lvl2_val2\",	},	\"lvl1_prop1\": \"lvl1_val1\" }, \"some_other_prop\": \"some_val\"}";
