@@ -107,11 +107,7 @@ namespace JUST
         {
             Context.Input = input;
             var parentToken = (JToken)transformer;
-            State state = new State()
-            {
-                CurrentArrayToken = new Dictionary<LevelKey, JToken> { { new LevelKey { Level = _levelCounter, Key = "root"}, Context.Input } },
-                CurrentScopeToken = new Dictionary<LevelKey, JToken> { { new LevelKey { Level = _levelCounter, Key = "root"}, Context.Input } }
-            };
+            State state = new State(transformer, Context.Input, _levelCounter);
             RecursiveEvaluate(ref parentToken, state);
             return parentToken;
         }
@@ -210,7 +206,7 @@ namespace JUST
                     {
                         var propVal = property.Value.ToString().Trim();
                         var output = ParseFunction(propVal, state);
-                        output = LookInTransformed(parentToken, output, propVal, state);
+                        output = LookInTransformed(output, propVal, state);
                         property.Value = GetToken(ParseFunction(property.Value.ToString().Trim(), state));
                     }
                 }
@@ -481,7 +477,8 @@ namespace JUST
             if (args.Length > 2)
             {
                 previousAlias = (string)ParseFunction(args[2].Trim(), state);
-                state.CurrentArrayToken = new Dictionary<LevelKey, JToken> { { new LevelKey { Level =_levelCounter, Key = previousAlias }, Context.Input } };
+                state.CurrentArrayToken.Clear();
+                state.CurrentArrayToken.Add(new LevelKey { Level =_levelCounter, Key = previousAlias }, Context.Input);
             }
             else
             {
@@ -519,15 +516,8 @@ namespace JUST
                 {
                     using (IEnumerator<JToken> elements = array.GetEnumerator())
                     {
-                        if (state.ParentArray?.Any() ?? false)
-                        {
-                            state.ParentArray.Add(new LevelKey { Level = _levelCounter, Key = alias}, array);
-                        }
-                        else
-                        {
-                            state.ParentArray = new Dictionary<LevelKey, JArray> { { new LevelKey { Level = _levelCounter, Key = alias}, array } };
-                        }
-
+                        state.ParentArray.Add(new LevelKey { Level = _levelCounter, Key = alias}, array);
+                        
                         if (arrayToForm == null)
                         {
                             arrayToForm = new JArray();
@@ -833,12 +823,12 @@ namespace JUST
             if (argumentArr.Length > 1)
             {
                 alias = ParseArgument(state, argumentArr[1]) as string;
-                if (!(state.CurrentArrayToken?.Any(a => a.Key.Key == alias) ?? false))
+                if (!state.CurrentArrayToken.Any(a => a.Key.Key == alias))
                 {
                     throw new ArgumentException($"Unknown loop alias: '{argumentArr[1]}'");
                 }
             }
-            JToken input = alias != null ? state.CurrentArrayToken.Single(a => a.Key.Key == alias).Value : state.CurrentArrayToken?.Last().Value ?? Context.Input;
+            JToken input = alias != null ? state.CurrentArrayToken.Single(a => a.Key.Key == alias).Value : state.CurrentArrayToken.Last().Value ?? Context.Input;
             JToken selectedToken = GetSelectableToken(input, Context).Select(jsonPath);
             return selectedToken;
         }
@@ -900,7 +890,7 @@ namespace JUST
                     for (; i < (arguments?.Length ?? 0); i++)
                     {
                         output = ParseArgument(state, arguments[i]);
-                        output = LookInTransformed(null, output, arguments[i], state);
+                        output = LookInTransformed(output, arguments[i], state);
                         listParameters.Add(output);
                     }
                     listParameters.Add(Context);
@@ -929,11 +919,14 @@ namespace JUST
             var input = JToken.Parse(Transform(parameters[0].ToString(), contextInput.ToString()));
             Context.Input = input;
             
-            IDictionary<LevelKey, JToken> tmpArray = state.CurrentArrayToken;
-            IDictionary<LevelKey, JToken> tmpScope = state.CurrentScopeToken;
+            IDictionary<LevelKey, JToken> tmpArray = new Dictionary<LevelKey, JToken>(state.CurrentArrayToken);
+            IDictionary<LevelKey, JToken> tmpScope = new Dictionary<LevelKey, JToken>(state.CurrentScopeToken);
 
-            state.CurrentArrayToken = new Dictionary<LevelKey, JToken>() { { new LevelKey { Key = "root", Level = 0 }, input } };
-            state.CurrentScopeToken = new Dictionary<LevelKey, JToken>() { { new LevelKey { Key = "root", Level = 0 }, input } };
+            state.CurrentArrayToken.Clear();
+            state.CurrentArrayToken.Add(new LevelKey { Key = "root", Level = 0 }, input);
+
+            state.CurrentScopeToken.Clear();
+            state.CurrentScopeToken.Add(new LevelKey { Key = "root", Level = 0 }, input);
 
             if (parameters[1].ToString().Trim().Trim('\'').StartsWith("{"))
             {
@@ -951,8 +944,17 @@ namespace JUST
             }
             Context.Input = contextInput;
             
-            state.CurrentArrayToken = tmpArray;
-            state.CurrentScopeToken = tmpScope;
+            state.CurrentArrayToken.Clear();
+            foreach (KeyValuePair<LevelKey, JToken> item in tmpArray)
+            {
+                state.CurrentArrayToken.Add(item);
+            }
+            
+            state.CurrentScopeToken.Clear();
+            foreach (KeyValuePair<LevelKey, JToken> item in tmpScope)
+            {
+                state.CurrentScopeToken.Add(item);
+            }
 
             return output;
         }
@@ -990,9 +992,9 @@ namespace JUST
         private object GetConditionalOutput(string[] arguments, State state)
         {
             var condition = ParseArgument(state, arguments[0]);
-            condition = LookInTransformed(null, condition, arguments[0], state);
+            condition = LookInTransformed(condition, arguments[0], state);
             var value = ParseArgument(state, arguments[1]);
-            value = LookInTransformed(null, value, arguments[1], state);
+            value = LookInTransformed(value, arguments[1], state);
             
             var equal = ComparisonHelper.Equals(condition, value, Context.EvaluationMode);
             var index = equal ? 2 : 3;
@@ -1028,7 +1030,7 @@ namespace JUST
             }
             else if (functionName == "customfunction")
                 output = CallCustomFunction(listParameters.ToArray());
-            else if (Context?.IsRegisteredCustomFunction(functionName) ?? false)
+            else if (Context.IsRegisteredCustomFunction(functionName))
             {
                 var methodInfo = Context.GetCustomMethod(functionName);
                 output = ReflectionHelper.InvokeCustomMethod<T>(methodInfo, listParameters.ToArray(), convertParameters, Context);
@@ -1075,12 +1077,12 @@ namespace JUST
             return output;
         }
 
-        private object LookInTransformed(JToken parentToken, object output, string propVal, State state)
+        private object LookInTransformed(object output, string propVal, State state)
         {
             if (output == null && Context.IsLookInTransformed())
             {
                 JToken tmpContext = Context.Input;
-                Context.Input = parentToken;
+                Context.Input = state.Transformer.Root;
                 output = ParseFunction(propVal, state);
                 Context.Input = tmpContext;
             }

@@ -10,11 +10,17 @@ internal struct LevelKey
 
 internal sealed class State
 {
-    internal IDictionary<LevelKey, JArray> ParentArray { get; set; }
-
-    internal IDictionary<LevelKey, JToken> CurrentArrayToken { get; set; }
-
-    internal IDictionary<LevelKey, JToken> CurrentScopeToken { get; set; }
+    internal State(JToken transformer, JToken input, int levelCounter)
+    {
+        Transformer = transformer;
+        ParentArray = new Dictionary<LevelKey, JArray>();
+        CurrentArrayToken = new Dictionary<LevelKey, JToken> { { new LevelKey { Level = levelCounter, Key = "root"}, input } };
+        CurrentScopeToken = new Dictionary<LevelKey, JToken> { { new LevelKey { Level = levelCounter, Key = "root"}, input } };
+    }
+    internal JToken Transformer { get; private set; }
+    internal IDictionary<LevelKey, JArray> ParentArray { get; private set; }
+    internal IDictionary<LevelKey, JToken> CurrentArrayToken { get; private set; }
+    internal IDictionary<LevelKey, JToken> CurrentScopeToken { get; private set; }
 
     internal string GetHigherAlias()
     {
