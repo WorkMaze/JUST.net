@@ -29,7 +29,7 @@ namespace JUST
             }
             try
             {
-                return InvokeCustomMethod<T>(methodInfo, parameters, convertParameters, context);
+                return InvokeCustomMethod<T>(methodInfo, parameters, convertParameters, context.EvaluationMode);
             }
             catch
             {
@@ -41,7 +41,7 @@ namespace JUST
             return GetDefaultValue(methodInfo.ReturnType);
         }
 
-        internal static object InvokeCustomMethod<T>(MethodInfo methodInfo, object[] parameters, bool convertParameters, JUSTContext context) where T : ISelectableToken
+        internal static object InvokeCustomMethod<T>(MethodInfo methodInfo, object[] parameters, bool convertParameters, EvaluationMode evaluationMode) where T : ISelectableToken
         {
             var instance = !methodInfo.IsStatic ? Activator.CreateInstance(methodInfo.DeclaringType) : null;
 
@@ -52,7 +52,7 @@ namespace JUST
                 for (int i = 0; i < parameterInfos.Length; i++)
                 {
                     var pType = parameterInfos[i].ParameterType;
-                    typedParameters.Add(GetTypedValue(pType, parameters[i], context.EvaluationMode));
+                    typedParameters.Add(GetTypedValue(pType, parameters[i], evaluationMode));
                 }
             }
             try

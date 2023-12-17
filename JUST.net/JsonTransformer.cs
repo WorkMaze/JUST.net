@@ -207,7 +207,7 @@ namespace JUST
                         var propVal = property.Value.ToString().Trim();
                         var output = ParseFunction(propVal, state);
                         output = LookInTransformed(output, propVal, state);
-                        property.Value = GetToken(ParseFunction(property.Value.ToString().Trim(), state));
+                        property.Value = GetToken(output);
                     }
                 }
 
@@ -1033,7 +1033,7 @@ namespace JUST
             else if (Context.IsRegisteredCustomFunction(functionName))
             {
                 var methodInfo = Context.GetCustomMethod(functionName);
-                output = ReflectionHelper.InvokeCustomMethod<T>(methodInfo, listParameters.ToArray(), convertParameters, Context);
+                output = ReflectionHelper.InvokeCustomMethod<T>(methodInfo, listParameters.ToArray(), convertParameters, Context.EvaluationMode);
             }
             else if (Regex.IsMatch(functionName, ReflectionHelper.EXTERNAL_ASSEMBLY_REGEX))
             {
@@ -1054,25 +1054,32 @@ namespace JUST
             else
             {
                 var input = ((JUSTContext)listParameters.Last()).Input;
-                if (functionName != "valueof")
+                if (input != state.Transformer)
                 {
-                    ((JUSTContext)listParameters.Last()).Input = state.CurrentArrayToken.Last().Value;
-                }
-                else
-                {
-                    if (functionName == "valueof" && listParameters.Count > 2)
+                    if (functionName != "valueof")
                     {
-                        ((JUSTContext)listParameters.Last()).Input = state.CurrentScopeToken.Single(p => p.Key.Key == listParameters[1].ToString()).Value;
-                        listParameters.Remove(listParameters.ElementAt(listParameters.Count - 2));
+                        ((JUSTContext)listParameters.Last()).Input = state.CurrentArrayToken.Last().Value;
                     }
                     else
                     {
-                        ((JUSTContext)listParameters.Last()).Input = state.CurrentScopeToken.Last().Value;
+                        if (functionName == "valueof" && listParameters.Count > 2)
+                        {
+                            ((JUSTContext)listParameters.Last()).Input = state.CurrentScopeToken.Single(p => p.Key.Key == listParameters[1].ToString()).Value;
+                            listParameters.Remove(listParameters.ElementAt(listParameters.Count - 2));
+                        }
+                        else
+                        {
+                            ((JUSTContext)listParameters.Last()).Input = state.CurrentScopeToken.Last().Value;
+                        }
                     }
                 }
                 
                 output = ReflectionHelper.Caller<T>(null, "JUST.Transformer`1", functionName, listParameters.ToArray(), convertParameters, Context);
-                ((JUSTContext)listParameters.Last()).Input = input;
+                
+                if (input != state.Transformer)
+                {
+                    ((JUSTContext)listParameters.Last()).Input = input;
+                }
             }
             return output;
         }
