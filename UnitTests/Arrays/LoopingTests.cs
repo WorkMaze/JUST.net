@@ -353,5 +353,19 @@ namespace JUST.UnitTests.Arrays
 
             Assert.AreEqual("{\"systemIds\":[]}", result);
         }
+
+        [Test]
+        public void LoopScope()
+        {
+            var input = "{\"array\":[{\"resource\":\"Location\",\"count\": { \"number\": 3 } },{\"resource\":\"Organization\", \"count\": { \"number\": 10 } }] }";
+            var transformer = "{\"result\":{\"#loop($.array)\":{ \"#scope($.count)\": { \"number\": \"#valueof($.number)\" } } } }";
+            var context = new JUSTContext
+            {
+                EvaluationMode = EvaluationMode.Strict
+            };
+            var result = new JsonTransformer(context).Transform(transformer, input);
+
+            Assert.AreEqual("{\"result\":[{\"number\":3},{\"number\":10}]}", result);
+        }
     }
 }
