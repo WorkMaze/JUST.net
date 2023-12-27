@@ -889,7 +889,7 @@ Output:
 
 ## <a name="nestedarrays"></a> Nested array looping
 It is possible to loop over more than one array at once. By default, the last array is used, but one can use properties from other arrays by using alias for array looping.
-There's a special alias 'root', that refers to the whole input.
+There's a special alias, called 'root', that contains whole input. Useful if you want to call a function inside a loop but references an outside property.
 One side note: loops must be last property, any properties after that will be ignored.
 
 Cosider the input:
@@ -1146,6 +1146,78 @@ Output:
       ]
     }
   ]
+}
+```
+
+## <a name="scopes"></a> scopes
+You can create scopes to avoid repeating whole path when referencing a property. It receives a path that will be considered the start of every function called inside (without an alias).
+Just like in loops, you can assign an alias to scopes. There's also a special alias called 'root' that references whole input.
+As in loops, scope must be last property, any properties after that will be ignored. Also, scopes must have a property attached. 
+Note that scope level won't exist on output, so do not repeat properties' name inside scope that you already have outside.
+
+Consider the following input:
+
+```JSON
+{
+  "level1": {
+    "level2": {
+	  "level3": {
+	    "prop1": "val1",
+	    "prop2": "val2",
+	    "prop3": "val3"
+	  },
+	  "lvl2_prop1": "lvl2_val1",
+	  "lvl2_prop2": "lvl2_val2",
+	},
+	"lvl1_prop1": "lvl1_val1"
+  },
+  "some_other_prop": "some_val"
+}
+```
+
+Transformer:
+
+```JSON
+{
+  "result1": {
+    "#scope($.level1.level2.level3)": {
+      "value_of_prop1": "#valueof($.prop1)",
+      "value_of_prop2": "#valueof($.prop3)"
+    }
+  },
+  "result2": {
+    "#scope($.level1,alias_lvl1)": {
+      "level1_prop": "#valueof($.lvl1_prop1)",
+      "level2_prop": "#valueof($.level2.lvl2_prop2,alias_lvl1)",
+      "root_prop": "#valueof($.some_other_prop,root)",
+      "lvl2_scope_alias": {
+        "#scope($.level2,alias_lvl2)": {
+          "alias_prop_lvl1": "#valueof($.level3.prop1)",
+	      "lvl2_prop2": "#valueof($.lvl2_prop2)"
+	    }
+      }
+    }
+  }
+}
+```
+
+Output:
+
+```JSON
+{
+  "result": {
+    "value_of_prop1": "val1",
+    "value_of_prop2": "val3"
+  },
+  "result2": {
+    "level1_prop": "lvl1_val1",
+    "level2_prop": "lvl2_val2",
+    "root_prop": "some_val",
+    "lvl2_scope_alias": {
+      "alias_prop_lvl1": "val1",
+      "lvl2_prop2": "lvl2_val2"
+    }
+  }
 }
 ```
 

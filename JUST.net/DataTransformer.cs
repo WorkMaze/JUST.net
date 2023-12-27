@@ -183,7 +183,7 @@ namespace JUST
                 else if (Context?.IsRegisteredCustomFunction(functionName) ?? false)
                 {
                     var methodInfo = Context.GetCustomMethod(functionName);
-                    output = ReflectionHelper.InvokeCustomMethod<T>(methodInfo, parameters, convertParameters, Context);
+                    output = ReflectionHelper.InvokeCustomMethod<T>(methodInfo, parameters, convertParameters, Context.EvaluationMode);
                 }
                 else if (functionName == "xconcat" || functionName == "xadd" || functionName == "mathequals" || functionName == "mathgreaterthan" || functionName == "mathlessthan"
                     || functionName == "mathgreaterthanorequalto"
