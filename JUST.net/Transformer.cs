@@ -453,7 +453,7 @@ namespace JUST
 
         public static object minatpath(JArray parsedArray, string path, JUSTContext context)
         {
-            decimal? result = decimal.MaxValue;
+            decimal? result = null;
 
             if (parsedArray != null)
             {
