@@ -267,5 +267,16 @@ namespace JUST.UnitTests
 
             Assert.AreEqual("{\"first\":123,\"second\":123,\"third\":125,\"fourth\":true,\"fifth\":true,\"sixth\":\"value is true\"}", result);
         }
+
+        [Test]
+        public void Scopes()
+        {
+            const string input = "{ \"level1\": { \"level2\": {	 \"level3\": {	 \"prop1\": \"val1\",	 \"prop2\": \"val2\",	 \"prop3\": \"val3\"	 },	 \"lvl2_prop1\": \"lvl2_val1\",	 \"lvl2_prop2\": \"lvl2_val2\",	},	\"lvl1_prop1\": \"lvl1_val1\" }, \"some_other_prop\": \"some_val\"}";
+            const string transformer = "{ \"result\": { \"#scope($.level1.level2.level3)\": { \"value_of_prop1\": \"#valueof($.prop1)\", \"value_of_prop2\": \"#valueof($.prop3)\" } }, \"result2\": { \"#scope($.level1,alias_lvl1)\": { \"level1_prop\": \"#valueof($.lvl1_prop1)\", \"level2_prop\": \"#valueof($.level2.lvl2_prop2,alias_lvl1)\", \"root_prop\": \"#valueof($.some_other_prop,root)\", \"lvl2_scope_alias\": { \"#scope($.level2,alias_lvl2)\": { \"alias_prop_lvl1\": \"#valueof($.level3.prop1)\", \"lvl2_prop2\": \"#valueof($.lvl2_prop2)\" } } } } }";
+
+            var result = new JsonTransformer(new JUSTContext() { EvaluationMode = EvaluationMode.Strict }).Transform(transformer, input);
+
+            Assert.AreEqual("{\"result\":{\"value_of_prop1\":\"val1\",\"value_of_prop2\":\"val3\"},\"result2\":{\"level1_prop\":\"lvl1_val1\",\"level2_prop\":\"lvl2_val2\",\"root_prop\":\"some_val\",\"lvl2_scope_alias\":{\"alias_prop_lvl1\":\"val1\",\"lvl2_prop2\":\"lvl2_val2\"}}}", result);
+        }
     }
 }
