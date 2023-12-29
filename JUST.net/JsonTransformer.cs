@@ -476,25 +476,17 @@ namespace JUST
 
             if (args.Length > 2)
             {
-// <<<<<<< HEAD
-//                 if (currentArrayToken?.Any() ?? false)
-//                 {
-//                     previousAlias = (string)ParseFunction(args[2].Trim(), null, parentArray, currentArrayToken);
-//                 }
-//                 else
-//                 {
-//                     previousAlias = currentArrayToken.Last().Key;
-//                     currentArrayToken = new Dictionary<string, JToken> { { previousAlias, Context.Input } };
-//                 }
-//             }
-//             else if (currentArrayToken?.Any() ?? false)
-//             {
-//                 previousAlias = currentArrayToken.Last().Key;
-// =======
                 previousAlias = (string)ParseFunction(args[2].Trim(), state);
-                state.CurrentArrayToken.Clear();
-                state.CurrentArrayToken.Add(new LevelKey { Level =_levelCounter, Key = previousAlias }, Context.Input);
-// >>>>>>> master
+                state.CurrentArrayToken.Add(new LevelKey() { Key = previousAlias, Level = _levelCounter }, Context.Input);
+            }
+            else if (state.CurrentArrayToken.Any(t => t.Key.Key == alias))
+            {
+                previousAlias = state.CurrentArrayToken.Single(t => t.Key.Key == alias).Key.Key;
+
+            }
+            else if (state.CurrentScopeToken.Any(t => t.Key.Key == alias))
+            {
+                previousAlias = state.CurrentScopeToken.Single(t => t.Key.Key == alias).Key.Key;
             }
             else
             {
