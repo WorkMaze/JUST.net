@@ -77,7 +77,16 @@ string transformedString = new JsonTransformer<JmesPathSelectable>.Transform(tra
 
 JUST is a transformation language just like XSLT. It includes functions which are used inside the transformer JSON to transform the input JSON in a desired output JSON. This section describes the various functions present in JUST and how they can be used to transform your JSON.
 
-Every JUST function starts with "#" character.
+Every JUST function starts with "#" character and must start at the begininng of the expression or at the beginning of an argument.
+
+Example:
+
+```JSON
+{
+  "valid_function": "#valueof(#xconcat($.prop[,other_prop_or_filter,]))",
+  "not_a_function": "some_sentence_at_the_beginning_invalidates_evaluation_#xconcat(sencence,_argument_not_evaluated_#valueof($.prop)_does_not_start_with_#)"
+}
+```
 
 ## <a name="valueof"></a> valueof
 
@@ -98,7 +107,7 @@ Consider the input:
           "onclick": "CloseDoc()"
         }
       ],
-	  "submenuitem": "CloseSession()"
+      "submenuitem": "CloseSession()"
     }
   }
 }
@@ -232,16 +241,16 @@ Transformer:
     "firstindexofand": "#firstindexof(#valueof($.stringref),and)",
     "substring": "#substring(#valueof($.stringref),9,11)",
     "concat": "#concat(#valueof($.menu.id.file),#valueof($.menu.value.Window))",
-	"length_string": "#length(#valueof($.stringref))",
-	"length_array": "#length(#valueof($.numbers))",
-	"length_path": "#length($.numbers)"
+    "length_string": "#length(#valueof($.stringref))",
+    "length_array": "#length(#valueof($.numbers))",
+    "length_path": "#length($.numbers)"
   },
   "mathresult": {
     "add": "#add(#valueof($.numbers[0]),3)",
     "subtract": "#subtract(#valueof($.numbers[4]),#valueof($.numbers[0]))",
     "multiply": "#multiply(2,#valueof($.numbers[2]))",
     "divide": "#divide(9,3)",
-	"round": "#round(10.005,2)"
+    "round": "#round(10.005,2)"
   }
 }
 ```
@@ -255,16 +264,16 @@ Output:
     "firstindexofand": 6,
     "substring": "veryunuasua",
     "concat":"",
-	"length_string": 34,
-	"length_array": 5,
-	"length_path": 5
+    "length_string": 34,
+    "length_array": 5,
+    "length_path": 5
   },
   "mathresult": {
     "add": 4,
     "subtract": 4,
     "multiply": 6,
     "divide": 3,
-	"round": 10.01
+    "round": 10.01
   }
 }
 ```
@@ -367,7 +376,7 @@ Output:
 
 ## <a name="multiarrays"></a> Aggregate functions for multidimensional arrays:
 
-These functions are essentially the same as the above ones, the only difference being that you can also provide a path to point to particluar element inside the array.
+These functions are essentially the same as the above ones, the only difference being that you can also provide a path to point to particular element inside the array.
 1. concatallatpath(array,path)
 2. sumatpath(array,path)
 3. averageatpath(array,path)
@@ -701,9 +710,9 @@ Cosider the input:
     }
   },
   "spell_numbers": {
-	"3": "three",
+    "3": "three",
     "2": "two",
-	"1": "one"
+    "1": "one"
   }
 }
 ```
@@ -729,14 +738,14 @@ Transformer:
     }
   },
   "sounds": { 
-	"#loop($.animals)": { 
-		"#eval(#currentproperty())": "#currentvalueatpath($..sound)" 
-	} 
+    "#loop($.animals)": { 
+        "#eval(#currentproperty())": "#currentvalueatpath($..sound)" 
+    } 
   },
   "number_index": { 
     "#loop($.spell_numbers)": { 
-	  "#eval(#currentindex())": "#currentvalueatpath(#concat($.,#currentproperty()))" 
-	} 
+      "#eval(#currentindex())": "#currentvalueatpath(#concat($.,#currentproperty()))" 
+    } 
   },
   "othervalue": "othervalue"
 }
@@ -787,13 +796,13 @@ Output:
   ],
   "sounds": {
     "cat": "meow",
-	"dog": "woof",
-	"human": "@!#$?"
+    "dog": "woof",
+    "human": "@!#$?"
   },
   "number_index": {
     "0": "three",
-	"1": "two",
-	"2": "one"
+    "1": "two",
+    "2": "one"
   },
   "othervalue": "othervalue"
 }
@@ -804,6 +813,8 @@ When a concatenation is needed, one can use #concat or #xconcat to join two arra
 1. concat(object1, object2)
 2. xconcat(object1,object2......objectx)
 
+Input:
+
 ```JSON
 {
   "drugs": [{ 
@@ -813,34 +824,38 @@ When a concatenation is needed, one can use #concat or #xconcat to join two arra
   }],
   "pa": [{ 
       "code": "pa1", "display": "PA1" 
-	},{
+    },{
       "code": "pa2", "display": "PA2" 
   }],
   "sa": [{ 
       "code": "sa1", "display": "SA1" 
-	},{
+    },{
       "code": "sa2", "display": "SA2" 
   }]
 }
 ```
 
-```Transformer
+Transformer:
+
+```JSON
 {
   "concat": "#concat(#valueof($.drugs), #valueof($.pa))", 
-  "multipleConcat": "#concat(#concat(#valueof($.drugs), #valueof($.pa)), #valueof($.sa))\",
+  "multipleConcat": "#concat(#concat(#valueof($.drugs), #valueof($.pa)), #valueof($.sa))",
   "xconcat": "#xconcat(#valueof($.drugs), #valueof($.pa), #valueof($.sa))" 
 }
 ```
 
-```Output
+Output:
+
+```JSON
 {
   "concat": [{
       "code": "001", "display": "Drug1" 
-	},{
+    },{
       "code": "002", "display": "Drug2" 
     },{
       "code": "pa1", "display": "PA1" 
-	},{ 
+    },{ 
       "code": "pa2", "display": "PA2" 
   }],
   "multipleConcat": [{ 
@@ -854,8 +869,8 @@ When a concatenation is needed, one can use #concat or #xconcat to join two arra
     },{ 
       "code": "sa1", "display": "SA1"
     },{ 
-	  "code": "sa2", "display": "SA2"
-	}],
+      "code": "sa2", "display": "SA2"
+    }],
   "xconcat": [{ 
       "code": "001", "display": "Drug1" 
     },{
@@ -874,6 +889,7 @@ When a concatenation is needed, one can use #concat or #xconcat to join two arra
 
 ## <a name="nestedarrays"></a> Nested array looping
 It is possible to loop over more than one array at once. By default, the last array is used, but one can use properties from other arrays by using alias for array looping.
+There's a special alias, called 'root', that contains whole input. Useful if you want to call a function inside a loop but references an outside property.
 One side note: loops must be last property, any properties after that will be ignored.
 
 Cosider the input:
@@ -883,19 +899,19 @@ Cosider the input:
     "Organization": {
       "Employee": [{
           "Name": "E2",
-		  "Surname": "S2",
+          "Surname": "S2",
           "Details": [{
               "Countries": [{
-			      "Name": "Iceland",
+                  "Name": "Iceland",
                   "Language": "Icelandic"
                 }
-			  ],
+              ],
               "Age": "30"
             }
           ]
         }, {
           "Name": "E1",
-		  "Surname": "S1",
+          "Surname": "S1",
           "Details": [{
               "Countries": [{
                   "Name": "Denmark",
@@ -925,7 +941,7 @@ Transformer:
       "Details": {
         "#loop($.Details)": {
           "Surname": "#currentvalueatpath($.Surname, employees)",
-		  "Age": "#currentvalueatpath($.Age)",
+          "Age": "#currentvalueatpath($.Age)",
           "Country": {
             "#loop($.Countries[0], countries)": "#currentvalueatpath($.Name, countries)"
           }
@@ -945,8 +961,8 @@ Output:
       "CurrentName": "E2",
       "Details": [{
           "Surname": "S2",
-		  "Age": 30,
-		  "Country": [ "Iceland" ]
+          "Age": 30,
+          "Country": [ "Iceland" ]
         }
       ]
     }, {
@@ -1133,6 +1149,78 @@ Output:
 }
 ```
 
+## <a name="scopes"></a> scopes
+You can create scopes to avoid repeating whole path when referencing a property. It receives a path that will be considered the start of every function called inside (without an alias).
+Just like in loops, you can assign an alias to scopes. There's also a special alias called 'root' that references whole input.
+As in loops, scope must be last property, any properties after that will be ignored. Also, scopes must have a property attached. 
+Note that scope level won't exist on output, so do not repeat properties' name inside scope that you already have outside.
+
+Consider the following input:
+
+```JSON
+{
+  "level1": {
+    "level2": {
+	  "level3": {
+	    "prop1": "val1",
+	    "prop2": "val2",
+	    "prop3": "val3"
+	  },
+	  "lvl2_prop1": "lvl2_val1",
+	  "lvl2_prop2": "lvl2_val2",
+	},
+	"lvl1_prop1": "lvl1_val1"
+  },
+  "some_other_prop": "some_val"
+}
+```
+
+Transformer:
+
+```JSON
+{
+  "result1": {
+    "#scope($.level1.level2.level3)": {
+      "value_of_prop1": "#valueof($.prop1)",
+      "value_of_prop2": "#valueof($.prop3)"
+    }
+  },
+  "result2": {
+    "#scope($.level1,alias_lvl1)": {
+      "level1_prop": "#valueof($.lvl1_prop1)",
+      "level2_prop": "#valueof($.level2.lvl2_prop2,alias_lvl1)",
+      "root_prop": "#valueof($.some_other_prop,root)",
+      "lvl2_scope_alias": {
+        "#scope($.level2,alias_lvl2)": {
+          "alias_prop_lvl1": "#valueof($.level3.prop1)",
+	      "lvl2_prop2": "#valueof($.lvl2_prop2)"
+	    }
+      }
+    }
+  }
+}
+```
+
+Output:
+
+```JSON
+{
+  "result": {
+    "value_of_prop1": "val1",
+    "value_of_prop2": "val3"
+  },
+  "result2": {
+    "level1_prop": "lvl1_val1",
+    "level2_prop": "lvl2_val2",
+    "root_prop": "some_val",
+    "lvl2_scope_alias": {
+      "alias_prop_lvl1": "val1",
+      "lvl2_prop2": "lvl2_val2"
+    }
+  }
+}
+```
+
 ## <a name="customfunc"></a> Calling Custom functions
 
 You can make your own custom functions in C# and call them from your transformer JSON.
@@ -1303,12 +1391,12 @@ Transformer:
   "Contact Information": {
     "Street Name": "#substring(#valueof($.ContactInformation),0,#firstindexof(#valueof($.ContactInformation),:))",
     "City": "#substring(#valueof($.ContactInformation),#add(#firstindexof(#valueof($.ContactInformation),:),1),#subtract(#subtract(#lastindexof(#valueof($.ContactInformation),:),#firstindexof(#valueof($.ContactInformation),:)),1))",
-    "PhoneNumber": "#substring(#valueof($.ContactInformation),#add(#lastindexof(#valueof($.ContactInformation),:),1),#subtract(#lastindexof(#valueof($.ContactInformation),),#lastindexof(#valueof($.ContactInformation),:)))"
+    "PhoneNumber": "#substring(#valueof($.ContactInformation),#add(#lastindexof(#valueof($.ContactInformation),:),1),#subtract(#subtract(#length(#valueof($.ContactInformation)),1),#lastindexof(#valueof($.ContactInformation),:)))"
   },
   "Personal Information": {
     "Age": "#substring(#valueof($.PersonalInformation),0,#firstindexof(#valueof($.PersonalInformation),:))",
     "Civil Status": "#substring(#valueof($.PersonalInformation),#add(#firstindexof(#valueof($.PersonalInformation),:),1),#subtract(#subtract(#lastindexof(#valueof($.PersonalInformation),:),#firstindexof(#valueof($.PersonalInformation),:)),1))",
-    "Ethnicity": "#substring(#valueof($.PersonalInformation),#add(#lastindexof(#valueof($.PersonalInformation),:),1),#subtract(#lastindexof(#valueof($.PersonalInformation),),#lastindexof(#valueof($.PersonalInformation),:)))"
+    "Ethnicity": "#substring(#valueof($.PersonalInformation),#add(#lastindexof(#valueof($.PersonalInformation),:),1),#subtract(#subtract(#length(#valueof($.PersonalInformation)),1),#lastindexof(#valueof($.PersonalInformation),:)))"
   }
 }
 ```
@@ -1401,12 +1489,13 @@ Consider the following input:
 {
   "arg": 1,
   "arr": [{
-	"id": 1,
-	"val": 100
-  },{
-	"id": 2,
-	"val": 200
-  }]
+      "id": 1,
+      "val": 100
+    },{
+      "id": 2,
+      "val": 200
+    }
+  ]
 }
 ```
 
@@ -1507,7 +1596,7 @@ Transformer:
         "Value2": "#valueof($.Tree.Flower)"
       }
     },
-	"Shrubs": [ "#ifgroup(#ifcondition(#valueof($.Tree.Flower),Rose,True,False),#valueof($.Tree.Flower))" ]
+    "Shrubs": [ "#ifgroup(#ifcondition(#valueof($.Tree.Flower),Rose,True,False),#valueof($.Tree.Flower))" ]
   }
 }
 ```
@@ -1521,7 +1610,7 @@ Output:
       "Value1": "leaf",
       "Value2": "Rose"
     },
-	"Shrubs": [ "Rose" ]
+    "Shrubs": [ "Rose" ]
   }
 }
 ```
@@ -1540,7 +1629,7 @@ Transformer:
         "Value2": "#valueof($.Tree.Flower)"
       }
     },
-	"Shrubs": [ "#ifgroup(#ifcondition(#valueof($.Tree.Flower),Olive,True,False),#valueof($.Tree.Flower))" ]
+    "Shrubs": [ "#ifgroup(#ifcondition(#valueof($.Tree.Flower),Olive,True,False),#valueof($.Tree.Flower))" ]
   }
 }
 ```
@@ -1550,7 +1639,7 @@ Output:
 {  
   "Result":{  
     "Header": "JsonTransform",
-	"Shrubs": [ ]
+    "Shrubs": [ ]
   }
 }
 ```
@@ -1911,9 +2000,9 @@ The output will contain 4 JSON files:
 ## <a name="otherformats"></a> Transforming JSON to other data formats
 
 JUST.NET can now transform JSON data into other generic formats too. All functions except the BULK FUNCTIONS are supported in this feature.
-The #loop functions excepts an extra argument which defines the seperator between the individual records.
+The #loop functions accepts an extra argument which defines the seperator between the individual records.
 
-```JSON
+```
 #loop(path,seaperator)
 ```
 
@@ -1927,7 +2016,7 @@ Sample code to transform from JSON to XML:
 ```C#
 string input = File.ReadAllText("Input.json");``
 string transformer = File.ReadAllText("DataTransformer.xml");
-string transformedString = DataTransformer.Transform(transformer, input);
+string transformedString = new DataTransformer().Transform(transformer, input);
 ```
 
 Input.json:

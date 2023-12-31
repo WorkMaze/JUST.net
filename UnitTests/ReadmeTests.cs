@@ -131,7 +131,7 @@ namespace JUST.UnitTests
         public void ComplexNestedFunctions()
         {
             const string input = "{ \"Name\": \"Kari\", \"Surname\": \"Nordmann\", \"MiddleName\": \"Inger\", \"ContactInformation\": \"Karl johans gate:Oslo:88880000\" , \"PersonalInformation\": \"45:Married:Norwegian\"}";
-            const string transformer = "{ \"FullName\": \"#concat(#concat(#concat(#valueof($.Name), ),#concat(#valueof($.MiddleName), )),#valueof($.Surname))\",	\"Contact Information\": { \"Street Name\": \"#substring(#valueof($.ContactInformation),0,#firstindexof(#valueof($.ContactInformation),:))\", \"City\": \"#substring(#valueof($.ContactInformation),#add(#firstindexof(#valueof($.ContactInformation),:),1),#subtract(#subtract(#lastindexof(#valueof($.ContactInformation),:),#firstindexof(#valueof($.ContactInformation),:)),1))\", \"PhoneNumber\": \"#substring(#valueof($.ContactInformation),#add(#lastindexof(#valueof($.ContactInformation),:),1),#subtract(#subtract(#length(#valueof($.ContactInformation)),1),#lastindexof(#valueof($.ContactInformation),:)))\" }, \"Personal Information\": { \"Age\": \"#substring(#valueof($.PersonalInformation),0,#firstindexof(#valueof($.PersonalInformation),:))\", \"Civil Status\": \"#substring(#valueof($.PersonalInformation),#add(#firstindexof(#valueof($.PersonalInformation),:),1),#subtract(#subtract(#lastindexof(#valueof($.PersonalInformation),:),#firstindexof(#valueof($.PersonalInformation),:)),1))\", \"Ethnicity\": \"#substring(#valueof($.PersonalInformation),#add(#lastindexof(#valueof($.PersonalInformation),:),1),#subtract(#subtract(#length(#valueof($.PersonalInformation)),1),#lastindexof(#valueof($.PersonalInformation),:)))\" }}";
+            const string transformer = "{ \"FullName\": \"#concat(#concat(#concat(#valueof($.Name), ),#concat(#valueof($.MiddleName), )),#valueof($.Surname))\", \"Contact Information\": { \"Street Name\": \"#substring(#valueof($.ContactInformation),0,#firstindexof(#valueof($.ContactInformation),:))\", \"City\": \"#substring(#valueof($.ContactInformation),#add(#firstindexof(#valueof($.ContactInformation),:),1),#subtract(#subtract(#lastindexof(#valueof($.ContactInformation),:),#firstindexof(#valueof($.ContactInformation),:)),1))\", \"PhoneNumber\": \"#substring(#valueof($.ContactInformation),#add(#lastindexof(#valueof($.ContactInformation),:),1),#subtract(#subtract(#length(#valueof($.ContactInformation)),1),#lastindexof(#valueof($.ContactInformation),:)))\" }, \"Personal Information\": { \"Age\": \"#substring(#valueof($.PersonalInformation),0,#firstindexof(#valueof($.PersonalInformation),:))\", \"Civil Status\": \"#substring(#valueof($.PersonalInformation),#add(#firstindexof(#valueof($.PersonalInformation),:),1),#subtract(#subtract(#lastindexof(#valueof($.PersonalInformation),:),#firstindexof(#valueof($.PersonalInformation),:)),1))\", \"Ethnicity\": \"#substring(#valueof($.PersonalInformation),#add(#lastindexof(#valueof($.PersonalInformation),:),1),#subtract(#subtract(#length(#valueof($.PersonalInformation)),1),#lastindexof(#valueof($.PersonalInformation),:)))\" }}";
 
             var result = new JsonTransformer().Transform(transformer, input);
 
@@ -277,6 +277,17 @@ namespace JUST.UnitTests
             var result = new JsonTransformer().Transform(transformer, input);
 
             Assert.AreEqual("{\"scalar\":true,\"object\":{\"result\":true},\"select_token\":{\"result\":true},\"loop\":[{\"result\":true},{\"result\":false}]}", result);
+        }
+
+        [Test]
+        public void Scopes()
+        {
+            const string input = "{ \"level1\": { \"level2\": {	 \"level3\": {	 \"prop1\": \"val1\",	 \"prop2\": \"val2\",	 \"prop3\": \"val3\"	 },	 \"lvl2_prop1\": \"lvl2_val1\",	 \"lvl2_prop2\": \"lvl2_val2\",	},	\"lvl1_prop1\": \"lvl1_val1\" }, \"some_other_prop\": \"some_val\"}";
+            const string transformer = "{ \"result\": { \"#scope($.level1.level2.level3)\": { \"value_of_prop1\": \"#valueof($.prop1)\", \"value_of_prop2\": \"#valueof($.prop3)\" } }, \"result2\": { \"#scope($.level1,alias_lvl1)\": { \"level1_prop\": \"#valueof($.lvl1_prop1)\", \"level2_prop\": \"#valueof($.level2.lvl2_prop2,alias_lvl1)\", \"root_prop\": \"#valueof($.some_other_prop,root)\", \"lvl2_scope_alias\": { \"#scope($.level2,alias_lvl2)\": { \"alias_prop_lvl1\": \"#valueof($.level3.prop1)\", \"lvl2_prop2\": \"#valueof($.lvl2_prop2)\" } } } } }";
+
+            var result = new JsonTransformer(new JUSTContext() { EvaluationMode = EvaluationMode.Strict }).Transform(transformer, input);
+
+            Assert.AreEqual("{\"result\":{\"value_of_prop1\":\"val1\",\"value_of_prop2\":\"val3\"},\"result2\":{\"level1_prop\":\"lvl1_val1\",\"level2_prop\":\"lvl2_val2\",\"root_prop\":\"some_val\",\"lvl2_scope_alias\":{\"alias_prop_lvl1\":\"val1\",\"lvl2_prop2\":\"lvl2_val2\"}}}", result);
         }
     }
 }
