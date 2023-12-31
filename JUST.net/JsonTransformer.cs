@@ -477,8 +477,16 @@ namespace JUST
             if (args.Length > 2)
             {
                 previousAlias = (string)ParseFunction(args[2].Trim(), state);
-                state.CurrentArrayToken.Clear();
-                state.CurrentArrayToken.Add(new LevelKey { Level =_levelCounter, Key = previousAlias }, Context.Input);
+                state.CurrentArrayToken.Add(new LevelKey() { Key = previousAlias, Level = _levelCounter }, Context.Input);
+            }
+            else if (state.CurrentArrayToken.Any(t => t.Key.Key == alias))
+            {
+                previousAlias = state.CurrentArrayToken.Single(t => t.Key.Key == alias).Key.Key;
+
+            }
+            else if (state.CurrentScopeToken.Any(t => t.Key.Key == alias))
+            {
+                previousAlias = state.CurrentScopeToken.Single(t => t.Key.Key == alias).Key.Key;
             }
             else
             {
@@ -912,11 +920,17 @@ namespace JUST
             }
         }
 
-        private object ParseApplyOver(State state, object[] parameters)
+        private object ParseApplyOver(IList<object> listParameters, State state)
         {
             object output;
-            var contextInput = Context.Input;
-            var input = JToken.Parse(Transform(parameters[0].ToString(), contextInput.ToString()));
+            JToken tmpContext = Context.Input, contextInput = Context.Input;
+            if (state.ParentArray.Any())
+            {
+                var alias = ParseLoopAlias(listParameters, 3, state.ParentArray.Last().Key.Key);
+                contextInput = state.GetAliasToken(alias);
+            }
+
+            var input = JToken.Parse(Transform(listParameters.ElementAt(0).ToString(), contextInput.ToString()));
             Context.Input = input;
             
             IDictionary<LevelKey, JToken> tmpArray = new Dictionary<LevelKey, JToken>(state.CurrentArrayToken);
@@ -928,21 +942,21 @@ namespace JUST
             state.CurrentScopeToken.Clear();
             state.CurrentScopeToken.Add(new LevelKey { Key = "root", Level = 0 }, input);
 
-            if (parameters[1].ToString().Trim().Trim('\'').StartsWith("{"))
+            if (listParameters.ElementAt(1).ToString().Trim().Trim('\'').StartsWith("{"))
             {
-                var jobj = JObject.Parse(parameters[1].ToString().Trim().Trim('\''));
+                var jobj = JObject.Parse(listParameters.ElementAt(1).ToString().Trim().Trim('\''));
                 output = new JsonTransformer(Context).Transform(jobj, input);
             }
-            else if (parameters[1].ToString().Trim().Trim('\'').StartsWith("["))
+            else if (listParameters.ElementAt(1).ToString().Trim().Trim('\'').StartsWith("["))
             {
-                var jarr = JArray.Parse(parameters[1].ToString().Trim().Trim('\''));
+                var jarr = JArray.Parse(listParameters.ElementAt(1).ToString().Trim().Trim('\''));
                 output = new JsonTransformer(Context).Transform(jarr, input);
             }
             else
             {
-                output = ParseFunction(parameters[1].ToString().Trim().Trim('\''), state);
+                output = ParseFunction(listParameters.ElementAt(1).ToString().Trim().Trim('\''), state);
             }
-            Context.Input = contextInput;
+            Context.Input = tmpContext;
             
             state.CurrentArrayToken.Clear();
             foreach (KeyValuePair<LevelKey, JToken> item in tmpArray)
@@ -955,7 +969,6 @@ namespace JUST
             {
                 state.CurrentScopeToken.Add(item);
             }
-
             return output;
         }
 
@@ -1049,7 +1062,7 @@ namespace JUST
             }
             else if (functionName == "applyover")
             {
-                output = ParseApplyOver(state, listParameters.ToArray());
+                output = ParseApplyOver(listParameters, state);
             }
             else
             {

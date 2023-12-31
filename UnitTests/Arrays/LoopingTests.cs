@@ -252,7 +252,7 @@ namespace JUST.UnitTests.Arrays
         {
             const string transformer = "{ \"hello\": { \"#loop($.NestedLoop.Organization.Employee, employee)\": { \"Details\": { \"#loop($.Details, details)\": { \"CurrentCountry\": \"#currentvalueatpath($.Country, details)\", \"OuterName\": \"#currentvalueatpath($.Name, employee)\", \"FirstLevel\": { \"#loop($.Roles, roles)\": { \"Employee\": \"#currentvalue(employee)\", \"Job\": \"#currentvalueatpath($.Job, roles)\" } } } } } } }";
 
-            var result = new JsonTransformer().Transform(transformer, ExampleInputs.NestedArrays);
+            var result = new JsonTransformer(new JUSTContext() { EvaluationMode = EvaluationMode.Strict }).Transform(transformer, ExampleInputs.NestedArrays);
 
             Assert.AreEqual("{\"hello\":[{\"Details\":[{\"CurrentCountry\":\"Iceland\",\"OuterName\":\"E2\",\"FirstLevel\":[{\"Employee\":{\"Name\":\"E2\",\"Details\":[{\"Country\":\"Iceland\",\"Age\":\"30\",\"Name\":\"Sven\",\"Language\":\"Icelandic\",\"Roles\":[{\"Job\":\"Janitor\",\"Salary\":100},{\"Job\":\"Security\",\"Salary\":200}]}]},\"Job\":\"Janitor\"},{\"Employee\":{\"Name\":\"E2\",\"Details\":[{\"Country\":\"Iceland\",\"Age\":\"30\",\"Name\":\"Sven\",\"Language\":\"Icelandic\",\"Roles\":[{\"Job\":\"Janitor\",\"Salary\":100},{\"Job\":\"Security\",\"Salary\":200}]}]},\"Job\":\"Security\"}]}]},{\"Details\":[{\"CurrentCountry\":\"Denmark\",\"OuterName\":\"E1\",\"FirstLevel\":[{\"Employee\":{\"Name\":\"E1\",\"Details\":[{\"Country\":\"Denmark\",\"Age\":\"30\",\"Name\":\"Svein\",\"Language\":\"Danish\",\"Roles\":[{\"Job\":\"Manager\",\"Salary\":300},{\"Job\":\"Developer\",\"Salary\":400}]}]},\"Job\":\"Manager\"},{\"Employee\":{\"Name\":\"E1\",\"Details\":[{\"Country\":\"Denmark\",\"Age\":\"30\",\"Name\":\"Svein\",\"Language\":\"Danish\",\"Roles\":[{\"Job\":\"Manager\",\"Salary\":300},{\"Job\":\"Developer\",\"Salary\":400}]}]},\"Job\":\"Developer\"}]}]}]}", result);
         }
@@ -295,7 +295,7 @@ namespace JUST.UnitTests.Arrays
         {
             const string input = "{ \"ontologyElements\": [ { \"id\":\"8b8b9d6e-4574-466b-b2c3-0062ad0642fe\", \"name\":\"Ontology1\",\"description\":\"test1\", \"entityType\":\"Ontology\" }, { \"id\":\"3ac89bbd-0de2-4692-a077-1d5d41efab69\", \"name\":\"MainType1\",\"order\":1, \"entityType\":\"MainType\", \"ontologyId\":\"8b8b9d6e-4574-466b-b2c3-0062ad0642fe\" }, { \"id\":\"97aa4eb2-0515-43d6-ba59-ffd931956b1a\", \"name\":\"SubType1\", \"order\":1, \"entityType\":\"SubType\", \"ontologyId\":\"8b8b9d6e-4574-466b-b2c3-0062ad0642fe\", \"mainTypeId\":\"3ac89bbd-0de2-4692-a077-1d5d41efab69\" } ] }";
 
-            const string transformer = "{ \"id\": \"#valueof($.ontologyElements[?(@.entityType == 'Ontology')].id)\", \"description\": \"#valueof($.ontologyElements[?(@.entityType == 'Ontology')].description)\", \"maintypes\": { \"#loop($.ontologyElements[?(@.entityType == 'MainType')])\" : { \"id\": \"#currentvalueatpath($.id)\", \"name\": \"#currentvalueatpath($.name)\", \"order\": \"#currentvalueatpath($.order)\", \"subTypes\" : { \"#loop(#xconcat($.ontologyElements[?/(@.entityType == 'SubType' && @.ontologyId == ', #currentvalueatpath($.ontologyId),'/)]), #concat(inside,Loop), #concat(ro, ot))\": { \"name\": \"#currentvalueatpath($.name,insideLoop)\" } } } } }";
+            const string transformer = "{ \"id\": \"#valueof($.ontologyElements[?(@.entityType == 'Ontology')].id)\", \"description\": \"#valueof($.ontologyElements[?(@.entityType == 'Ontology')].description)\", \"maintypes\": { \"#loop($.ontologyElements[?(@.entityType == 'MainType')])\" : { \"id\": \"#currentvalueatpath($.id)\", \"name\": \"#currentvalueatpath($.name)\", \"order\": \"#currentvalueatpath($.order)\", \"subTypes\" : { \"#loop(#xconcat($.ontologyElements[?/(@.entityType == 'SubType' && @.ontologyId == ', #currentvalueatpath($.ontologyId),'/)]), #concat(inside,Loop), #concat(ro,ot))\": { \"name\": \"#currentvalueatpath($.name,insideLoop)\" } } } } }";
 
             var result = new JsonTransformer(new JUSTContext { EvaluationMode = EvaluationMode.Strict }).Transform(transformer, input);
 
@@ -352,6 +352,17 @@ namespace JUST.UnitTests.Arrays
             var result = new JsonTransformer(context).Transform(transformer, input);
 
             Assert.AreEqual("{\"systemIds\":[]}", result);
+        }
+
+        [Test]
+        public void LoopPathRefersAnotherLoopAlias()
+        {
+            const string input = "{ \"orderItems\": [ { \"id\": \"1\", \"sku\": \"a\" }, { \"id\": \"2\", \"sku\": \"b\" }, { \"id\": \"3\", \"sku\": \"c\" } ], \"affectedItems\": [ 1, 2 ], \"test\": \"abc\" }";
+            const string transformer = "{ \"#loop($.affectedItems,affectedItems)\": { \"#loop($.orderItems,orderItems,root)\": { \"sku\": \"#currentvalueatpath($.sku)\", \"id\": \"#currentvalue(affectedItems)\" } }}";
+
+            var result = new JsonTransformer().Transform(transformer, input);
+
+            Assert.AreEqual("[[{\"sku\":\"a\",\"id\":1},{\"sku\":\"b\",\"id\":1},{\"sku\":\"c\",\"id\":1}],[{\"sku\":\"a\",\"id\":2},{\"sku\":\"b\",\"id\":2},{\"sku\":\"c\",\"id\":2}]]", result);
         }
 
         [Test]
