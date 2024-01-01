@@ -141,8 +141,9 @@ namespace JUST
             bool isBulk = false;
             bool isScope = false;
 
-            foreach (JToken childToken in tokens)
+            for (int i = 0; i < tokens.Count(); i++)
             {
+                var childToken = tokens.ElementAt(i);
                 ParseToken(ref parentToken, state, ref selectedTokens, ref tokensToReplace, ref tokensToDelete, ref loopProperties, ref condProps, ref arrayToForm, ref dictToForm, ref scopeProperties, ref scopeToForm, ref tokenToForm, ref tokensToAdd, ref isLoop, ref isBulk, ref isScope, childToken);
             }
 
@@ -267,7 +268,21 @@ namespace JUST
                         }
                         else if (token is JArray arr && parentToken.Parent != null)
                         {
-                            (parentToken.Parent as JProperty).Value = arr;
+                            switch (parentToken.Parent.Type)    
+                            {
+                                case JTokenType.Array:
+                                    parentToken.Replace(arr);
+                                    break;
+                                case JTokenType.Property:
+                                    (parentToken.Parent as JProperty).Value = arr;
+                                    break;
+                                default:
+                                    if (Context.IsStrictMode())
+                                    {
+                                        throw new Exception($"don't know what to do with {token} and {parentToken.Type} parent!");
+                                    }
+                                    break;
+                            }
                         }
                         else
                         {
