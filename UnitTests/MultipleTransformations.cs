@@ -16,7 +16,7 @@ namespace JUST.UnitTests
                         "{ \"intermediate_transform\": \"#valueof($.condition)\" }," +
                           "\"#exists($.intermediate_transform[?(@.test=='yes')])\" ] } }";
 
-            var result = new JsonTransformer().Transform(transformer, input);
+            var result = new JsonTransformer(new JUSTContext() { EvaluationMode = EvaluationMode.Strict}).Transform(transformer, input);
 
             Assert.AreEqual("{\"result\":true}", result);
         }
@@ -48,7 +48,7 @@ namespace JUST.UnitTests
                         "{ \"intermediate_transform\": \"#valueof($.condition)\" }," +
                         "{ \"result\": \"#exists($.intermediate_transform[?(@.test=='yes')])\" } ] } }";
 
-            var result = new JsonTransformer().Transform(transformer, input);
+            var result = new JsonTransformer(new JUSTContext() { EvaluationMode = EvaluationMode.Strict}).Transform(transformer, input);
 
             Assert.AreEqual("{\"select_token\":{\"result\":true}}", result);
         }
@@ -66,7 +66,7 @@ namespace JUST.UnitTests
                                 "{ \"result\": \"#exists($.intermediate_transform[?(@.test=='yes')])\" } ] " +
                         " } } }";
 
-            var result = new JsonTransformer().Transform(transformer, input);
+            var result = new JsonTransformer(new JUSTContext() { EvaluationMode = EvaluationMode.Strict}).Transform(transformer, input);
 
             Assert.AreEqual("{\"loop\":[{\"result\":true},{\"result\":false}]}", result);
         }

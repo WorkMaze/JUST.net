@@ -92,10 +92,10 @@ namespace JUST
         {
             var tmp = new JObject
             {
-                { "root", transformer }
+                { State.RootKey, transformer }
             };
             Transform(tmp, input);
-            return tmp["root"];
+            return tmp[State.RootKey];
         }
 
         public JToken Transform(JObject transformer, string input)
@@ -251,16 +251,16 @@ namespace JUST
                     isScope = true;
                     break;
                 case "transform":
-                    TranformOperation(property, arguments, parentArray, currentArrayToken);
+                    TranformOperation(property, arguments, state);
                     break;
             }
         }
 
-        private void TranformOperation(JProperty property, string arguments, IDictionary<string, JArray> parentArray, IDictionary<string, JToken> currentArrayToken)
+        private void TranformOperation(JProperty property, string arguments, State state)
         {
             string[] argumentArr = ExpressionHelper.SplitArguments(arguments, Context.EscapeChar);
 
-            object functionResult = ParseArgument(null, parentArray, currentArrayToken, argumentArr[0]);
+            object functionResult = ParseArgument(state, argumentArr[0]);
             if (!(functionResult is string jsonPath))
             {
                 throw new ArgumentException($"Invalid path for #transform: '{argumentArr[0]}' resolved to null!");
@@ -270,18 +270,18 @@ namespace JUST
             string alias = null;
             if (argumentArr.Length > 1)
             {
-                alias = ParseArgument(null, parentArray, currentArrayToken, argumentArr[1]) as string;
-                if (!(currentArrayToken?.ContainsKey(alias) ?? false))
+                alias = ParseArgument(state, argumentArr[1]) as string;
+                if (!(state.CurrentArrayToken?.Any(t => t.Key.Key == alias) ?? false))
                 {
                     throw new ArgumentException($"Unknown loop alias: '{argumentArr[1]}'");
                 }
-                JToken input = alias != null ? currentArrayToken?[alias] : currentArrayToken?.Last().Value ?? Context.Input;
-                var selectable = GetSelectableToken(currentArrayToken[alias], Context);
+                JToken input = alias != null ? state.CurrentArrayToken?.Single(t => t.Key.Key == alias).Value : state.CurrentArrayToken?.Last().Value ?? Context.Input;
+                var selectable = GetSelectableToken(state.CurrentArrayToken.Single(t => t.Key.Key == alias).Value, Context);
                 selectedToken = selectable.Select(argumentArr[0]);
             }
             else
             {
-                var selectable = GetSelectableToken(currentArrayToken?.Last().Value ?? Context.Input, Context);
+                var selectable = GetSelectableToken(state.CurrentArrayToken?.Last().Value ?? Context.Input, Context);
                 selectedToken = selectable.Select(argumentArr[0]);
             }
             
@@ -294,12 +294,24 @@ namespace JUST
                     JToken token = property.Value[i];
                     if (token.Type == JTokenType.String)
                     {
-                        var obj = ParseFunction(token.Value<string>(), null, parentArray, currentArrayToken);
+                        var obj = ParseFunction(
+                            token.Value<string>(),
+                            new State(token, Context.Input, _levelCounter,
+                                state.CurrentArrayToken.Where(t => t.Key.Key != State.RootKey)
+                                    .ToDictionary(p => p.Key, p => p.Value),
+                                state.CurrentScopeToken.Where(t => t.Key.Key != State.RootKey)
+                                    .ToDictionary(p => p.Key, p => p.Value)));
                         token.Replace(GetToken(obj));
                     }
                     else
                     {
-                        RecursiveEvaluate(ref token, i == 0 ? parentArray : null, i == 0 ? currentArrayToken : null);
+                        RecursiveEvaluate(
+                            ref token,
+                            new State(token, Context.Input, _levelCounter,
+                                state.CurrentArrayToken.Where(t => t.Key.Key != State.RootKey)
+                                    .ToDictionary(p => p.Key, p => p.Value),
+                                state.CurrentScopeToken.Where(t => t.Key.Key != State.RootKey)
+                                    .ToDictionary(p => p.Key, p => p.Value)))
                     }
                     Context.Input = token;
                 }
@@ -524,7 +536,7 @@ namespace JUST
         private void LoopOperation(string propertyName, string arguments, State state, ref List<string> loopProperties, ref JArray arrayToForm, ref JObject dictToForm, JToken childToken)
         {
             var args = ExpressionHelper.SplitArguments(arguments, Context.EscapeChar);
-            var previousAlias = "root";
+            var previousAlias = State.RootKey;
             args[0] = (string)ParseFunction(args[0], state);
             _levelCounter++;
             string alias = args.Length > 1 ? (string)ParseFunction(args[1].Trim(), state) : $"loop{_levelCounter}";
@@ -532,7 +544,7 @@ namespace JUST
             if (args.Length > 2)
             {
                 previousAlias = (string)ParseFunction(args[2].Trim(), state);
-                state.CurrentArrayToken.Add(new LevelKey() { Key = previousAlias, Level = _levelCounter }, Context.Input);
+                state.CurrentArrayToken.Add(new LevelKey() { Key = alias, Level = _levelCounter }, Context.Input);
             }
             else if (state.CurrentArrayToken.Any(t => t.Key.Key == alias))
             {
@@ -642,7 +654,7 @@ namespace JUST
         private void ScopeOperation(string propertyName, string arguments, State state, ref List<string> scopeProperties, ref JObject scopeToForm, JToken childToken)
         {
             var args = ExpressionHelper.SplitArguments(arguments, Context.EscapeChar);
-            var previousAlias = "root";
+            var previousAlias = State.RootKey;
             args[0] = (string)ParseFunction(args[0], state);
             _levelCounter++;
             string alias = args.Length > 1 ? (string)ParseFunction(args[1].Trim(), state) : $"scope{_levelCounter}";
@@ -992,10 +1004,10 @@ namespace JUST
             IDictionary<LevelKey, JToken> tmpScope = new Dictionary<LevelKey, JToken>(state.CurrentScopeToken);
 
             state.CurrentArrayToken.Clear();
-            state.CurrentArrayToken.Add(new LevelKey { Key = "root", Level = 0 }, input);
+            state.CurrentArrayToken.Add(new LevelKey { Key = State.RootKey, Level = 0 }, input);
 
             state.CurrentScopeToken.Clear();
-            state.CurrentScopeToken.Add(new LevelKey { Key = "root", Level = 0 }, input);
+            state.CurrentScopeToken.Add(new LevelKey { Key = State.RootKey, Level = 0 }, input);
 
             if (listParameters.ElementAt(1).ToString().Trim().Trim('\'').StartsWith("{"))
             {

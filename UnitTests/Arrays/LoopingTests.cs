@@ -360,7 +360,7 @@ namespace JUST.UnitTests.Arrays
             const string input = "{ \"orderItems\": [ { \"id\": \"1\", \"sku\": \"a\" }, { \"id\": \"2\", \"sku\": \"b\" }, { \"id\": \"3\", \"sku\": \"c\" } ], \"affectedItems\": [ 1, 2 ], \"test\": \"abc\" }";
             const string transformer = "{ \"#loop($.affectedItems,affectedItems)\": { \"#loop($.orderItems,orderItems,root)\": { \"sku\": \"#currentvalueatpath($.sku)\", \"id\": \"#currentvalue(affectedItems)\" } }}";
 
-            var result = new JsonTransformer().Transform(transformer, input);
+            var result = new JsonTransformer(new JUSTContext() { EvaluationMode = EvaluationMode.Strict }).Transform(transformer, input);
 
             Assert.AreEqual("[[{\"sku\":\"a\",\"id\":1},{\"sku\":\"b\",\"id\":1},{\"sku\":\"c\",\"id\":1}],[{\"sku\":\"a\",\"id\":2},{\"sku\":\"b\",\"id\":2},{\"sku\":\"c\",\"id\":2}]]", result);
         }
