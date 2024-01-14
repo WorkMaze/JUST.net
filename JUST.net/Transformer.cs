@@ -122,31 +122,38 @@ namespace JUST
         private static object ConcatArray(object obj1, object obj2)
         {
             JArray item = new JArray();
-            JToken item1 = null, item2 = null;
-            for (int i = 0; i < ((object[])obj1).Length; i++)
+            var objArr1 = obj1 is JArray arr1 ? arr1.ToObject<object[]>() : (object[])obj1;
+            for (int i = 0; i < objArr1.Length; i++)
             {
-                if (((object[])obj1)[i] is JValue)
+                if (objArr1[i] is JValue val)
                 {
-                    item1 = (JValue)((object[])obj1)[i];
-                    item.Add(item1);
+                    item.Add(val);
+                }
+                else if (objArr1[i] is JObject obj)
+                {
+                    item.Add(obj);
                 }
                 else
                 {
-                    item1 = (JObject)((object[])obj1)[i];
-                    item.Add(item1);
+                    item.Add(JToken.FromObject(objArr1[i]));
                 }
             }
-            for (int j = 0; obj2 != null && j < ((object[])obj2).Length; j++)
+            
+            var objArr2 = obj2 is JArray arr ? arr.ToObject<object[]>() : (object[])obj2;
+            for (int j = 0; obj2 != null && j < objArr2.Length; j++)
             {
-                if (((object[])obj2)[j] is JValue)
+
+                if (objArr2[j] is JValue val)
                 {
-                    item2 = (JValue)((object[])obj2)[j];
-                    item1.AddAfterSelf(item2);
+                    item.AddAfterSelf(val);
+                }
+                else if (objArr2[j] is JObject obj)
+                {
+                    item.Add(obj);
                 }
                 else
                 {
-                    item2 = (JObject)((object[])obj2)[j];
-                    item.Add(item2);
+                    item.Add(JToken.FromObject(objArr2[j]));
                 }
             }
             return item.ToObject<object[]>();
@@ -160,13 +167,21 @@ namespace JUST
                 {
                     return str1.Length > 0 ? str1 + obj2?.ToString() : string.Empty + obj2.ToString();
                 }
+                else if (obj1 is JArray arr1)
+                {
+                    return obj2 is JArray arr2 ? new JArray(arr1.Concat(arr2)).ToObject<object[]>() : ConcatArray(arr1.ToObject<object[]>(), obj2);
+                }
                 return ConcatArray(obj1, obj2);
             }
             else if (obj2 != null)
             {
                 if (obj2 is string str2)
                 {
-                    return str2.Length > 0 ? obj1?.ToString() + str2 : obj1.ToString() + string.Empty;
+                    return str2;
+                }
+                else if (obj2 is JArray arr2)
+                {
+                    return arr2.ToObject<object[]>();
                 }
                 return ConcatArray(obj2, obj1);
             }
@@ -789,7 +804,7 @@ namespace JUST
 
         public static bool isarray(object val, JUSTContext context)
         {
-            return val != null ? val.GetType().IsArray : false;
+            return val != null ? val is JArray || val.GetType().IsArray : false;
         }
 
         public static object ifgroup(bool isToInclude, object val)
