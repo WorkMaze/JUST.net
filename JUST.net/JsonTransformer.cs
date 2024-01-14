@@ -477,7 +477,6 @@ namespace JUST
             if (args.Length > 2)
             {
                 previousAlias = (string)ParseFunction(args[2].Trim(), state);
-                state.CurrentArrayToken.Add(new LevelKey() { Key = previousAlias, Level = _levelCounter }, Context.Input);
             }
             else if (state.CurrentArrayToken.Any(t => t.Key.Key == alias))
             {
@@ -499,7 +498,7 @@ namespace JUST
             JToken arrayToken;
             var selectable = GetSelectableToken(state.GetAliasToken(previousAlias), Context);
             arrayToken = selectable.Select(strArrayToken);
-
+            arrayToken = LookInTransformed(arrayToken, $"#valueof({args[0]})", state) as JToken;
             if (arrayToken != null)
             {
                 //workaround: result should be an array if path ends up with array filter
@@ -1106,7 +1105,7 @@ namespace JUST
                 output = ParseFunction(propVal, state);
                 Context.Input = tmpContext;
             }
-            return output;
+            return output is Array ? new JArray(output) : output;
         }
 
             private object CallCustomFunction(object[] parameters)
