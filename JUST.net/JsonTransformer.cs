@@ -311,7 +311,7 @@ namespace JUST
                                 state.CurrentArrayToken.Where(t => t.Key.Key != State.RootKey)
                                     .ToDictionary(p => p.Key, p => p.Value),
                                 state.CurrentScopeToken.Where(t => t.Key.Key != State.RootKey)
-                                    .ToDictionary(p => p.Key, p => p.Value)))
+                                    .ToDictionary(p => p.Key, p => p.Value)));
                     }
                     Context.Input = token;
                 }
@@ -1097,7 +1097,7 @@ namespace JUST
                     null,
                     "JUST.Transformer`1",
                     functionName,
-                    new[] { state.ParentArray.Single(p => p.Key.Key == alias).Value, state.CurrentArrayToken.Single(p => p.Key.Key == alias).Value }.Concat(listParameters.ToArray()).ToArray(),
+                    new[] { state.ParentArray.First(p => p.Key.Key == alias || p.Key.Key == state.ParentArray.Last().Key.Key) .Value, state.CurrentArrayToken.Single(p => p.Key.Key == alias).Value }.Concat(listParameters.ToArray()).ToArray(),
                     convertParameters,
                     Context);
             }
@@ -1138,11 +1138,19 @@ namespace JUST
                 {
                     if (functionName != "valueof")
                     {
-                        ((JUSTContext)listParameters.Last()).Input = state.CurrentArrayToken.Last().Value;
+                        // TODO Input must change to previous transformed output
+                        // if (state.Transformer != null)
+                        // {
+                        //     ((JUSTContext)listParameters.Last()).Input = state.CurrentScopeToken.Last().Value;
+                        // }
+                        // else
+                        // {
+                            ((JUSTContext)listParameters.Last()).Input = state.CurrentArrayToken.Last().Value;
+                        // }
                     }
                     else
                     {
-                        if (functionName == "valueof" && listParameters.Count > 2)
+                        if (listParameters.Count > 2)
                         {
                             ((JUSTContext)listParameters.Last()).Input = state.CurrentScopeToken.Single(p => p.Key.Key == listParameters[1].ToString()).Value;
                             listParameters.Remove(listParameters.ElementAt(listParameters.Count - 2));
