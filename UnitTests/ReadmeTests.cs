@@ -269,6 +269,17 @@ namespace JUST.UnitTests
         }
 
         [Test]
+        public void Transform()
+        {
+            const string input = "{ \"spell\": [\"one\", \"two\", \"three\"], \"letters\": [\"z\", \"c\", \"n\"], \"nested\": {	\"spell\": [\"one\", \"two\", \"three\"], \"letters\": [\"z\", \"c\", \"n\"] },\"array\": [{ \"spell\": [\"one\", \"two\", \"three\"], \"letters\": [\"z\", \"c\", \"n\"] }, { \"spell\": [\"four\", \"five\", \"six\"], \"letters\": [\"z\", \"c\", \"n\"] } ]}";
+            const string transformer = "{ \"scalar\": { \"#transform($)\": [{ \"condition\": { \"#loop($.letters)\": { \"test\": \"#ifcondition(#stringcontains(#valueof($.spell[0]),#currentvalue()),True,yes,no)\" } } }, \"#exists($.condition[?(@.test=='yes')])\"] }, \"object\": { \"#transform($)\": [{ \"condition\": { \"#loop($.letters)\": { \"test\": \"#ifcondition(#stringcontains(#valueof($.spell[0]),#currentvalue()),True,yes,no)\" } } }, { \"intermediate_transform\": \"#valueof($.condition)\" }, { \"result\": \"#exists($.intermediate_transform[?(@.test=='yes')])\" } ] }, \"select_token\": { \"#transform($.nested)\": [{ \"condition\": { \"#loop($.letters)\": { \"test\": \"#ifcondition(#stringcontains(#valueof($.spell[0]),#currentvalue()),True,yes,no)\" } } }, { \"intermediate_transform\": \"#valueof($.condition)\" }, { \"result\": \"#exists($.intermediate_transform[?(@.test=='yes')])\" } ] }, \"loop\": { \"#loop($.array,selectLoop)\": { \"#transform($)\": [{ \"condition\": { \"#loop($.letters)\": { \"test\": \"#ifcondition(#stringcontains(#currentvalueatpath($.spell[0],selectLoop),#currentvalue()),True,yes,no)\" } } }, { \"intermediate_transform\": \"#valueof($.condition)\" }, { \"result\": \"#exists($.intermediate_transform[?(@.test=='yes')])\" } ] } } } ";
+
+            var result = new JsonTransformer(new JUSTContext { EvaluationMode = EvaluationMode.Strict }).Transform(transformer, input);
+
+            Assert.AreEqual("{\"scalar\":true,\"object\":{\"result\":true},\"select_token\":{\"result\":true},\"loop\":[{\"result\":true},{\"result\":false}]}", result);
+        }
+
+        [Test]
         public void Scopes()
         {
             const string input = "{ \"level1\": { \"level2\": {	 \"level3\": {	 \"prop1\": \"val1\",	 \"prop2\": \"val2\",	 \"prop3\": \"val3\"	 },	 \"lvl2_prop1\": \"lvl2_val1\",	 \"lvl2_prop2\": \"lvl2_val2\",	},	\"lvl1_prop1\": \"lvl1_val1\" }, \"some_other_prop\": \"some_val\"}";

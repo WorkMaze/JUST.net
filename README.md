@@ -1682,9 +1682,8 @@ Output:
 
 ## <a name="applyover"></a> Apply function over transformation
 
-Sometimes you cannnot achieve what you want directly from a single function (or composition). To overcome this you may want to apply a function over a previous transformation. That's what #applyover does.
-First argument is the first transformation to apply to input, and the result will serve as input to the second argument/transformation. Second argument can be a simple function or a complex transformation (an object or an array).
-Note that if any of the arguments/transformations of #applyover has commas (,), one has to use #constant_comma to represent them (and use #xconcat to construct the argument/transformation).
+Sometimes you cannnot achieve what you want directly from a single function (or composition). To overcome this you may want to apply a function over a previous transformation. That's what #applyover does. First argument is the first transformation to apply to input, and the result will serve as input to the second argument/transformation. Second argument can be a simple function or a complex transformation (an object or an array).
+Bare in mind that every special character (comma, parenthesis) must be escaped if they appear inside the second argument/transformation.
 
 Consider the following input:
 
@@ -1768,6 +1767,90 @@ Output:
   "sixth": "value is true"
 }
 ```
+
+## <a name="transform"></a> Multiple transformations
+
+The #applyover function is handy to make a simple transformation, but when extra transformation is complex, it can became cumbersome, because one has to escape all special characters.
+To avoid this, there's a function called #transform. It takes a path as parameter, and like bulk functions, is composed by an array. Each element of the array is a transformation,
+that will be applied over the generated result of the previous item of the array. The first item/transformation will be applied over the given input, or current element if one is on an array loop.
+Note that for the second element/transformation and beyond, the input is the previous generated output of the previous transformation, so it's like a new transformation.
+
+Consider the following input:
+
+```JSON
+{
+  "spell": ["one", "two", "three"],
+  "letters": ["z", "c", "n"],
+  "nested": {
+    "spell": ["one", "two", "three"],
+    "letters": ["z", "c", "n"]
+  },
+  "array": [{
+      "spell": ["one", "two", "three"],
+      "letters": ["z", "c", "n"]
+    }, {
+      "spell": ["four", "five", "six"],
+      "letters": ["z", "c", "n"]
+    }
+  ]
+}
+```
+
+
+Transformer:
+
+```JSON
+{
+  "scalar": {
+    "#transform($)": [
+      { "condition": { "#loop($.letters)": { "test": "#ifcondition(#stringcontains(#valueof($.spell[0]),#currentvalue()),True,yes,no)" } } },
+      "#exists($.condition[?(@.test=='yes')])"
+	]
+  },
+  "object": {
+    "#transform($)": [
+      { "condition": { "#loop($.letters)": { "test": "#ifcondition(#stringcontains(#valueof($.spell[0]),#currentvalue()),True,yes,no)" } } },
+      { "intermediate_transform": "#valueof($.condition)" },
+      { "result": "#exists($.intermediate_transform[?(@.test=='yes')])" }
+    ]
+  },
+  "select_token": {
+    "#transform($.nested)": [
+      { "condition": { "#loop($.letters)": { "test": "#ifcondition(#stringcontains(#valueof($.spell[0]),#currentvalue()),True,yes,no)" } } },
+      { "intermediate_transform": "#valueof($.condition)" },
+      { "result": "#exists($.intermediate_transform[?(@.test=='yes')])" }
+    ]
+  },
+  "loop": {
+    "#loop($.array,selectLoop)": {
+      "#transform($)": [
+        { "condition": { "#loop($.letters)": { "test": "#ifcondition(#stringcontains(#currentvalueatpath($.spell[0],selectLoop),#currentvalue()),True,yes,no)" } } },
+        { "intermediate_transform": "#valueof($.condition)" },
+        { "result": "#exists($.intermediate_transform[?(@.test=='yes')])" }
+      ]
+    }
+  }
+}
+```
+
+Output:
+
+```JSON
+{
+  "scalar": true,
+  "object": {
+    "result": true
+  }
+  "select_token": {
+    "result": true
+  },
+  "loop": [
+    { "result": true },
+	{ "result": false }
+  ]
+}
+```
+
 
 ## <a name="schemavalidation"></a> Schema Validation against multiple schemas using prefixes
 
