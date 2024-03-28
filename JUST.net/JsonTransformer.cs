@@ -300,7 +300,7 @@ namespace JUST
                                 state.CurrentArrayToken.Where(t => t.Key.Key != State.RootKey)
                                     .ToDictionary(p => p.Key, p => p.Value),
                                 state.CurrentScopeToken.Where(t => t.Key.Key != State.RootKey)
-                                    .ToDictionary(p => p.Key, p => p.Value)));
+                                    .ToDictionary(p => p.Key, p => p.Value), true));
                         token.Replace(GetToken(obj));
                     }
                     else
@@ -311,7 +311,7 @@ namespace JUST
                                 state.CurrentArrayToken.Where(t => t.Key.Key != State.RootKey)
                                     .ToDictionary(p => p.Key, p => p.Value),
                                 state.CurrentScopeToken.Where(t => t.Key.Key != State.RootKey)
-                                    .ToDictionary(p => p.Key, p => p.Value)));
+                                    .ToDictionary(p => p.Key, p => p.Value), true));
                     }
                     Context.Input = token;
                 }
@@ -1138,15 +1138,14 @@ namespace JUST
                 {
                     if (functionName != "valueof")
                     {
-                        // TODO Input must change to previous transformed output
-                        // if (state.Transformer != null)
-                        // {
-                        //     ((JUSTContext)listParameters.Last()).Input = state.CurrentScopeToken.Last().Value;
-                        // }
-                        // else
-                        // {
+                        if (state.Multiple)
+                        {
+                            ((JUSTContext)listParameters.Last()).Input = state.CurrentScopeToken.Last().Value;
+                        }
+                        else
+                        {
                             ((JUSTContext)listParameters.Last()).Input = state.CurrentArrayToken.Last().Value;
-                        // }
+                        }
                     }
                     else
                     {

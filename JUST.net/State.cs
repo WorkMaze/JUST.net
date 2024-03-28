@@ -13,7 +13,8 @@ internal sealed class State
     internal const string RootKey = "root";
     internal State(JToken transformer, JToken input, int levelCounter,
         IDictionary<LevelKey, JToken> currentArrayToken = null,
-        IDictionary<LevelKey, JToken> currentScopeToken = null)
+        IDictionary<LevelKey, JToken> currentScopeToken = null,
+        bool multiple = false)
     {
         Transformer = transformer;
         ParentArray = new Dictionary<LevelKey, JArray>();
@@ -21,11 +22,13 @@ internal sealed class State
             .Concat(currentArrayToken ?? new Dictionary<LevelKey, JToken>()).ToDictionary(p => p.Key, p => p.Value);
         CurrentScopeToken = new Dictionary<LevelKey, JToken> { { new LevelKey { Level = levelCounter, Key = State.RootKey}, input } }
             .Concat(currentScopeToken ?? new Dictionary<LevelKey, JToken>()).ToDictionary(p => p.Key, p => p.Value);
+        Multiple = multiple;
     }
     internal JToken Transformer { get; private set; }
     internal IDictionary<LevelKey, JArray> ParentArray { get; private set; }
     internal IDictionary<LevelKey, JToken> CurrentArrayToken { get; private set; }
     internal IDictionary<LevelKey, JToken> CurrentScopeToken { get; private set; }
+    internal bool Multiple { get; private set; }
 
     internal string GetHigherAlias()
     {
